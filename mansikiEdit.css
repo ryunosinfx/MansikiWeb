@@ -24,8 +24,8 @@ span.space{
 	opacity:0;
 }
 span.space2{
-	word-spacing:2em;
-	opacity:1;
+	word-spacing:0px;
+	opacity:0;
 }
 div.nums{
 	border:solid red 0px;
@@ -34,6 +34,7 @@ div.nums{
 	overflow:hidden;
 	word-wrap:word-break;
 	text-align:right;
+	font-size:10px;
 }
 
 div.inneredit{

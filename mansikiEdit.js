@@ -1,6 +1,6 @@
 //	alert("here we are!");
 var tab ="";
-
+const caretLetter="|";
 var HilightingEditor= function(id, width,height){
 	this.className="HilightingEditor";
 	this.classIdPrefix =this.className+"_"+id;
@@ -25,7 +25,7 @@ HilightingEditor.prototype={
 		this.outer = this.outerParent.children("."+this.classIdPrefix +"Outer").eq(0).css("overflow-x","scroll").css("overflow-y","scroll")
 			.css("position","relative").width(width-this.baseLineNumWidth).height(height);
 		this.outer.append("<div id='"+this.classIdPrefix +"Frame' style='width:"+width+";height:"+height+"'></div>");
-		this.frame = this.outer.children("#"+this.classIdPrefix +"Frame");
+		this.frame = this.outer.children("#"+this.classIdPrefix +"Frame").css("overflow","hidden");
 		this.frame.append(
 				"<textarea class='inputText'></textarea>" 
 			+"<div class='viewText' id='"+this.classIdPrefix+"view'></div><div class='caretSpacer'></div><div class='caretSpacerUpper'id='"+this.classIdPrefix+"Upper'></div><div class='caret'></div>"
@@ -40,22 +40,17 @@ HilightingEditor.prototype={
 		this.caret = this.frame.children(".caret").eq(0);
 		this.caretSpacerUpper = this.frame.children(".caretSpacerUpper").eq(0);
 		
-		this.frame.css("overflow","hidden");
-		
 		this.textarea
-		.css("opacity",0.5).css("height",height).css("z-index",200).css("display","block").css("border","solid transparent 1px")
+		.css("opacity",0.1).css("height",height).css("z-index",200).css("display","block").css("border","solid transparent 1px")
 		.css("font-size",this.fontSize+"px").css("position","relative")
 		.css("overflow","hidden").css("line-height",this.lineHeight+"px");
-		//.css("word-break","keep-all").css("word-wrap","normal");
 		
 		this.view
 		.css("opacity",0.5).css("width",(width-this.baseLineNumWidth)+"px")
 		.css("height",height).css("z-index",10).css("border","solid 1px green ").css("position","relative")
 		.css("line-height",this.lineHeight+"px").css("font-size",this.fontSize+"px")
-		.css("overflow","hidden").css("color","blue");
+		.css("overflow","hidden").css("color","blue").css("top",((height)*-1));
 		
-		var topView = this.view.position().top;//位置を取得
-		this.view.css("top",((height)*-1));
 		this.lineNum//
 		.css("opacity",0.9).css("position","absolute").css("width",this.baseLineNumWidth+"px")
 		.css("height",height).css("z-index",210).css("border","solid black 1px")
@@ -89,6 +84,7 @@ HilightingEditor.prototype={
 			me.timer = setTimeout(function(){me.onEdit(event);},10);
 			return;
 		}
+		me.textarea.val(me.textarea.val().replace(/\t/g, "    "));
 		var list = me.textarea.val().replace(/(\r|\n|\r\n)/g, "\n").split("\n");
 		var domRows = me.view.children(".rows");
 		var rowNums = me.lineNumInner.children(".nums");
@@ -104,24 +100,32 @@ HilightingEditor.prototype={
 		var alText2="";
 		me.caretSpacerUpper.width(width-viewWidthPlus).height(rowHeight);	//カーソル上空間
 		me.caretSpacer.height(rowHeight-1);								//カーソル左空間
+		var nowTotalHeight =list.length*rowHeight+100;
+		var isAddedRows= nowTotalHeight>me.height;
+		nowTotalHeight=isAddedRows?nowTotalHeight:me.height;
+		var topLog="";
 		var offsetYUpper = (me.view.height()+me.textarea.height()+rowHeight+3)*-1;
+		var diff = domRows.length - list.length;
 		//行単位で処理
 		for(var i= 0;i<list.length;i++){
 			var isCaretRow = false;
+			var isCaretRowShowed = false;
 			var rowText = list[i];					//本来その行に存在する文字列情報
-			var domRow = domRows.eq(i);				//行を表示している領域
+			var domRow = domRows.eq(i).css("background-color","#000");				//行を表示している領域
 			var rowTextLength = rowText.length;	//行文字数
 			amountLength += rowTextLength;			//カーソル位置ー今までの全行文字数＋行の長さ//行トータルの集計
 			maxWidth = maxWidth+2< domRow.width()?domRow.width()+2:maxWidth;
 			alText+="/["+i+"]:"+rowTextLength+"@"+currentCaret;
-			
 			var atCurrentCaret = currentCaret + rowTextLength - amountLength-i;//キャレット位置
 			//alert("a:"+(atCurrentCaret)+"/b:"+rowTextLength+"/i:"+i+"/c:"+rowText);
-			if(isCaretRow===false && (atCurrentCaret <= rowTextLength && atCurrentCaret >= 0)){
+			if(isCaretRow===false && isCaretRowShowed==false && (0 <= atCurrentCaret && atCurrentCaret <= rowTextLength )){
 				isCaretRow=true;
-				me.textarea2.val("a:"+(atCurrentCaret)+"/b:"+rowTextLength+"/i:"+i+"/boolena:"+isCaretRow+"/c:"+rowText+"\n"
-				+"/L:"+me.data.length +"/d:"+ me.data[i] +"/Rl:"+ domRow.length +"/"
-				+(me.data.length > i && me.data[i]===rowText && domRow.length > 0 && isCaretRow==false));
+				isCaretRowShowed==true;
+				//me.textarea2.val("a:"+(atCurrentCaret)+"/b:"+rowTextLength+"/i:"+i+"/boolena:"+isCaretRow+"/c:"+rowText+"\n"
+				//+"/L:"+me.data.length +"/d:"+ me.data[i] +"/Rl:"+ domRow.length +"/"
+				//+(me.data.length > i && me.data[i]===rowText && domRow.length > 0 && isCaretRow==false));
+			}else{
+				isCaretRow=false;
 			}
 			if(me.data.length > i && me.data[i]===rowText && domRow.length > 0 && isCaretRow==false){//データが動いていないかつカーソルの行位以外はスルー
 				continue;//次の行を処理する。
@@ -148,13 +152,13 @@ HilightingEditor.prototype={
 			
 			if(isCaretRow){//var stringAtCaret ="A";//キャレットの表示//caretsカーソル
 			alText2+="/["+i+"]:"+rowTextLength;
+				domRow = domRows.eq(i).css("background-color","#FF00E6");
 				var position = domRow.position();//位置を取得
-				var top = position.top;
+				var topCaret = position.top;
+				//topLog+="/["+i+"]:"+topCaret;
 				var left = position.left + rowNum.attr('clientWidth');
-				me.caretSpacerUpper.css("top",top+offsetYUpper);		//カーソル上空間
-				me.caretSpacer.css("top",top+offsetYUpper*2).width(0);	//カーソル左空間
-				me.caretSpacer.html(comverted);							//カーソル上空間にカーソル位置より上空間に回りこみ断片を導入
-				//me.textarea2.val(atCurrentCaret+":"+currentCaret+"/"+rowTextLength+"/"+amountLength+"/i:"+i+"/"+domRow+"/"+domRow.width()+"/"+maxWidth+"/top:"+top+"/left:"+left+"/width:"+width);
+				me.caretSpacerUpper.css("top",topCaret+offsetYUpper+(isAddedRows && diff > 0?(rowHeight*diff*2):0));		//カーソル上空間
+				me.caretSpacer.css("top",topCaret+offsetYUpper*2).width(0).html(comverted);	//カーソル左空間//カーソル上空間にカーソル位置より上空間に回りこみ断片を導入
 			}
 			me.textarea3.val(atCurrentCaret+":"+currentCaret+"/"+rowTextLength+"/"+amountLength+"/i:"+i+"/"+domRow.width()+"/"+maxWidth+"/\n"+alText);
 			var rowId= domRow.attr('id');
@@ -177,17 +181,24 @@ HilightingEditor.prototype={
 			if(isCaretRow){
 				me.caretSpacerUpper.html(me.comvertStringToHTML(rowText.substring(0,atCurrentCaret)));				//カーソルまでの修飾済み文字列を設定
 				me.caretSpacerUpper.width(0);
+				me.caret.css("top",topCaret+offsetYUpper*1-rowHeight+(isAddedRows?(rowHeight*diff*2):0)-2);
 				var nowCaretLeft=me.fetchWidth(document.getElementById(me.classIdPrefix+"Upper"),rowHeight,true);
 				me.caretSpacerUpper.width(nowCaretLeft);
-				me.caret.css("left",nowCaretLeft).css("top",top+offsetYUpper*1-rowHeight-2).text("A");
+				me.caret.css("left",nowCaretLeft).text("A");
+				me.textarea2.val(atCurrentCaret+":"+currentCaret+"/"+rowTextLength+"/"+amountLength+"/i:"+i+"/offsetYUpper:"+offsetYUpper+"/rowHeight:"+rowHeight+"/a:"+(topCaret+offsetYUpper*1-rowHeight-2)+"/top:"+topCaret+"/left:"+left+"/width:"+width+"\n"+topLog);
 			}
 		}
 		for(var n= list.length;n<domRows.length;n++){//各リストサイズを開始位置として行要素を設定
 			domRows.eq(n).remove();//行要素を削除
 			rowNums.eq(n).remove();//行番号も削除
 		}
-		var nowTotalHeight =list.length*rowHeight+100;
-		nowTotalHeight=nowTotalHeight>me.height?nowTotalHeight:me.height;
+		for(var j=0;j<domRows.length;j++){
+			domRow = domRows.eq(j)
+			var domRowDom=document.getElementById(domRow.attr('id'));
+			if(maxWidth!=domRowDom.style.width.replace(/px/,"")*1){
+				domRowDom.style.width=maxWidth;
+			}
+		}
 		me.textarea.width(maxWidth).height(nowTotalHeight);	
 		me.frame.width(maxWidth).height(nowTotalHeight);	
 		me.lineNumInner.height(nowTotalHeight);		
@@ -209,7 +220,7 @@ HilightingEditor.prototype={
 	},
 	attatchMainTre:function(attachPoint){
 		attachPoint.append(this.outerParent);
-		this.fetchLetterSpace(this,attachPoint);
+		//this.fetchLetterSpace(this,attachPoint);
 		this.textarea.unbind("keyup",this.onEdit);
 		this.textarea.bind("keyup",{"self":this},this.onEdit);
 		this.textarea.unbind("click",this.onEdit);
@@ -242,11 +253,11 @@ HilightingEditor.prototype={
 	comvertStringToHTML:function(str){
 		var reSpaceZen = new RegExp('b','g');
 		//alert(str.replace(/[　]{1}/g,"<span class='space2'>ああ</span>"));
-		str = str.replace(/&/g,"&amp;").replace(/[　]{1}/g,"&emsp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+		str = str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/[　]{1}/g,"<span&nbsp;class='space2'>ぽ</span>")
 		.replace(/\t/g,"<pre&nbsp;style='display:inline;border:0px;margin:0px;padding:0px;'>&_#_0_9_;</pre>")
-		.replace(/\s/g,"&nbsp").replace(/&_#_0_9_;/g,"&#09;")
-		.replace(/pre&nbsp;style/g,"pre style");
-		return str.replace(/[　]{1}/g,"<span class='space2'>&emsp;</span>");
+		.replace(/\s/g,"&nbsp;").replace(/&_#_0_9_;/g,"&nbsp;&nbsp;&nbsp;&nbsp;")
+		.replace(/pre&nbsp;style/g,"pre style").replace(/span&nbsp;class/g,"span class");
+		return str.replace(/[　]{1}/g,"<span class='space2'>&emsp;</span>1");
 	},
     fetchWidth:function(domObj,rowHeight,isFit){
     	var count = 1;
@@ -278,32 +289,8 @@ HilightingEditor.prototype={
 				}
 			}
 		}
-    	//alert(domObj.style.width.replace(/px/,"")*1);
     	var ret = domObj.style.width.replace(/px/,"")*1;
     	return isNaN(ret)?width:ret;
-    },
-    fetchLetterSpace:function(me,attachPoint){
-    	var test=$("<div style='display:block;height:"+me.fontSize+"px;border:1px solid black ;' id='"+me.classIdPrefix+"fetchLetterSpace' >ああ</div>").css("overflow","hidden")
-    	.css("line-height",me.lineHeight+"px").css("font-size",me.fontSize+"px").width(1);
-    	attachPoint.append(test);
-		var domTest = document.getElementById(me.classIdPrefix+"fetchLetterSpace");
-		domTest.style.width= me.fontSize*3;
-		var count=0;
-		var nowWidth = domTest.scrollWidth;
-		var log ="";
-		while(count < me.fontSize*3){
-			count++;
-			domTest.style.width=nowWidth-count;
-			var height = domTest.scrollHeight;
-			var scrollWidth = domTest.scrollWidth;
-			log+="/["+count+"]"+height;
-			if(height > me.lineHeight*1.5){
-				domTest.style.width=nowWidth-count+1;
-				break;
-			}
-		}
-		
-    	alert("domTest.scrollWidth:"+domTest.scrollWidth +"/me.fontSize:"+me.fontSize+"/"+log);
     }
 }
 	
