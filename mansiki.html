@@ -1,0 +1,35 @@
+
+<html>
+<header>
+<title></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+	<link rel="stylesheet" type="text/css" href="mansikiEdit.css" media="all" />
+	<script src="mansikiEdit.js" type="text/javascript"></script>
+	<script src="jquery.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		$(document).ready(function(){
+			var he = new HilightingEditor("test");
+			he.init(500,400);
+			he.attatchMainTre($("#ancer"));
+		});
+	</script>
+
+</header>
+
+<body>
+	<div id="wrapper">
+		<article>
+			<from>
+			<div id="ancer"></div>
+			<textarea class='inputText2'></textarea>
+			<textarea class='inputText3'></textarea>
+			</from>
+			
+		</article>
+		<footer>
+
+		</footer>
+	</div>
+</body>
+</html>
