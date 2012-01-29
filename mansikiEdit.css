@@ -50,8 +50,8 @@ div.inneredit textarea{
 	background-color:#68FF75;
 }
 /*---------------------------*/
-.HilightingEditor{
-	font-family:"Takaoゴシック","Takao Pゴシック","ＭＳ ゴシック","Andale Mono",sans-serif;
+.HilightingEditor,.HilightingEditor .inputText{
+	font-family:"Takao Pゴシック",monospace,"Takaoゴシック","ＭＳ ゴシック","Andale Mono",sans-serif;
 	f ont-family:"Andale Mono";
 	word-spacing:0px;
 	letter-spacing:0px;

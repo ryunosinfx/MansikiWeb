@@ -30,7 +30,7 @@ HilightingEditor.prototype={
 				"<textarea class='inputText'></textarea>" 
 			+"<div class='viewText' id='"+this.classIdPrefix+"view'></div><div class='caretSpacer'></div><div class='caretSpacerUpper'id='"+this.classIdPrefix+"Upper'></div><div class='caret'></div>"
 			);
-		this.textarea = this.frame.children(".inputText").eq(0);
+		this.textarea = this.frame.children(".inputText").eq(0).css("letter-spacing","0px").css("word-wrap","keep-all");
 		this.textarea2 = $(".inputText2").eq(0);
 		this.textarea3 = $(".inputText3").eq(0);
 		this.view = this.frame.children(".viewText").eq(0);
@@ -151,9 +151,9 @@ HilightingEditor.prototype={
 				var position = domRow.position();//位置を取得
 				var top = position.top;
 				var left = position.left + rowNum.attr('clientWidth');
-				me.caretSpacerUpper.css("top",top+offsetYUpper);//カーソル上空間
-				me.caretSpacer.css("top",top+offsetYUpper*2).width(0);//カーソル左空間
-				me.caretSpacer.html(comverted);//カーソル上空間にカーソル位置より上空間に回りこみ断片を導入
+				me.caretSpacerUpper.css("top",top+offsetYUpper);		//カーソル上空間
+				me.caretSpacer.css("top",top+offsetYUpper*2).width(0);	//カーソル左空間
+				me.caretSpacer.html(comverted);							//カーソル上空間にカーソル位置より上空間に回りこみ断片を導入
 				//me.textarea2.val(atCurrentCaret+":"+currentCaret+"/"+rowTextLength+"/"+amountLength+"/i:"+i+"/"+domRow+"/"+domRow.width()+"/"+maxWidth+"/top:"+top+"/left:"+left+"/width:"+width);
 			}
 			me.textarea3.val(atCurrentCaret+":"+currentCaret+"/"+rowTextLength+"/"+amountLength+"/i:"+i+"/"+domRow.width()+"/"+maxWidth+"/\n"+alText);
@@ -209,6 +209,7 @@ HilightingEditor.prototype={
 	},
 	attatchMainTre:function(attachPoint){
 		attachPoint.append(this.outerParent);
+		this.fetchLetterSpace(this,attachPoint);
 		this.textarea.unbind("keyup",this.onEdit);
 		this.textarea.bind("keyup",{"self":this},this.onEdit);
 		this.textarea.unbind("click",this.onEdit);
@@ -280,6 +281,29 @@ HilightingEditor.prototype={
     	//alert(domObj.style.width.replace(/px/,"")*1);
     	var ret = domObj.style.width.replace(/px/,"")*1;
     	return isNaN(ret)?width:ret;
+    },
+    fetchLetterSpace:function(me,attachPoint){
+    	var test=$("<div style='display:block;height:"+me.fontSize+"px;border:1px solid black ;' id='"+me.classIdPrefix+"fetchLetterSpace' >ああ</div>").css("overflow","hidden")
+    	.css("line-height",me.lineHeight+"px").css("font-size",me.fontSize+"px").width(1);
+    	attachPoint.append(test);
+		var domTest = document.getElementById(me.classIdPrefix+"fetchLetterSpace");
+		domTest.style.width= me.fontSize*3;
+		var count=0;
+		var nowWidth = domTest.scrollWidth;
+		var log ="";
+		while(count < me.fontSize*3){
+			count++;
+			domTest.style.width=nowWidth-count;
+			var height = domTest.scrollHeight;
+			var scrollWidth = domTest.scrollWidth;
+			log+="/["+count+"]"+height;
+			if(height > me.lineHeight*1.5){
+				domTest.style.width=nowWidth-count+1;
+				break;
+			}
+		}
+		
+    	alert("domTest.scrollWidth:"+domTest.scrollWidth +"/me.fontSize:"+me.fontSize+"/"+log);
     }
 }
 	
