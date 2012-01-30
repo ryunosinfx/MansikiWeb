@@ -10,6 +10,7 @@ var HilightingEditor= function(id, width,height){
 	this.data = new Array();
 	this.dataConverted = new Array();
 	this.nowTime=new Date().getTime();
+	this.selectedRowsObj=[];
 	this.timer;
 }
 
@@ -28,12 +29,14 @@ HilightingEditor.prototype={
 		this.frame = this.outer.children("#"+this.classIdPrefix +"Frame").css("overflow","hidden");
 		this.frame.append(
 				"<textarea class='inputText'></textarea>" 
-			+"<div class='viewText' id='"+this.classIdPrefix+"view'></div><div class='caretSpacer'></div><div class='caretSpacerUpper'id='"+this.classIdPrefix+"Upper'></div><div class='caret'></div>"
+			+"<div class='viewText' id='"+this.classIdPrefix+"view'></div><div class='caretSpacer'></div>"
+			+"<div class='selectionViewText' id='"+this.classIdPrefix+"selectionView'></div><div class='caretSpacerUpper'id='"+this.classIdPrefix+"Upper'></div><div class='caret'></div>"
 			);
 		this.textarea = this.frame.children(".inputText").eq(0).css("letter-spacing","0px").css("word-wrap","keep-all");
 		this.textarea2 = $(".inputText2").eq(0);
 		this.textarea3 = $(".inputText3").eq(0);
 		this.view = this.frame.children(".viewText").eq(0);
+		this.selectionView = this.frame.children(".selectionViewText").eq(0);
 		this.lineNum = this.outerParent.children("#"+this.classIdPrefix +"LineNum");
 		this.lineNumInner = this.lineNum.children("#"+this.classIdPrefix +"LineNumInner");
 		this.caretSpacer = this.frame.children(".caretSpacer").eq(0);
@@ -46,6 +49,12 @@ HilightingEditor.prototype={
 		.css("overflow","hidden").css("line-height",this.lineHeight+"px");
 		
 		this.view
+		.css("opacity",0.5).css("width",(width-this.baseLineNumWidth)+"px")
+		.css("height",height).css("z-index",10).css("border","solid 1px green ").css("position","relative")
+		.css("line-height",this.lineHeight+"px").css("font-size",this.fontSize+"px")
+		.css("overflow","hidden").css("color","blue").css("top",((height)*-1));
+		
+		this.selectionView
 		.css("opacity",0.5).css("width",(width-this.baseLineNumWidth)+"px")
 		.css("height",height).css("z-index",10).css("border","solid 1px green ").css("position","relative")
 		.css("line-height",this.lineHeight+"px").css("font-size",this.fontSize+"px")
@@ -84,8 +93,9 @@ HilightingEditor.prototype={
 			me.timer = setTimeout(function(){me.onEdit(event);},10);
 			return;
 		}
-		me.textarea.val(me.textarea.val().replace(/\t/g, "    "));
-		var list = me.textarea.val().replace(/(\r|\n|\r\n)/g, "\n").split("\n");
+		var text = me.textarea.val().replace(/\t/g, "    ").replace(/(\r|\n|\r\n)/g, "\n");
+		me.textarea.val(text);
+		var list = text.split("\n");
 		var domRows = me.view.children(".rows");
 		var rowNums = me.lineNumInner.children(".nums");
 		var numsHPadding = 2;
@@ -95,6 +105,7 @@ HilightingEditor.prototype={
 		var width = me.view.attr('scrollWidth')-viewWidthPlus*2;
 		var maxWidth=me.textareaWidth;
 		var currentCaret = me.textarea.get(0).selectionStart;//カーソル位置
+		var currentEnd= me.textarea.get(0).selectionEnd;//カーソル位置
 		var amountLength = 0;
 		var alText="";
 		var alText2="";
@@ -106,6 +117,7 @@ HilightingEditor.prototype={
 		var topLog="";
 		var offsetYUpper = (me.view.height()+me.textarea.height()+rowHeight+3)*-1;
 		var diff = domRows.length - list.length;
+		var caretRowNo=0;
 		//行単位で処理
 		for(var i= 0;i<list.length;i++){
 			var isCaretRow = false;
@@ -121,6 +133,7 @@ HilightingEditor.prototype={
 			if(isCaretRow===false && isCaretRowShowed==false && (0 <= atCurrentCaret && atCurrentCaret <= rowTextLength )){
 				isCaretRow=true;
 				isCaretRowShowed==true;
+				caretRowNo=i;
 				//me.textarea2.val("a:"+(atCurrentCaret)+"/b:"+rowTextLength+"/i:"+i+"/boolena:"+isCaretRow+"/c:"+rowText+"\n"
 				//+"/L:"+me.data.length +"/d:"+ me.data[i] +"/Rl:"+ domRow.length +"/"
 				//+(me.data.length > i && me.data[i]===rowText && domRow.length > 0 && isCaretRow==false));
@@ -154,8 +167,7 @@ HilightingEditor.prototype={
 			alText2+="/["+i+"]:"+rowTextLength;
 				domRow = domRows.eq(i).css("background-color","#FF00E6");
 				var position = domRow.position();//位置を取得
-				var topCaret = position.top;
-				//topLog+="/["+i+"]:"+topCaret;
+				var topCaret = position.top;//topLog+="/["+i+"]:"+topCaret;
 				var left = position.left + rowNum.attr('clientWidth');
 				me.caretSpacerUpper.css("top",topCaret+offsetYUpper+(isAddedRows && diff > 0?(rowHeight*diff*2):0));		//カーソル上空間
 				me.caretSpacer.css("top",topCaret+offsetYUpper*2).width(0).html(comverted);	//カーソル左空間//カーソル上空間にカーソル位置より上空間に回りこみ断片を導入
@@ -188,6 +200,7 @@ HilightingEditor.prototype={
 				me.textarea2.val(atCurrentCaret+":"+currentCaret+"/"+rowTextLength+"/"+amountLength+"/i:"+i+"/offsetYUpper:"+offsetYUpper+"/rowHeight:"+rowHeight+"/a:"+(topCaret+offsetYUpper*1-rowHeight-2)+"/top:"+topCaret+"/left:"+left+"/width:"+width+"\n"+topLog);
 			}
 		}
+		//ここまでで処理が完了する。
 		for(var n= list.length;n<domRows.length;n++){//各リストサイズを開始位置として行要素を設定
 			domRows.eq(n).remove();//行要素を削除
 			rowNums.eq(n).remove();//行番号も削除
@@ -199,12 +212,45 @@ HilightingEditor.prototype={
 				domRowDom.style.width=maxWidth;
 			}
 		}
+		//選択範囲処理
+		
+		if(nowTime-me.nowTime<100){//指定時間内はスキップ
+			me.timer = setTimeout(function(){me.onEdit(event);},10);
+			return;
+		}
 		me.textarea.width(maxWidth).height(nowTotalHeight);	
 		me.frame.width(maxWidth).height(nowTotalHeight);	
 		me.lineNumInner.height(nowTotalHeight);		
 		me.view.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-1);		
+		me.selectionView.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-2);		
 		me.data = list.concat();//データにリストをコピー
 		me.nowTime=new Date().getTime();
+	},
+	onSelected:function(me,currentCaret,currentEnd,text,caretRowNo){
+		if(currentCaret != currentEnd){
+
+			if(nowTime-me.nowTime<100){//指定時間内はスキップ
+				me.timer = setTimeout(function(){me.onSelected(me,currentCaret,currentEnd,text,caretRowNo);},10);
+				return;
+			}
+			me.removeSelectedObjs(me);
+			var selectList=me.getSelectedText(currentCaret,currentEnd,text).split("\n");
+			for(var k=0;k<selectList.length;k++){//開始がX文字直後、Y文字数
+				me.selectionView.append("<div class='rows' style='width:"+width+"px;'></div>");
+				var domRows = me.selectionView.children(".rows");
+				caretRowNo;
+			}
+		}else {
+			me.removeSelectedObjs(me);
+		}
+		
+	},
+	removeSelectedObjs:function(me){
+		if(me.selectedRowsObj!==undefined && me.selectedRowsObj.length>0){//削除処理
+			for(var i=0 ; i<me.selectedRowsObj.length;i++){
+				me.selectionView.remove(me.selectedRowsObj.shift());
+			}
+		}
 	},
 	//スクロール時に表示？
 	onScroll:function(event){
@@ -220,7 +266,6 @@ HilightingEditor.prototype={
 	},
 	attatchMainTre:function(attachPoint){
 		attachPoint.append(this.outerParent);
-		//this.fetchLetterSpace(this,attachPoint);
 		this.textarea.unbind("keyup",this.onEdit);
 		this.textarea.bind("keyup",{"self":this},this.onEdit);
 		this.textarea.unbind("click",this.onEdit);
@@ -242,9 +287,10 @@ HilightingEditor.prototype={
 		me.textarea2.css("top",top+200).css("left",(0+1200)+"px").css("width",realWidth+"px");
 		me.textarea3.css("top",top+200).css("left",(0+1200)+"px").css("width",realWidth+"px");
 		me.view.css("top",(me.textarea.height()+3)*-1).css("left",0+"px").css("width",realWidth+"px");
-		me.caretSpacer.css("top",(me.textarea.height()+3)*-2).css("left",0+"px").css("width",realWidth+"px");
-		me.caretSpacerUpper.css("top",(me.textarea.height()+3)*-2).css("left",0+"px").css("width",realWidth+"px");
-		me.caret.css("top",(me.textarea.height()+3)*-2).css("left",0+"px").css("width",10+"px").css("height",me.lineHeight+"px");
+		me.selectionView.css("top",(me.textarea.height()+3)*-2).css("left",0+"px").css("width",realWidth+"px");
+		me.caretSpacer.css("top",(me.textarea.height()+3)*-3).css("left",0+"px").css("width",realWidth+"px");
+		me.caretSpacerUpper.css("top",(me.textarea.height()+3)*-3).css("left",0+"px").css("width",realWidth+"px");
+		me.caret.css("top",(me.textarea.height()+3)*-3).css("left",0+"px").css("width",10+"px").css("height",me.lineHeight+"px");
 		me.lineNum.css("top",0).css("left",left);
 		me.outer.css("left",me.baseLineNumWidth+"px");
 		me.outer.width(document.getElementById(this.classIdPrefix +"Outer").scrollWidth-12);	
@@ -291,6 +337,9 @@ HilightingEditor.prototype={
 		}
     	var ret = domObj.style.width.replace(/px/,"")*1;
     	return isNaN(ret)?width:ret;
+    },
+    getSelectedText:function(start,end,text){
+    	return text.slice(start,end);
     }
 }
 	
