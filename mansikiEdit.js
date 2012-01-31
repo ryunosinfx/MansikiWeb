@@ -11,7 +11,10 @@ var HilightingEditor= function(id, width,height){
 	this.dataConverted = new Array();
 	this.nowTime=new Date().getTime();
 	this.selectedRowsObj=[];
+	this.waight=10;
 	this.timer;
+	this.basicRowColor="#000";
+	this.caretRowColor="#FF00E6";
 }
 
 HilightingEditor.prototype={
@@ -115,15 +118,16 @@ HilightingEditor.prototype={
 		var isAddedRows= nowTotalHeight>me.height;
 		nowTotalHeight=isAddedRows?nowTotalHeight:me.height;
 		var topLog="";
-		var offsetYUpper = (me.view.height()+me.textarea.height()+rowHeight+3)*-1;
+		var offsetYUpper = (me.selectionView.height()+me.view.height()+me.textarea.height()+rowHeight+3)*-1;
 		var diff = domRows.length - list.length;
 		var caretRowNo=0;
+		var nowCaretLeft=0;
 		//行単位で処理
 		for(var i= 0;i<list.length;i++){
 			var isCaretRow = false;
 			var isCaretRowShowed = false;
 			var rowText = list[i];					//本来その行に存在する文字列情報
-			var domRow = domRows.eq(i).css("background-color","#000");				//行を表示している領域
+			var domRow = domRows.eq(i).css("background-color",me.basicRowColor);				//行を表示している領域
 			var rowTextLength = rowText.length;	//行文字数
 			amountLength += rowTextLength;			//カーソル位置ー今までの全行文字数＋行の長さ//行トータルの集計
 			maxWidth = maxWidth+2< domRow.width()?domRow.width()+2:maxWidth;
@@ -165,11 +169,11 @@ HilightingEditor.prototype={
 			
 			if(isCaretRow){//var stringAtCaret ="A";//キャレットの表示//caretsカーソル
 			alText2+="/["+i+"]:"+rowTextLength;
-				domRow = domRows.eq(i).css("background-color","#FF00E6");
+				domRow = domRows.eq(i).css("background-color",me.caretRowColor);
 				var position = domRow.position();//位置を取得
 				var topCaret = position.top;//topLog+="/["+i+"]:"+topCaret;
 				var left = position.left + rowNum.attr('clientWidth');
-				me.caretSpacerUpper.css("top",topCaret+offsetYUpper+(isAddedRows && diff > 0?(rowHeight*diff*2):0));		//カーソル上空間
+				me.caretSpacerUpper.css("top",topCaret+offsetYUpper+(isAddedRows && diff > 0?(rowHeight*diff*2):0)-2);		//カーソル上空間
 				me.caretSpacer.css("top",topCaret+offsetYUpper*2).width(0).html(comverted);	//カーソル左空間//カーソル上空間にカーソル位置より上空間に回りこみ断片を導入
 			}
 			me.textarea3.val(atCurrentCaret+":"+currentCaret+"/"+rowTextLength+"/"+amountLength+"/i:"+i+"/"+domRow.width()+"/"+maxWidth+"/\n"+alText);
@@ -193,8 +197,8 @@ HilightingEditor.prototype={
 			if(isCaretRow){
 				me.caretSpacerUpper.html(me.comvertStringToHTML(rowText.substring(0,atCurrentCaret)));				//カーソルまでの修飾済み文字列を設定
 				me.caretSpacerUpper.width(0);
-				me.caret.css("top",topCaret+offsetYUpper*1-rowHeight+(isAddedRows?(rowHeight*diff*2):0)-2);
-				var nowCaretLeft=me.fetchWidth(document.getElementById(me.classIdPrefix+"Upper"),rowHeight,true);
+				me.caret.css("top",topCaret+offsetYUpper*1-rowHeight+(isAddedRows?(rowHeight*diff*2):0)-4);
+				nowCaretLeft=me.fetchWidth(document.getElementById(me.classIdPrefix+"Upper"),rowHeight,true);
 				me.caretSpacerUpper.width(nowCaretLeft);
 				me.caret.css("left",nowCaretLeft).text("A");
 				me.textarea2.val(atCurrentCaret+":"+currentCaret+"/"+rowTextLength+"/"+amountLength+"/i:"+i+"/offsetYUpper:"+offsetYUpper+"/rowHeight:"+rowHeight+"/a:"+(topCaret+offsetYUpper*1-rowHeight-2)+"/top:"+topCaret+"/left:"+left+"/width:"+width+"\n"+topLog);
@@ -213,32 +217,40 @@ HilightingEditor.prototype={
 			}
 		}
 		//選択範囲処理
-		
-		if(nowTime-me.nowTime<100){//指定時間内はスキップ
-			me.timer = setTimeout(function(){me.onEdit(event);},10);
-			return;
-		}
+		me.onSelected(me,currentCaret,currentEnd,text,caretRowNo,maxWidth,rowHeight,nowCaretLeft,nowTime);
 		me.textarea.width(maxWidth).height(nowTotalHeight);	
 		me.frame.width(maxWidth).height(nowTotalHeight);	
 		me.lineNumInner.height(nowTotalHeight);		
 		me.view.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-1);		
-		me.selectionView.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-2);		
+		me.selectionView.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-2-rowHeight);		
 		me.data = list.concat();//データにリストをコピー
 		me.nowTime=new Date().getTime();
 	},
-	onSelected:function(me,currentCaret,currentEnd,text,caretRowNo){
+	onSelected:function(me,currentCaret,currentEnd,text,caretRowNo,maxWidth,rowHeight,nowCaretLeft,nowTime){
 		if(currentCaret != currentEnd){
-
 			if(nowTime-me.nowTime<100){//指定時間内はスキップ
-				me.timer = setTimeout(function(){me.onSelected(me,currentCaret,currentEnd,text,caretRowNo);},10);
+				me.timer = setTimeout(function(){me.onSelected(me,currentCaret,currentEnd,text,caretRowNo,maxWidth,rowHeight,nowCaretLeft,nowTime);},1);
 				return;
 			}
 			me.removeSelectedObjs(me);
 			var selectList=me.getSelectedText(currentCaret,currentEnd,text).split("\n");
 			for(var k=0;k<selectList.length;k++){//開始がX文字直後、Y文字数
-				me.selectionView.append("<div class='rows' style='width:"+width+"px;'></div>");
-				var domRows = me.selectionView.children(".rows");
-				caretRowNo;
+				me.selectionView.append("<div class='selectedRows' style='width:"+0+"px;'>"+selectList[k]+"</div>");
+				var domRow = me.selectionView.children(".selectedRows").eq(k);
+				domRowDom=domRow.get();
+				if(me.data[k+caretRowNo]==selectList[k] && selectList.length-1>k){//同じ場合
+					nowWidth=maxWidth;
+				}else if(nowCaretLeft > 0 && selectList.length>1){
+					nowWidth=maxWidth - nowCaretLeft;
+				}else{
+					var rowId= domRow.attr('id');
+					rowId= rowId===undefined ? me.classIdPrefix+"selectedRows"+(k+1):rowId;
+					domRow.attr('id',rowId).width(0);
+					var domRowDom = document.getElementById(rowId);
+					nowWidth=me.fetchWidth(domRowDom,rowHeight,true);
+				}
+				domRow.width(nowWidth).height(rowHeight).css("left",nowCaretLeft).css("top",( caretRowNo)*rowHeight-2-2*(caretRowNo+k));
+				nowCaretLeft=0;
 			}
 		}else {
 			me.removeSelectedObjs(me);
@@ -246,10 +258,12 @@ HilightingEditor.prototype={
 		
 	},
 	removeSelectedObjs:function(me){
-		if(me.selectedRowsObj!==undefined && me.selectedRowsObj.length>0){//削除処理
-			for(var i=0 ; i<me.selectedRowsObj.length;i++){
-				me.selectionView.remove(me.selectedRowsObj.shift());
+		var rows=me.selectionView.children(".selectedRows");
+		if(rows!==undefined && rows.length>0){//削除処理
+			for(var i=0 ; i<rows.length;i++){
+				rows.eq(i).remove();
 			}
+			me.selectionView.height(0);
 		}
 	},
 	//スクロール時に表示？
@@ -264,12 +278,34 @@ HilightingEditor.prototype={
 		var scrollTop = me.onScrollOuterParent.scrollTop();//スクロールを付随
 		me.lineNum.scrollTop(scrollTop);
 	},
+	onMouseDown:function(event){
+		var me = event.data.self;
+		me.isMouseDown = true;
+	},
+	onMouseUp:function(event){
+		var me = event.data.self;
+		me.isMouseDown = false;
+	},
+	onMoveEdit:function(event){
+		var me = event.data.self;
+		if(me.isMouseDown){
+			me.onEdit(event);
+		}
+	},
 	attatchMainTre:function(attachPoint){
 		attachPoint.append(this.outerParent);
 		this.textarea.unbind("keyup",this.onEdit);
 		this.textarea.bind("keyup",{"self":this},this.onEdit);
 		this.textarea.unbind("click",this.onEdit);
 		this.textarea.bind("click",{"self":this},this.onEdit);
+		this.textarea.unbind("mousedown",this.onMouseDown);
+		this.textarea.bind("mousedown",{"self":this},this.onMouseDown);
+		this.textarea.unbind("mouseup",this.onMouseUp);
+		this.textarea.bind("mouseup",{"self":this},this.onMouseUp);
+		this.textarea.unbind("mousemove",this.onMoveEdit);
+		this.textarea.bind("mousemove",{"self":this},this.onMoveEdit);
+		this.textarea.unbind("select",this.onEdit);
+		this.textarea.bind("select",{"self":this},this.onEdit);
 		this.outer.unbind("scroll",this.onScroll);
 		this.outer.bind("scroll",{"self":this},this.onScroll);
 		this.outerParent.unbind("scroll",this.onScrollOuterParent);
@@ -282,15 +318,16 @@ HilightingEditor.prototype={
 		var left = position.left;
 		var realLeft = left + size;
 		var realWidth = (me.width - size);
+		var height = me.textarea.height();
 		me.frame.css("left",realLeft+"px");
 		me.textarea.css("top",top).css("left",0+"px").css("width",realWidth+"px");
 		me.textarea2.css("top",top+200).css("left",(0+1200)+"px").css("width",realWidth+"px");
 		me.textarea3.css("top",top+200).css("left",(0+1200)+"px").css("width",realWidth+"px");
-		me.view.css("top",(me.textarea.height()+3)*-1).css("left",0+"px").css("width",realWidth+"px");
-		me.selectionView.css("top",(me.textarea.height()+3)*-2).css("left",0+"px").css("width",realWidth+"px");
-		me.caretSpacer.css("top",(me.textarea.height()+3)*-3).css("left",0+"px").css("width",realWidth+"px");
-		me.caretSpacerUpper.css("top",(me.textarea.height()+3)*-3).css("left",0+"px").css("width",realWidth+"px");
-		me.caret.css("top",(me.textarea.height()+3)*-3).css("left",0+"px").css("width",10+"px").css("height",me.lineHeight+"px");
+		me.view.css("top",(height+3)*-1).css("left",0+"px").css("width",realWidth+"px");
+		me.selectionView.css("top",(height+3)*-2-me.lineHeight).css("left",0+"px").css("width",realWidth+"px");
+		me.caretSpacer.css("top",(height+3)*-2).css("left",0+"px").css("width",realWidth+"px");
+		me.caretSpacerUpper.css("top",(height+3)*-2).css("left",0+"px").css("width",realWidth+"px");
+		me.caret.css("top",(height+3)*-2).css("left",0+"px").css("width",10+"px").css("height",me.lineHeight+"px");
 		me.lineNum.css("top",0).css("left",left);
 		me.outer.css("left",me.baseLineNumWidth+"px");
 		me.outer.width(document.getElementById(this.classIdPrefix +"Outer").scrollWidth-12);	

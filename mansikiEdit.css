@@ -10,7 +10,7 @@ input,textarea{
 	border:solid black 1px;
 	overflow:hidden;
 }
-div.rows{
+div.rows,div.selectedRows{
 	border:solid red 0px;
 	margin:0px;
 	padding:0px;
@@ -18,6 +18,10 @@ div.rows{
 	overflow:hidden;
 	word-wrap:word-break;
 	
+}
+div.selectedRows{
+	position:relative;
+	background-color:#010;
 }
 span.space{
 	word-spacing:0px;
