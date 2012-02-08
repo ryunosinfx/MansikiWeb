@@ -30,6 +30,12 @@ span.space{
 span.space2{
 	word-spacing:0px;
 	opacity:0;
+	background-color:#95FF00;
+}
+span.Selected{
+	word-spacing:0px;
+	opacity:1;
+	background-color:#95FF00;
 }
 div.nums{
 	border:solid red 0px;
