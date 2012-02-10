@@ -11,6 +11,7 @@ var HilightingEditor= function(id, width,height){
 	this.data = new Array();
 	this.dataConverted = new Array();
 	this.nowTime=new Date().getTime();
+	this.nowTimeFind=new Date().getTime();
 	this.selectedRowsObj=[];
 	this.waight=10;
 	this.timer;
@@ -20,9 +21,10 @@ var HilightingEditor= function(id, width,height){
 }
 
 HilightingEditor.prototype={
-	init:function(width,height){
+	init:function(width,height,findInput){
 		this.height = height;
 		this.width = width;
+		this.findInput=findInput;
 		
 		this.outerParent = $("<div class='"+this.className +"' id='"+this.classIdPrefix +"'></div>").css("overflow","hidden")
 			.css("position","relative").width(width+20).height(height+40)
@@ -98,6 +100,9 @@ HilightingEditor.prototype={
 		.css("back-ground-color","green").css("white-space","nowrap");
 		
 		this.textareaWidth = width-this.baseLineNumWidth;
+		this.rule = new HilightingSyntaxRule("find","findHilight","",undefined,"STRING","LINE");
+		this.findInput.bind("keypress",{"self":this},this.findInTheArea);
+		
 	},
 	onEdit:function(event){
 	
@@ -231,7 +236,7 @@ HilightingEditor.prototype={
 		me.lineNumInner.height(nowTotalHeight);		
 		me.view.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-1);		
 		me.selectionView.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-2-rowHeight);		
-		me.findView.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-2-rowHeight);		
+		me.findView.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-3-rowHeight);		
 		me.data = list.concat();//データにリストをコピー
 		me.nowTime=new Date().getTime();
 	},
@@ -334,7 +339,7 @@ HilightingEditor.prototype={
 		me.textarea3.css("top",top+200).css("left",(0+1200)+"px").css("width",realWidth+"px");
 		me.view.css("top",(height+3)*(me.layerTimes+3)).css("left",0+"px").css("width",realWidth+"px");
 		me.selectionView.css("top",(height+3)*(me.layerTimes+2)-me.lineHeight).css("left",0+"px").css("width",realWidth+"px");
-		me.findView.css("top",(height+3)*(me.layerTimes+2)-me.lineHeight).css("left",0+"px").css("width",realWidth+"px");
+		me.findView.css("top",(height+3)*(me.layerTimes+1)-me.lineHeight).css("left",0+"px").css("width",realWidth+"px");
 		me.caretSpacer.css("top",(height+3)*(me.layerTimes+2)).css("left",0+"px").css("width",realWidth+"px");
 		me.caretSpacerUpper.css("top",(height+3)*(me.layerTimes+2)).css("left",0+"px").css("width",realWidth+"px");
 		me.caret.css("top",(height+3)*-2).css("left",0+"px").css("width",10+"px").css("height",me.lineHeight+"px");
@@ -383,19 +388,22 @@ HilightingEditor.prototype={
     	return text.slice(start,end);
     },
     findInTheArea:function(event){
+		var nowTime=new Date().getTime();
     	var me = event.data.self;
-    	var value = event.data.target.val();
-    	var rule = event.data.rule;
-    	var list = me.getFormatedTextCRLF(me.textarea.val()).split("\n");
+    	if(nowTime-me.nowTimeFind<300){//指定時間内はスキップ
+			me.timerFind = setTimeout(function(){me.findInTheArea(event);},10);
+			return;
+		}
+    	me.rule.regix=me.findInput.val();
+    	var textList = me.getFormatedTextCRLF(me.textarea.val()).split("\n");
     	var viewHTML = "";
-    	for(var row in list){
-    		viewHTML += me.
+    	var hsRule = new HilightingSyntax();
+    	hsRule.addRule(me.rule);
+    	
+    	for(var rowIndex in textList){
+    		viewHTML += me.SyntaxHilighter.comvertStringToHTMLHilight(textList[rowIndex],hsRule,me.SyntaxHilighter)+"<br />";
     	}
-    	me.SyntaxHilighter.comvertStringToHTML();
-    	
-	}
-    selectFindText:function(){
-    	
+    	me.findView.html(viewHTML);
     }
 }
 var SyntaxHilighter = function(){
@@ -406,7 +414,7 @@ var SyntaxHilighter = function(){
 	this.maskReA2 = new RegExp(this.maskStringA2, "g");
 	this.maskReB1 = new RegExp(this.maskStringB1, "g");
 }
-SyntaxHilighter.prototype={,
+SyntaxHilighter.prototype={
 	comvertStringToHTML:function(str){//ここの処理はWorkerに投げたい。
 		str = str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/[　]{1}/g,"<span&nbsp;class='space2'>ぽ</span>")
 		.replace(/\t/g,"<pre&nbsp;style='display:inline;border:0px;margin:0px;padding:0px;'>&_#_0_9_;</pre>")
@@ -414,16 +422,34 @@ SyntaxHilighter.prototype={,
 		.replace(/pre&nbsp;style/g,"pre style").replace(/span&nbsp;class/g,"span class");
 		return str.replace(/[　]{1}/g,"<span class='space2'>&emsp;</span>1");
 	},
-	comvertStringToHTMLHilight:function(str,rule,me){//ここの処理はWorkerに投げたい。
-		var size = rule.getRouleList().length;
-		for(var i=0 ;i<size ;i++){
-			var hilightRule = rule.getRouleList()[i];
+	comvertStringToHTMLHilight:function(str,hsRule,me){//ここの処理はWorkerに投げたい。
+		var size = hsRule.getSize();
+    	//alert("size:"+size+"/");
+    	alert("A str:"+str+"/");
+		for(var priority in hsRule.getRouleList()){
+			var hilightRule = hsRule.getRouleList()[priority];
 			var rexStr = hilightRule.getRegix();
-			var re = new RegExp(rexStr.match("(")?rexStr:"("+rexStr+")","g");
+			
+    	//alert("A rexStr:"+rexStr+"/"+rexStr.match(/\(/));
+			rexStr=rexStr.match(/\(/)?rexStr:"("+rexStr+")";
+    	//alert("B rexStr:"+rexStr+"/");
+			var re = new RegExp(rexStr,"g");
 			var className= hilightRule.getCssClassName();
-			str.replace(re,me.maskStringA1+className+me.maskStringA2+re.$1+me.maskStringB1);
+			
+			str=str.replace(re,me.maskStringA1+className+me.maskStringA2+RegExp.$1+me.maskStringB1);
+    	//alert("C str:"+str+"/"+re.$1+"/"+rexStr+"/match:"+str.match(re)+"/"+me.maskStringA1+className+me.maskStringA2+re.$1+me.maskStringB1);
 		}
-		return me.comvertStringToHTML(str).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>");
+    	alert("B str:"+str+"/");
+    	var html = me.comvertStringToHTML(str);
+    	alert("B1 html:"+html+"/");
+    	html= html.replace(me.maskReA1,"<span class='");
+    	alert("B2 html:"+html+"/");
+    	html= html.replace(me.maskReA2,"'>");
+    	alert("B3 html:"+html+"/");
+    	html= html.replace(me.maskReB1,"</span>");
+    	alert("B4 html:"+html+"/");
+    	return html;
+		//return me.comvertStringToHTML(str).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>");
 	}
 	
 }
@@ -440,12 +466,31 @@ HilightingSyntax.prototype={
 	addRule:function(hilightingSyntaxRule,priority){
 		this.ruleList[priority]=hilightingSyntaxRule;
 	},
+	sortRuleByPriority:function(){
+		var keys=[];
+		var newMap={};
+		for (var priority in this.ruleList){
+			keys.push(priority);
+		}
+		keys.sort();
+		for(var i =0;i<keys.length;i++){
+			newMap[keys[i]]=this.ruleList[keys[i]];
+		}
+		this.ruleList=newMap;
+	},
+	getSize:function(){
+		var count = 0;
+		for (var priority in this.ruleList){
+			count++;
+		}
+		return count;
+	},
 	getRouleList:function(){
 		return this.ruleList;
 	}
 	
 }
-var HilightingSyntaxRule=fanction(name,cssClassName,regix,preRoule,type,scope){
+var HilightingSyntaxRule=function(name,cssClassName,regix,preRoule,type,scope){
 	this.name=name;
 	this.cssClassName=cssClassName;
 	this.regix=regix;

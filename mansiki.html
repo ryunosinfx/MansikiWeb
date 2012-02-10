@@ -10,7 +10,7 @@
 	<script type="text/javascript">
 		$(document).ready(function(){
 			var he = new HilightingEditor("test");
-			he.init(500,400);
+			he.init(500,400,$("#findOnEditor"));
 			he.attatchMainTre($("#ancer"));
 		});
 	</script>
@@ -22,6 +22,7 @@
 		<article>
 			<from>
 			<h1>タイトル！</h1>
+			<input id="findOnEditor" type="text" />
 			<div id="ancer"></div>
 			<textarea class='inputText2'></textarea>
 			<textarea class='inputText3'></textarea>
