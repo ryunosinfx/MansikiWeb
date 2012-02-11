@@ -37,6 +37,12 @@ span.Selected{
 	opacity:1;
 	background-color:#95FF00;
 }
+span.findHilight{
+	word-spacing:0px;
+	opacity:1;
+	background-color:#FF8800;
+	color:red;
+}
 div.nums{
 	border:solid red 0px;
 	margin:0px;

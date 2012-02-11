@@ -236,8 +236,9 @@ HilightingEditor.prototype={
 		me.lineNumInner.height(nowTotalHeight);		
 		me.view.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-1);		
 		me.selectionView.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-2-rowHeight);		
-		me.findView.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-3-rowHeight);		
+		me.findView.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-3-rowHeight-2);		
 		me.data = list.concat();//データにリストをコピー
+		me.findInTheArea({"data":{"self":me}});
 		me.nowTime=new Date().getTime();
 	},
 	onSelected:function(me,currentCaret,currentEnd,text,caretRowNo,maxWidth,rowHeight,nowCaretLeft,nowTime){
@@ -424,32 +425,15 @@ SyntaxHilighter.prototype={
 	},
 	comvertStringToHTMLHilight:function(str,hsRule,me){//ここの処理はWorkerに投げたい。
 		var size = hsRule.getSize();
-    	//alert("size:"+size+"/");
-    	alert("A str:"+str+"/");
 		for(var priority in hsRule.getRouleList()){
 			var hilightRule = hsRule.getRouleList()[priority];
 			var rexStr = hilightRule.getRegix();
-			
-    	//alert("A rexStr:"+rexStr+"/"+rexStr.match(/\(/));
 			rexStr=rexStr.match(/\(/)?rexStr:"("+rexStr+")";
-    	//alert("B rexStr:"+rexStr+"/");
 			var re = new RegExp(rexStr,"g");
 			var className= hilightRule.getCssClassName();
-			
-			str=str.replace(re,me.maskStringA1+className+me.maskStringA2+RegExp.$1+me.maskStringB1);
-    	//alert("C str:"+str+"/"+re.$1+"/"+rexStr+"/match:"+str.match(re)+"/"+me.maskStringA1+className+me.maskStringA2+re.$1+me.maskStringB1);
+			str=str.replace(re,function(str, p1, offset, s){return me.maskStringA1+className+me.maskStringA2+p1+me.maskStringB1;});
 		}
-    	alert("B str:"+str+"/");
-    	var html = me.comvertStringToHTML(str);
-    	alert("B1 html:"+html+"/");
-    	html= html.replace(me.maskReA1,"<span class='");
-    	alert("B2 html:"+html+"/");
-    	html= html.replace(me.maskReA2,"'>");
-    	alert("B3 html:"+html+"/");
-    	html= html.replace(me.maskReB1,"</span>");
-    	alert("B4 html:"+html+"/");
-    	return html;
-		//return me.comvertStringToHTML(str).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>");
+		return me.comvertStringToHTML(str).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>");
 	}
 	
 }
