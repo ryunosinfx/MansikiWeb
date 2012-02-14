@@ -134,8 +134,8 @@ HilightingEditor.prototype={
 		var isAddedRows= nowTotalHeight>me.height;
 		nowTotalHeight=isAddedRows?nowTotalHeight:me.height;
 		var topLog="";
-		var offsetYUpper = (me.selectionView.height()*(me.layerTimes*-1)+rowHeight+3)*-1;
 		var diff = domRows.length - list.length;
+		var offsetYUpper = (me.selectionView.height()*(me.layerTimes*-1)+rowHeight*(isAddedRows && diff > 0 ? me.layerTimes+1:1)+3)*-1;
 		var caretRowNo=0;
 		var nowCaretLeft=0;
 		//行単位で処理
@@ -181,12 +181,13 @@ HilightingEditor.prototype={
 			rowNum.html(i+1);//行番号表示
 			
 			if(isCaretRow){//var stringAtCaret ="A";//キャレットの表示//caretsカーソル
-			alText2+="/["+i+"]:"+rowTextLength;
+				alText2+="/["+i+"]:"+rowTextLength;
 				domRow = domRows.eq(i).css("background-color",me.caretRowColor);
 				var position = domRow.position();//位置を取得
 				var topCaret = position.top;//topLog+="/["+i+"]:"+topCaret;
 				var left = position.left + rowNum.attr('clientWidth');
-				me.caretSpacerUpper.css("top",topCaret+offsetYUpper+(isAddedRows && diff > 0?(rowHeight*diff*2):0)-2);		//カーソル上空間
+				var caretTop = topCaret+offsetYUpper+(isAddedRows ? rowHeight*(diff*2+(diff!=0 ? -2:0)):0)-2;
+				me.caretSpacerUpper.css("top",caretTop);		//カーソル上空間
 				me.caretSpacer.css("top",topCaret+offsetYUpper*2).width(0).html(comverted);	//カーソル左空間//カーソル上空間にカーソル位置より上空間に回りこみ断片を導入
 			}
 			me.textarea3.val(atCurrentCaret+":"+currentCaret+"/"+rowTextLength+"/"+amountLength+"/i:"+i+"/"+domRow.width()+"/"+maxWidth+"/\n"+alText);
@@ -210,11 +211,11 @@ HilightingEditor.prototype={
 			if(isCaretRow){
 				me.caretSpacerUpper.html(me.SyntaxHilighter.comvertStringToHTML(rowText.substring(0,atCurrentCaret)));				//カーソルまでの修飾済み文字列を設定
 				me.caretSpacerUpper.width(0);
-				me.caret.css("top",topCaret+offsetYUpper*1-rowHeight+(isAddedRows?(rowHeight*diff*2):0)-4);
+				me.caret.css("top",caretTop-rowHeight-2);//キャレット最終位置
 				nowCaretLeft=me.fetchWidth(document.getElementById(me.classIdPrefix+"Upper"),rowHeight,true);
 				me.caretSpacerUpper.width(nowCaretLeft);
 				me.caret.css("left",nowCaretLeft).text("A");
-				me.textarea2.val(atCurrentCaret+":"+currentCaret+"/"+rowTextLength+"/"+amountLength+"/i:"+i+"/offsetYUpper:"+offsetYUpper+"/rowHeight:"+rowHeight+"/a:"+(topCaret+offsetYUpper*1-rowHeight-2)+"/top:"+topCaret+"/left:"+left+"/width:"+width+"\n"+topLog);
+				me.textarea2.val(atCurrentCaret+":"+currentCaret+"/"+rowTextLength+"/"+amountLength+"/i:"+i+"/caretTop:"+caretTop+"/diff:"+diff+"/offsetYUpper:"+offsetYUpper+"/rowHeight:"+rowHeight+"/a:"+(topCaret+offsetYUpper*1-rowHeight-2)+"/top:"+topCaret+"/left:"+left+"/width:"+width+"\n"+topLog);
 			}
 		}
 		//ここまでで処理が完了する。
@@ -225,7 +226,7 @@ HilightingEditor.prototype={
 		for(var j=0;j<domRows.length;j++){
 			domRow = domRows.eq(j)
 			var domRowDom=document.getElementById(domRow.attr('id'));
-			if(maxWidth!=domRowDom.style.width.replace(/px/,"")*1){
+			if(domRowDom!=null && maxWidth!=domRowDom.style.width.replace(/px/,"")*1){
 				domRowDom.style.width=maxWidth;
 			}
 		}
@@ -270,7 +271,6 @@ HilightingEditor.prototype={
 		}else {
 			me.removeSelectedObjs(me);
 		}
-		
 	},
 	removeSelectedObjs:function(me){
 		var rows=me.selectionView.children(".selectedRows");
@@ -335,7 +335,7 @@ HilightingEditor.prototype={
 		var realWidth = (me.width - size);
 		var height = me.textarea.height();
 		me.frame.css("left",realLeft+"px");
-		me.textarea.css("top",top).css("left",0+"px").css("width",realWidth+"px");
+		me.textarea.css("top","0px").css("left",0+"px").css("width",realWidth+"px");
 		me.textarea2.css("top",top+200).css("left",(0+1200)+"px").css("width",realWidth+"px");
 		me.textarea3.css("top",top+200).css("left",(0+1200)+"px").css("width",realWidth+"px");
 		me.view.css("top",(height+3)*(me.layerTimes+3)).css("left",0+"px").css("width",realWidth+"px");
@@ -395,6 +395,7 @@ HilightingEditor.prototype={
 			me.timerFind = setTimeout(function(){me.findInTheArea(event);},10);
 			return;
 		}
+		//console(me.textarea.val());
     	me.rule.regix=me.findInput.val();
     	var textList = me.getFormatedTextCRLF(me.textarea.val()).split("\n");
     	var viewHTML = "";
@@ -434,8 +435,10 @@ SyntaxHilighter.prototype={
 			str=str.replace(re,function(str, p1, offset, s){return me.maskStringA1+className+me.maskStringA2+p1+me.maskStringB1;});
 		}
 		return me.comvertStringToHTML(str).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>");
+	},
+	comvertStringToHTMLHilight:function(str,hsRule,me){
+		
 	}
-	
 }
 var HilightingSyntax= function(){
 	this.ruleList={};
@@ -443,7 +446,7 @@ var HilightingSyntax= function(){
 HilightingSyntax.prototype={
 	createRule:function(name,cssClassName,regix,preRoule,type,scope,priority){
 		if(priority===undefined){
-			priority="aaaa";//なんできめられないんだっけ？
+			priority="aaaa"+this.getSize();;//なんできめられないんだっけ？
 		}
 		this.ruleList[priority]=new HilightingSyntaxRule(name,cssClassName,regix,preRoule,type,scope);
 	},
