@@ -484,6 +484,7 @@ var HilightingSyntaxRule=function(name,cssClassName,regix,preRoule,type,scope){
 	this.preRoule=preRoule;//必須条件
 	this.type=type;//行なのか文字列なのか
 	this.scope=scope;//ページとするのか、
+	this.callback=callback;
 }
 HilightingSyntaxRule.prototype={
 	getName:function(){
@@ -503,6 +504,9 @@ HilightingSyntaxRule.prototype={
 	},
 	getScope:function(){
 		return this.scope;
+	},
+	setCallBack:function(callback){
+		this.callback=callback;
 	}
 }
 
