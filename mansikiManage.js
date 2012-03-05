@@ -19,35 +19,35 @@ function buildMansikiHilight(){
 	pageRule.setCallBack(callbackFunc);
 	list.addRule(pageRule,"AAAA");
 	//コマ単位
-	var komaRule =new HilightingSyntaxRule(name,"koma","^[Koma](.+)$","","koma","koma");
+	var komaRule =new HilightingSyntaxRule(name,"koma","^\s*[Koma](.+)$","","koma","koma");
 	komaRule.setCallBack(callbackFunc);
 	list.addRule(pageRule,"BAAA");
 	//吹き出し単位
-	var fukidashiRule =new HilightingSyntaxRule(name,"fukidashi","^【([^】]+)】[()] ()","","fukidashi","koma");
+	var fukidashiRule =new HilightingSyntaxRule(name,"fukidashi","^\s*【([^】]+)】[()] ()","","fukidashi","koma");
 	fukidashiRule.setCallBack(callbackFunc);
 	list.addRule(fukidashiRule,"BBA");
 	//ナレーション単位
-	var nalationRule =new HilightingSyntaxRule(name,"nalation","^NA(.+)$","","nalation","koma");
+	var nalationRule =new HilightingSyntaxRule(name,"nalation","^\s*NA(.+)$","","nalation","koma");
 	nalationRule.setCallBack(callbackFunc);
 	list.addRule(nalationRule,"BBBA");
 	//シーン単位
-	var seanRule =new HilightingSyntaxRule(name,"sean","()()()","","sean","koma");
+	var seanRule =new HilightingSyntaxRule(name,"sean","^\s*S(.+)$","","sean","koma");
 	seanRule.setCallBack(callbackFunc);
 	list.addRule(seanRule,"BBBA");
 	//背景単位
-	var backgroundRule =new HilightingSyntaxRule(name,"background","()()()","","background","koma");
+	var backgroundRule =new HilightingSyntaxRule(name,"background","^\s*BG(.+)$","","background","koma");
 	backgroundRule.setCallBack(callbackFunc);
 	list.addRule(backgroundRule,"BBBA");
 	//設定単位
-	var settingRule =new HilightingSyntaxRule(name,"setting","()()()","","setting","koma");
+	var settingRule =new HilightingSyntaxRule(name,"setting","^\s*set(.+)$","","setting","koma");
 	settingRule.setCallBack(callbackFunc);
 	list.addRule(settingRule,"BBCA");
 	//ノート単位
-	var noteRule =new HilightingSyntaxRule(name,"note","()()()","","note","koma");
+	var noteRule =new HilightingSyntaxRule(name,"note","^\s*Note(.+)$","","note","koma");
 	noteRule.setCallBack(callbackFunc);
 	list.addRule(noteRule,"BBCB");
 	//注釈単位
-	var quoteRule =new HilightingSyntaxRule(name,"quote","()()()","","quote","koma");
+	var quoteRule =new HilightingSyntaxRule(name,"quote","^\s*Quote(.+)$","","quote","koma");
 	quoteRule.setCallBack(callbackFunc);
 	list.addRule(quoteRule,"BBCC");
 	//ページ区切り
@@ -72,6 +72,8 @@ var MansikiRowCondition = function(preRow,text,regexp,type){
 		,"background":function(text){return new MansikiBackgroundManager(text);}//背景
 		,"note":function(text){return new MansikiNoteManager(text);}//ノート
 		,"quote":function(text){return new MansikiQuoteManager(text);}//注釈
+		,"review":function(text){return new MansikiQuoteManager(text);}//注釈
+		,"comment":function(text){return new MansikiQuoteManager(text);}//注釈
 	}
 	this.RowObje=this.func[type]();
 }
@@ -120,7 +122,17 @@ var MansikiWorkManager = function(){
 	this.rowSetting=[];
 	this.rowConditionList=[];
 	this.rowConditionListOld=[];
-	this.funcs={};
+	this.funcs={"test":"test"
+		,"page":function(rowStat){var pi= rowstat.pageIndex;rowstat.clear();rowstat.pageIndex=pi;}
+		,"koma":function(rowStat){}
+		,"fukidashi":function(rowStat){}
+		,"nalation":function(rowStat){}
+		,"sean":function(rowStat){}
+		,"background":function(rowStat){}
+		,"setting":function(rowStat){}
+		,"note":function(rowStat){}
+		,"quote":function(rowStat){}
+		};
 	this.currentRowStat=new MansikiRowStat();
 }
 MansikiWorkManager.prototype={
@@ -140,8 +152,11 @@ MansikiWorkManager.prototype={
 		this.rowConditionList.push(newRowObj);
 		return newRowObj.getFormatedRow();//ここで行の内容を書き換える
 	},
-	makeRowStat:function(){
-		return new MansikiRowStat();
+	makeRowStat:function(type){
+		 var rowstat =new MansikiRowStat();
+		rowstat.copy(this.currentRowStat);
+		
+		return rowstat;
 	},
 	addPage:function(page){
 		this.pageList.push(page);
@@ -449,12 +464,67 @@ var MansikiRowStat=function(){
 	this.fukidashiIndex;
 	this.nalationIndex;
 	this.seanIndex;
-	this.backgroundIndex;
 	this.settingIndex;
+	this.backgroundIndex;
 	this.noteIndex;
 	this.quoteIndex;
+	this.reviewIndex;
+	this.commentIndex;
+	this.rowColor;
+	this.indentLevel;
 }
 MansikiRowStat.prototype={
+	addPage:function(preRowStat){
+		this.pageIndex=preRowStat.pageIndex+1;
+	},
+	clean:function(type){
+		var funcs ={"func":fucntion(text,self){alert(text);}
+			,"page":function(self){self.pageIndex=0;}//ページ
+			,"koma":function(self){self.komaIndex=0;}//コマ
+			,"fukidashi":function(self){self.fukidashiIndex=0;}//吹き出し
+			,"nalation":function(self){self.nalationIndex=0;}//ナレーション
+			,"sean":function(self){self.seanIndex=0;}//シーン
+			,"setting":function(self){self.settingIndex=0;}//設定
+			,"background":function(self){self.backgroundIndex=0;}//背景
+			,"note":function(self){self.noteIndex=0;}//ノート
+			,"quote":function(self){self.quoteIndex=0;}//注釈
+			,"review":function(self){self.reviewIndex=0;}//レビュー記録
+			,"comment":function(self){self.commentIndex=0;}//コメント
+			,"rowColor":function(self){self.rowColor="";}//カラー
+			,"indentLevel":function(self){self.indentLevel=0;}//注釈
+		};
+	},
+	cleanPage:function(){this.clean("page");},
+	cleanKoma:function(){this.clean("koma");},
+	cleanFukidashi:function(){this.clean("fukidashi");},
+	cleanNalation:function(){this.clean("nalation");},
+	cleanSean:function(){this.clean("sean");},
+	cleanSetting:function(){this.clean("setting");},
+	cleanBackground:function(){this.clean("background");},
+	cleanNote:function(){this.clean("note");},
+	cleanQuote:function(){this.clean("quote");},
+	cleanReview:function(){this.clean("review");},
+	cleanComment:function(){this.clean("comment");},
+	cleanRowColor:function(){this.clean("rowColor");},
+	cleanIndentLevel:function(){this.clean("indentLevel");},
+	copy:function(preRowStat){
+		this.pageIndex = preRowStat.pageIndex;
+		this.komaIndex = preRowStat.komaIndex;
+		this.fukidashiIndex = preRowStat.fukidashiIndex;
+		this.nalationIndex = preRowStat.nalationIndex;
+		this.seanIndex = preRowStat.seanIndex;
+		this.backgroundIndex = preRowStat.backgroundIndex;
+		this.settingIndex = preRowStat.settingIndex;
+		this.noteIndex = preRowStat.noteIndex;
+		this.quoteIndex = preRowStat.quoteIndex;
+		this.reviewIndex = preRowStat.reviewIndex;
+		this.commentIndex = preRowStat.commentIndex;
+		this.rowColor = preRowStat.rowColor;
+		this.indentLevel = preRowStat.indentLevel;
+	},
+	:function(){
+	
+	},
 	
 }
 //
