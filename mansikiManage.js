@@ -1,59 +1,9 @@
 //諸事情によりグローバルに置く
 var mansikiWorkMng;
 function MansikiInit(){
-	var text ;
 	mansikiWorkMng = new MansikiWorkManager();
 }
 //こりゃあかん、作品単位での管理が必要
-
-function buildMansikiHilight(){
-	var list = new HilightingSyntax();
-	var callbackFunc = function(pre,text,regexp,type){
-		if(mansikiWorkMng===undefined){
-			return ;
-		}
-		return mansikiWorkMng.add(pre,text,regexp,type);//
-	};
-	//ページ単位 name,cssClassName,regix,preRoule,type,scope
-	var pageRule =new HilightingSyntaxRule(name,"page","^[Page](.+)$","","page","page");
-	pageRule.setCallBack(callbackFunc);
-	list.addRule(pageRule,"AAAA");
-	//コマ単位
-	var komaRule =new HilightingSyntaxRule(name,"koma","^\s*[Koma](.+)$","","koma","koma");
-	komaRule.setCallBack(callbackFunc);
-	list.addRule(pageRule,"BAAA");
-	//吹き出し単位
-	var fukidashiRule =new HilightingSyntaxRule(name,"fukidashi","^\s*【([^】]+)】[()] ()","","fukidashi","koma");
-	fukidashiRule.setCallBack(callbackFunc);
-	list.addRule(fukidashiRule,"BBA");
-	//ナレーション単位
-	var nalationRule =new HilightingSyntaxRule(name,"nalation","^\s*NA(.+)$","","nalation","koma");
-	nalationRule.setCallBack(callbackFunc);
-	list.addRule(nalationRule,"BBBA");
-	//シーン単位
-	var seanRule =new HilightingSyntaxRule(name,"sean","^\s*S(.+)$","","sean","koma");
-	seanRule.setCallBack(callbackFunc);
-	list.addRule(seanRule,"BBBA");
-	//背景単位
-	var backgroundRule =new HilightingSyntaxRule(name,"background","^\s*BG(.+)$","","background","koma");
-	backgroundRule.setCallBack(callbackFunc);
-	list.addRule(backgroundRule,"BBBA");
-	//設定単位
-	var settingRule =new HilightingSyntaxRule(name,"setting","^\s*set(.+)$","","setting","koma");
-	settingRule.setCallBack(callbackFunc);
-	list.addRule(settingRule,"BBCA");
-	//ノート単位
-	var noteRule =new HilightingSyntaxRule(name,"note","^\s*Note(.+)$","","note","koma");
-	noteRule.setCallBack(callbackFunc);
-	list.addRule(noteRule,"BBCB");
-	//注釈単位
-	var quoteRule =new HilightingSyntaxRule(name,"quote","^\s*Quote(.+)$","","quote","koma");
-	quoteRule.setCallBack(callbackFunc);
-	list.addRule(quoteRule,"BBCC");
-	//ページ区切り
-	//見開き
-	return 
-}
 //LinkedListで
 var MansikiRowCondition = function(preRow,text,regexp,type){
 	this.rowColor="";
@@ -62,7 +12,7 @@ var MansikiRowCondition = function(preRow,text,regexp,type){
 	this.text=text;
 	this.preRow=preRow;
 	this.regexp=regexp;
-	this.func={"func":fucntion(text){alert(text);}
+	this.func={"func":function(text){alert(text);}
 		,"page":function(text){return new MansikiPageManager(text);}//ページ
 		,"koma":function(text){return new MansikiKomaManager(text);}//コマ
 		,"fukidashi":function(text){return new MansikiFukidashiManager(text);}//吹き出し
@@ -109,10 +59,9 @@ MansikiRowCondition.prototype={
 }
 //固定打ちというか一行目はこのデータであるべきだよね。
 var MansikiWorkManager = function(){
-	this.title=title;
+	this.title;
 	this.pageDiarect;
 	this.pageStartSide;
-	this.title=title;
 	this.pagNum;
 	this.komaIndex;
 	this.komaNum;
@@ -122,6 +71,7 @@ var MansikiWorkManager = function(){
 	this.rowSetting=[];
 	this.rowConditionList=[];
 	this.rowConditionListOld=[];
+	this.rowStats=[];
 	this.funcs={"test":"test"
 		,"page":function(rowStat){var pi= rowstat.pageIndex;rowstat.clear();rowstat.pageIndex=pi;}
 		,"koma":function(rowStat){}
@@ -134,28 +84,79 @@ var MansikiWorkManager = function(){
 		,"quote":function(rowStat){}
 		};
 	this.currentRowStat=new MansikiRowStat();
+	this.hilightRules;
+	this.buildMansikiHilight();
 }
 MansikiWorkManager.prototype={
+	buildMansikiHilight:function (){
+		var list = new HilightingSyntax();
+		var callbackFunc = function(text,regexp,type){
+			//alert("callback!!!");
+			if(mansikiWorkMng===undefined){
+				return ;
+			}
+			///alert("callback!!!");
+			return mansikiWorkMng.add(text,regexp,type,mansikiWorkMng);//
+		};
+		//ページ単位 name,cssClassName,regix,preRoule,type,scope
+		var pageRule =new HilightingSyntaxRule(name,"page","^\\\[Page\\\](.+)$","","page","page",callbackFunc,"[Page]");
+		list.addRule(pageRule,"AAAA");
+		//コマ単位
+		var komaRule =new HilightingSyntaxRule(name,"koma","^\s*\[Koma\](.+)$","","koma","koma",callbackFunc,"[Koma]");
+		list.addRule(pageRule,"BAAA");
+		//吹き出し単位
+		var fukidashiRule =new HilightingSyntaxRule(name,"fukidashi","^\s*【([^】]+)】\[()\] ()","","fukidashi","koma",callbackFunc,"【Koma】");
+		list.addRule(fukidashiRule,"BBA");
+		//ナレーション単位
+		var nalationRule =new HilightingSyntaxRule(name,"nalation","^\s*NA(.+)$","","nalation","koma",callbackFunc,"  NA:");
+		list.addRule(nalationRule,"BBBA");
+		//シーン単位
+		var seanRule =new HilightingSyntaxRule(name,"sean","^\s*S:(.+)$","","sean","koma",callbackFunc,"S:");
+		list.addRule(seanRule,"BBBA");
+		//背景単位
+		var backgroundRule =new HilightingSyntaxRule(name,"background","^\s*BG:(.+)$","","background","koma",callbackFunc,"    BG:");
+		list.addRule(backgroundRule,"BBBA");
+		//設定単位
+		var settingRule =new HilightingSyntaxRule(name,"setting","^\s*set:(.+)$","","setting","koma",callbackFunc,"    set:");
+		list.addRule(settingRule,"BBCA");
+		//ノート単位
+		var noteRule =new HilightingSyntaxRule(name,"note","^\s*Note:(.+)$","","note","koma",callbackFunc,"    Note:");
+		list.addRule(noteRule,"BBCB");
+		//注釈単位
+		var quoteRule =new HilightingSyntaxRule(name,"quote","^\s*Quote:(.+)$","","quote","koma",callbackFunc,"    Quote:");
+		list.addRule(quoteRule,"BBCC");
+		//ページ区切り
+		//見開き
+		this.hilightRules= list;
+	},
+	getHilightRules:function(){
+		return this.hilightRules;
+	},
 	startRefresh:function(){
 		this.rowConditionListOld=this.rowConditionList;
 		this.rowConditionList=[];
 	},
-	add:function(pre,text,regexp,type){//基本
-		var size = this.rowConditionList.length;
-		var oldRowObj = this.rowConditionListOld[size];
-		if(oldRowObj!==undefined && oldRowObj.text===text){
-			oldRowObj.preRow=pre;
-			this.rowConditionList.push(oldRowObj);
-			return oldRowObj.getFormatedRow();//ここで行の内容を書き換える
+	add:function(text,regexp,type,me){//基本
+		var size = me.rowConditionList.length;
+		if(size > 0){
+			var pre = me.rowConditionList[size-1];
+			var oldRowObj = me.rowConditionListOld[size];
+			if(oldRowObj!==undefined && oldRowObj.text===text){
+				oldRowObj.preRow=pre;
+				this.rowConditionList.push(oldRowObj);
+				return oldRowObj.getFormatedRow();//ここで行の内容を書き換える
+			}
 		}
 		var newRowObj= new MansikiRowCondition(pre,text,regexp,type);
-		this.rowConditionList.push(newRowObj);
+		me.rowConditionList.push(newRowObj);
+		me.rowStats.push(me.makeRowStat(type,me));
+		//alert("now!now!");
 		return newRowObj.getFormatedRow();//ここで行の内容を書き換える
 	},
-	makeRowStat:function(type){
+	makeRowStat:function(me,type){
 		 var rowstat =new MansikiRowStat();
-		rowstat.copy(this.currentRowStat);
-		
+		rowstat.copy(me.currentRowStat,type);
+		rowstat.nowStat();
 		return rowstat;
 	},
 	addPage:function(page){
@@ -170,9 +171,9 @@ MansikiWorkManager.prototype={
 	getSide:function(index){
 	
 	},
-	,init(title,author,license,pageDirect,startSide,){
+	init:function(title,author,license,pageDirect,startSide){
 	
-	}
+	},
 	getFormatedRow:function(){
 		return "";
 	}
@@ -241,10 +242,10 @@ MansikiKomaManager.prototype={
 	feedStat:function(rowStat){
 		this.rowStat=rowStat;
 	},
-	checkParentPage;function(){
+	checkParentPage:function(){
 		
 	},
-	update;function(){
+	update:function(){
 	
 	},
 	getFormatedRow:function(){
@@ -478,7 +479,7 @@ MansikiRowStat.prototype={
 		this.pageIndex=preRowStat.pageIndex+1;
 	},
 	clean:function(type){
-		var funcs ={"func":fucntion(text,self){alert(text);}
+		var funcs ={"func":function(text,self){alert(text);}
 			,"page":function(self){self.pageIndex=0;}//ページ
 			,"koma":function(self){self.komaIndex=0;}//コマ
 			,"fukidashi":function(self){self.fukidashiIndex=0;}//吹き出し
@@ -507,7 +508,11 @@ MansikiRowStat.prototype={
 	cleanComment:function(){this.clean("comment");},
 	cleanRowColor:function(){this.clean("rowColor");},
 	cleanIndentLevel:function(){this.clean("indentLevel");},
-	copy:function(preRowStat){
+	copy:function(preRowStat,type){
+		if(preRowStat===undefined){
+			this.clean(type);
+			return ;
+		}
 		this.pageIndex = preRowStat.pageIndex;
 		this.komaIndex = preRowStat.komaIndex;
 		this.fukidashiIndex = preRowStat.fukidashiIndex;
@@ -522,9 +527,9 @@ MansikiRowStat.prototype={
 		this.rowColor = preRowStat.rowColor;
 		this.indentLevel = preRowStat.indentLevel;
 	},
-	:function(){
-	
-	},
+	nowStat:function(){
+		$("#inputText4").val(this.toSource());
+	}
 	
 }
 //

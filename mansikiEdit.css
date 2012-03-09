@@ -76,5 +76,18 @@ div.inneredit textarea{
 span.lsa{
 	letter-spacing:-2px;
 }
+/*---------------------------*/
+
+span.page{
+	color:red;
+}
+span.page_prefix{
+	color:red;
+	text-decoration:underline overline;
+	background-color:white;
+	font-weight:bold;
+	letter-spacing: -1px;
+}
+
 
 
