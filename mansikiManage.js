@@ -5,7 +5,7 @@ function MansikiInit(){
 }
 //こりゃあかん、作品単位での管理が必要
 //LinkedListで
-var MansikiRowCondition = function(preRow,text,regexp,type){
+var MansikiRowCondition = function(preRow,text,regexp,type,rowstat){
 	this.rowColor="";
 	this.textColer="";
 	this.rowType=type;
@@ -13,19 +13,19 @@ var MansikiRowCondition = function(preRow,text,regexp,type){
 	this.preRow=preRow;
 	this.regexp=regexp;
 	this.func={"func":function(text){alert(text);}
-		,"page":function(text){return new MansikiPageManager(text);}//ページ
-		,"koma":function(text){return new MansikiKomaManager(text);}//コマ
-		,"fukidashi":function(text){return new MansikiFukidashiManager(text);}//吹き出し
-		,"nalation":function(text){return new MansikiNalationManager(text);}//ナレーション
-		,"sean":function(text){return new MansikiSeanManager(text);}//シーン
-		,"setting":function(text){return new MansikisettingManager(text);}//設定
-		,"background":function(text){return new MansikiBackgroundManager(text);}//背景
-		,"note":function(text){return new MansikiNoteManager(text);}//ノート
-		,"quote":function(text){return new MansikiQuoteManager(text);}//注釈
-		,"review":function(text){return new MansikiQuoteManager(text);}//注釈
-		,"comment":function(text){return new MansikiQuoteManager(text);}//注釈
+		,"page":function(text,rowstat){return new MansikiPageManager(text,rowstat);}//ページ
+		,"koma":function(text,rowstat){return new MansikiKomaManager(text,rowstat);}//コマ
+		,"fukidashi":function(text,rowstat){return new MansikiFukidashiManager(text,rowstat);}//吹き出し
+		,"nalation":function(text,rowstat){return new MansikiNalationManager(text,rowstat);}//ナレーション
+		,"sean":function(text,rowstat){return new MansikiSeanManager(text,rowstat);}//シーン
+		,"setting":function(text,rowstat){return new MansikisettingManager(text,rowstat);}//設定
+		,"background":function(text,rowstat){return new MansikiBackgroundManager(text,rowstat);}//背景
+		,"note":function(text,rowstat){return new MansikiNoteManager(text,rowstat);}//ノート
+		,"quote":function(text,rowstat){return new MansikiQuoteManager(text,rowstat);}//注釈
+		,"review":function(text,rowstat){return new MansikiQuoteManager(text,rowstat);}//注釈
+		,"comment":function(text,rowstat){return new MansikiQuoteManager(text,rowstat);}//注釈
 	}
-	this.RowObje=this.func[type]();
+	this.RowObje=this.func[type](text,rowstat);
 }
 MansikiRowCondition.prototype={
 	getParentObj:function(type){//再帰でたどる
@@ -37,6 +37,9 @@ MansikiRowCondition.prototype={
 			}
 		}
 		return "";
+	},
+	updateRowStat:function(rowstat){
+		this.RowObje.rowstat= rowstat;
 	},
 	checkHasParentObj:function(){
 		
@@ -54,7 +57,18 @@ MansikiRowCondition.prototype={
 		return this.RowObje;
 	},
 	getFormatedRow:function(){
-		return this.RowObje.getFormatedRow();
+		var formated = this.RowObje.getFormatedRow();
+		if(formated===undefined || formated.length <1){
+			return this.text;
+		}
+		return formated;
+	},
+	getRowColor:function(){
+		var bgColor = this.RowObje.getRowColor();
+		if(bgColor===undefined || bgColor.length <1){
+			return "";
+		}
+		return bgColor;
 	}
 }
 //固定打ちというか一行目はこのデータであるべきだよね。
@@ -71,17 +85,20 @@ var MansikiWorkManager = function(){
 	this.rowSetting=[];
 	this.rowConditionList=[];
 	this.rowConditionListOld=[];
-	this.rowStats=[];
-	this.funcs={"test":"test"
-		,"page":function(rowStat){var pi= rowstat.pageIndex;rowstat.clear();rowstat.pageIndex=pi;}
-		,"koma":function(rowStat){}
-		,"fukidashi":function(rowStat){}
-		,"nalation":function(rowStat){}
-		,"sean":function(rowStat){}
-		,"background":function(rowStat){}
-		,"setting":function(rowStat){}
-		,"note":function(rowStat){}
-		,"quote":function(rowStat){}
+	this.rowStats={};
+	this.rowStatsOld={};
+	this.rowStatEditorFuncs={"test":"test" //page>koma>hukidashi=nalation=sean=background=setting=note=quote
+		,"page":function(rs){var pi= rs.pageIndex;rs.clear();rs.addOne("page",pi); return rs;}
+		,"koma":function(rs){var pi= rs.pageIndex;var ki=rs.komaIndex;rs.clear();rs.pageIndex=pi;rs.addOne("koma",ki); return rs;}
+		,"fukidashi":function(rs){rs.addOne("fukidashi",ki); return rs;}
+		,"nalation":function(rs){rs.addOne("nalation",ki); return rs;}
+		,"sean":function(rs){rs.addOne("sean",ki);return rs;}
+		,"background":function(rs){rs.addOne("background",ki); return rs;}
+		,"setting":function(rs){rs.addOne("setting",ki); return rs;}
+		,"note":function(rs){rs.addOne("note",ki); return rs;}
+		,"quote":function(rs){rs.addOne("quote",ki); return rs;}
+		,"review":function(rs){rs.addOne("review",ki); return rs;}
+		,"comment":function(rs){rs.addOne("comment",ki); return rs;}
 		};
 	this.currentRowStat=new MansikiRowStat();
 	this.hilightRules;
@@ -90,22 +107,22 @@ var MansikiWorkManager = function(){
 MansikiWorkManager.prototype={
 	buildMansikiHilight:function (){
 		var list = new HilightingSyntax();
-		var callbackFunc = function(text,regexp,type){
-			//alert("callback!!!");
+		var callbackFunc = function(text,regexp,type,el,index){
 			if(mansikiWorkMng===undefined){
+			alert("text:"+text);
 				return ;
 			}
-			///alert("callback!!!");
-			return mansikiWorkMng.add(text,regexp,type,mansikiWorkMng);//
+			el = mansikiWorkMng.add(text,regexp,type,mansikiWorkMng,el,index);
+			return el;//
 		};
 		//ページ単位 name,cssClassName,regix,preRoule,type,scope
 		var pageRule =new HilightingSyntaxRule(name,"page","^\\\[Page\\\](.+)$","","page","page",callbackFunc,"[Page]");
 		list.addRule(pageRule,"AAAA");
 		//コマ単位
-		var komaRule =new HilightingSyntaxRule(name,"koma","^\s*\[Koma\](.+)$","","koma","koma",callbackFunc,"[Koma]");
+		var komaRule =new HilightingSyntaxRule(name,"koma","^\s*\\\[Koma\\\](.+)$","","koma","koma",callbackFunc,"[Koma]");
 		list.addRule(pageRule,"BAAA");
 		//吹き出し単位
-		var fukidashiRule =new HilightingSyntaxRule(name,"fukidashi","^\s*【([^】]+)】\[()\] ()","","fukidashi","koma",callbackFunc,"【Koma】");
+		var fukidashiRule =new HilightingSyntaxRule(name,"fukidashi","^\s*【([^】]+)】\\\[()\\\] ()","","fukidashi","koma",callbackFunc,"【Koma】");
 		list.addRule(fukidashiRule,"BBA");
 		//ナレーション単位
 		var nalationRule =new HilightingSyntaxRule(name,"nalation","^\s*NA(.+)$","","nalation","koma",callbackFunc,"  NA:");
@@ -135,29 +152,57 @@ MansikiWorkManager.prototype={
 	startRefresh:function(){
 		this.rowConditionListOld=this.rowConditionList;
 		this.rowConditionList=[];
+		this.rowStatsOld=this.rowStats;
+		this.rowStats={};
 	},
-	add:function(text,regexp,type,me){//基本
+	add:function(text,regexp,type,me,el,foleanIndex){//基本
 		var size = me.rowConditionList.length;
 		if(size > 0){
-			var pre = me.rowConditionList[size-1];
+			var index = size-1;
+			var pre = me.rowConditionList[index];
 			var oldRowObj = me.rowConditionListOld[size];
 			if(oldRowObj!==undefined && oldRowObj.text===text){
 				oldRowObj.preRow=pre;
 				this.rowConditionList.push(oldRowObj);
-				return oldRowObj.getFormatedRow();//ここで行の内容を書き換える
+				el.setText(oldRowObj.getFormatedRow());
+				el.setOverrideOffset(el.getText().length - text.length);
+				el.setBgColor(oldRowObj.getRowColor());
+				//this.rowStats[index]=this.rowStatsOld[index];
+				me.makeRowStat(me,type,size,foleanIndex)
+				return el;//ここで行の内容を書き換える
 			}
 		}
-		var newRowObj= new MansikiRowCondition(pre,text,regexp,type);
+		var newRowObj= new MansikiRowCondition(pre,text,regexp,type,me.makeRowStat(me,type,size,foleanIndex));
 		me.rowConditionList.push(newRowObj);
-		me.rowStats.push(me.makeRowStat(type,me));
-		//alert("now!now!");
-		return newRowObj.getFormatedRow();//ここで行の内容を書き換える
+		el.setText(newRowObj.getFormatedRow());
+		el.setOverrideOffset(el.getText().length - text.length);
+		el.setBgColor(newRowObj.getRowColor());
+		return el;//ここで行の内容を書き換える
 	},
-	makeRowStat:function(me,type){
+	makeRowStat:function(me,type,index,foleanIndex){
 		 var rowstat =new MansikiRowStat();
-		rowstat.copy(me.currentRowStat,type);
+		if(foleanIndex!==undefined){
+			index = foleanIndex*1;
+		}
+		var indexes=[];
+		for(var idx in me.rowStats){
+			if(index*1 > idx*1){
+				indexes.push(idx*1);
+			}
+		}
+		indexes.sort(function(a , b){return b - a;});
+		for(var i =0;i<indexes.length ;i++){
+		 	var preStats = me.rowStats[indexes[i]];
+			if(preStats!==undefined ){
+				break;
+			}
+		}
+		rowstat.copy(preStats,type);
+		me.currentRowStat = me.rowStatEditorFuncs[type](rowstat);
+		 
 		rowstat.nowStat();
-		return rowstat;
+		me.rowStats[index*1]=me.currentRowStat;
+		return me.currentRowStat;
 	},
 	addPage:function(page){
 		this.pageList.push(page);
@@ -179,10 +224,11 @@ MansikiWorkManager.prototype={
 	}
 }
 
-var MansikiPageManager =function(rowData){
+var MansikiPageManager =function(rowData,rowstat){
 	this.idPrefix="page";
 	this.id=this.idPrefix+createId();
 	this.rowData = rowData;
+	this.rowstat = rowstat;
 	this.komaList=[];
 	this.fukidashiList=[];
 	this.narationList=[];
@@ -217,16 +263,20 @@ MansikiPageManager.prototype={
 		this.fukidashiList=newList;
 	},
 	getFormatedRow:function(){
-		return "";
+		return "[Page] "+this.rowstat.pageIndex+"p";
+	},
+	getRowColor:function(){
+		return "#017318";
 	}
 }
 
-var MansikiKomaManager =function(index,border,style,parentPage){
+var MansikiKomaManager =function(index,rowstat,border,style,parentPage){
 	//location
 	//
 	this.idPrefix="koma";
 	this.id=this.idPrefix+createId();
 	this.index=index;
+	this.rowstat = rowstat;
 	this.border=border;
 	this.borderWidth=borderWidth;
 	this.parentPage=parentPage;
@@ -253,11 +303,12 @@ MansikiKomaManager.prototype={
 	}
 }
 //
-var MansikiFukidashiManager =function(serifu,sender,parentKoma){
+var MansikiFukidashiManager =function(serifu,rowstat,sender,parentKoma){
 	this.idPrefix="fukidashi";
 	this.id=this.idPrefix+createId();
 	this.sender=sender;
 	this.serifu=serifu;
+	this.rowstat = rowstat;
 	this.zindex=zindex;
 	this.parentKoma=parentKoma ;
 	this.lineStyle;
@@ -279,10 +330,11 @@ MansikiFukidashiManager.prototype={
 	}
 }
 //
-var MansikiNalationManager=function(text,parentKoma){
+var MansikiNalationManager=function(text,rowstat,parentKoma){
 	this.idPrefix="nalation";
 	this.id=this.idPrefix+createId();
 	this.text=text;
+	this.rowstat = rowstat;
 	this.top=top;
 	this.left=left;
 	this.fontsize=fontsize;
@@ -309,10 +361,11 @@ MansikiNalationManager.prototype={
 	}
 }
 //
-var MansikiSeanManager=function(text,parentKoma){
+var MansikiSeanManager=function(text,rowstat,parentKoma){
 	this.idPrefix="nalation";
 	this.id=this.idPrefix+createId();
 	this.text=text;
+	this.rowstat = rowstat;
 	this.top=top;
 	this.left=left;
 	this.fontsize=fontsize;
@@ -339,10 +392,11 @@ MansikiSeanManager.prototype={
 	}
 }
 //
-var MansikiBackgroundManager=function(text,parentKoma){
+var MansikiBackgroundManager=function(text,rowstat,parentKoma){
 	this.idPrefix="nalation";
 	this.id=this.idPrefix+createId();
 	this.text=text;
+	this.rowstat = rowstat;
 	this.top=top;
 	this.left=left;
 	this.fontsize=fontsize;
@@ -369,10 +423,11 @@ MansikiBackgroundManager.prototype={
 	}
 }
 //
-var MansikiSettingManager=function(text,parentKoma){
+var MansikiSettingManager=function(text,rowstat,parentKoma){
 	this.idPrefix="nalation";
 	this.id=this.idPrefix+createId();
 	this.text=text;
+	this.rowstat = rowstat;
 	this.top=top;
 	this.left=left;
 	this.fontsize=fontsize;
@@ -399,10 +454,11 @@ MansikiSettingManager.prototype={
 	}
 }
 //
-var MansikiNoteManager=function(text,parentKoma){
+var MansikiNoteManager=function(text,rowstat,parentKoma){
 	this.idPrefix="nalation";
 	this.id=this.idPrefix+createId();
 	this.text=text;
+	this.rowstat = rowstat;
 	this.top=top;
 	this.left=left;
 	this.fontsize=fontsize;
@@ -429,10 +485,11 @@ MansikiNoteManager.prototype={
 	}
 }
 //
-var MansikiQuoteManager=function(text,parentKoma){
+var MansikiQuoteManager=function(text,rowstat,parentKoma){
 	this.idPrefix="nalation";
 	this.id=this.idPrefix+createId();
 	this.text=text;
+	this.rowstat = rowstat;
 	this.top=top;
 	this.left=left;
 	this.fontsize=fontsize;
@@ -479,21 +536,28 @@ MansikiRowStat.prototype={
 		this.pageIndex=preRowStat.pageIndex+1;
 	},
 	clean:function(type){
-		var funcs ={"func":function(text,self){alert(text);}
-			,"page":function(self){self.pageIndex=0;}//ページ
-			,"koma":function(self){self.komaIndex=0;}//コマ
-			,"fukidashi":function(self){self.fukidashiIndex=0;}//吹き出し
-			,"nalation":function(self){self.nalationIndex=0;}//ナレーション
-			,"sean":function(self){self.seanIndex=0;}//シーン
-			,"setting":function(self){self.settingIndex=0;}//設定
-			,"background":function(self){self.backgroundIndex=0;}//背景
-			,"note":function(self){self.noteIndex=0;}//ノート
-			,"quote":function(self){self.quoteIndex=0;}//注釈
-			,"review":function(self){self.reviewIndex=0;}//レビュー記録
-			,"comment":function(self){self.commentIndex=0;}//コメント
-			,"rowColor":function(self){self.rowColor="";}//カラー
-			,"indentLevel":function(self){self.indentLevel=0;}//注釈
+		this.set(type,0);
+	},
+	set:function(type,index){
+		var funcs ={"func":function(text,self){alert(text+","+index);}
+			,"page":function(self,index){self.pageIndex=index;}//ページ
+			,"koma":function(self){self.komaIndex=index;}//コマ
+			,"fukidashi":function(self){self.fukidashiIndex=index;}//吹き出し
+			,"nalation":function(self){self.nalationIndex=index;}//ナレーション
+			,"sean":function(self){self.seanIndex=index;}//シーン
+			,"setting":function(self){self.settingIndex=index;}//設定
+			,"background":function(self){self.backgroundIndex=index;}//背景
+			,"note":function(self){self.noteIndex=index;}//ノート
+			,"quote":function(self){self.quoteIndex=index;}//注釈
+			,"review":function(self){self.reviewIndex=index;}//レビュー記録
+			,"comment":function(self){self.commentIndex=index;}//コメント
+			,"rowColor":function(self){self.rowColor=index;}//カラー
+			,"indentLevel":function(self){self.indentLevel=index;}//注釈
 		};
+		funcs[type](this,index);
+	},
+	addOne:function(type,index){
+		this.set(type,index===undefined?0:index+1);
 	},
 	cleanPage:function(){this.clean("page");},
 	cleanKoma:function(){this.clean("koma");},
@@ -527,8 +591,28 @@ MansikiRowStat.prototype={
 		this.rowColor = preRowStat.rowColor;
 		this.indentLevel = preRowStat.indentLevel;
 	},
+	clear:function(){
+		this.cleanPage();
+		this.cleanKoma();
+		this.cleanFukidashi();
+		this.cleanNalation();
+		this.cleanSean();
+		this.cleanSetting();
+		this.cleanBackground();
+		this.cleanNote();
+		this.cleanQuote();
+		this.cleanReview();
+		this.cleanComment();
+		this.cleanRowColor();
+		this.cleanIndentLevel();
+	},
+	getID:function(){
+		return 
+		this.pageIndex +this.komaIndex +this.fukidashiIndex +this.nalationIndex +this.seanIndex +this.backgroundIndex +this.settingIndex +this.noteIndex +this.quoteIndex 
+		+this.reviewIndex +this.commentIndex +this.rowColor +this.indentLevel ;
+	},
 	nowStat:function(){
-		$("#inputText4").val(this.toSource());
+		//$("#inputText4").val(this.toSource());
 	}
 	
 }

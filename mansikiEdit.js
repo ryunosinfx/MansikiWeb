@@ -211,7 +211,7 @@ HilightingEditor.prototype={
 			domRow.width(nowWidth);
 			if(isCaretRow){
 //				me.caretSpacerUpper.html(me.SyntaxHilighter.comvertStringToHTML(rowText.substring(0,atCurrentCaret)));				//カーソルまでの修飾済み文字列を設定
-				var html = me.SyntaxHilighter.comvertStringToHTMLHilight(rowText.substring(0,atCurrentCaret),mansikiWorkMng.getHilightRules(),me.SyntaxHilighter);
+				var html = me.SyntaxHilighter.comvertStringToHTMLHilight(rowText.substring(0,atCurrentCaret),mansikiWorkMng.getHilightRules(),me.SyntaxHilighter,i).getHtml();
 				me.caretSpacerUpper.html(html);//カーソルまでの修飾済み文字列を設定
 				me.caretSpacerUpper.width(0);
 				me.caret.css("top",caretTop-rowHeight-2);//キャレット最終位置
@@ -221,14 +221,22 @@ HilightingEditor.prototype={
 				me.textarea2.val(atCurrentCaret+":"+currentCaret+"/"+rowTextLength+"/"+amountLength+"/i:"+i+"/caretTop:"+caretTop+"/diff:"+diff+"/offsetYUpper:"+offsetYUpper+"/rowHeight:"+rowHeight+"/a:"+(topCaret+offsetYUpper*1-rowHeight-2)+"/top:"+topCaret+"/left:"+left+"/width:"+width+"/html:"+rowText.substring(0,atCurrentCaret)+"/"+html+"\n"+topLog);
 			}
 		}
+		//このあたりで行追加処理を入れる？
 		//ここまでで処理が完了する。
 		for(var n= list.length;n<domRows.length;n++){//各リストサイズを開始位置として行要素を設定
 			domRows.eq(n).remove();//行要素を削除
 			rowNums.eq(n).remove();//行番号も削除
 		}
-		
+		//追加前のやつ。
+		var domRowsArray = [];
 		for(var j=0;j<domRows.length;j++){
-			domRow = domRows.eq(j)
+			domRowsArray.push(domRows.eq(j));
+		}
+		mansikiWorkMng.startRefresh();
+		var domRowsOffset=0;
+		var overrideOffset=0;
+		for(var j=0;j<domRowsArray.length;j++){
+			domRow = domRowsArray[j];
 			var domRowDom=document.getElementById(domRow.attr('id'));
 			if(domRowDom!=null && maxWidth!=domRowDom.style.width.replace(/px/,"")*1){
 				domRowDom.style.width=maxWidth;
@@ -236,13 +244,17 @@ HilightingEditor.prototype={
 			if(rowText.substring(0,atCurrentCaret)===undefined ){
 				alert("rowText.substring(0,atCurrentCaret)");
 			}
-			if(list[j] !== undefined){
-				domRow.html(me.SyntaxHilighter.comvertStringToHTMLHilight(list[j],mansikiWorkMng.getHilightRules(),me.SyntaxHilighter));
+			if(list[j] !== undefined){//ここで強制入力を反映
+				var el = me.SyntaxHilighter.comvertStringToHTMLHilight(list[j],mansikiWorkMng.getHilightRules(),me.SyntaxHilighter);
+				var rowData = el.getHtml();
+				list[j] = el.getText();
+				overrideOffset+=el.getOverrideOffset();
+				domRow.html(rowData).css("background-color",el.getBgColor());
 			}
 		}
 		//選択範囲処理
 		me.onSelected(me,currentCaret,currentEnd,text,caretRowNo,maxWidth,rowHeight,nowCaretLeft,nowTime);
-		me.textarea.width(maxWidth).height(nowTotalHeight);	
+		me.textarea.width(maxWidth).height(nowTotalHeight).val(list.join("\n"));	
 		me.frame.width(maxWidth).height(nowTotalHeight);	
 		me.lineNumInner.height(nowTotalHeight);		
 		me.view.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-1);		
@@ -250,7 +262,10 @@ HilightingEditor.prototype={
 		me.findView.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-3-rowHeight-2);		
 		me.data = list.concat();//データにリストをコピー
 		me.findInTheArea({"data":{"self":me}});
+		me.textarea.get(0).selectionStart=currentCaret+overrideOffset;//カーソル位置
+		me.textarea.get(0).selectionEnd=currentEnd+overrideOffset;//カーソル位置
 		me.nowTime=new Date().getTime();
+		
 	},
 	onSelected:function(me,currentCaret,currentEnd,text,caretRowNo,maxWidth,rowHeight,nowCaretLeft,nowTime){
 		if(currentCaret != currentEnd){
@@ -413,7 +428,7 @@ HilightingEditor.prototype={
     	hsRule.addRule(me.rule);
     	
     	for(var rowIndex in textList){
-    		viewHTML += me.SyntaxHilighter.comvertStringToHTMLHilight(textList[rowIndex],hsRule,me.SyntaxHilighter)+"<br />";
+    		viewHTML += me.SyntaxHilighter.comvertStringToHTMLHilight(textList[rowIndex],hsRule,me.SyntaxHilighter).getHtml()+"<br />";
     	}
     	me.findView.html(viewHTML);
     }
@@ -435,23 +450,37 @@ SyntaxHilighter.prototype={
 		.replace(/pre&nbsp;style/g,"pre style").replace(/span&nbsp;class/g,"span class");
 		return str.replace(/[　]{1}/g,"<span class='space2'>&emsp;</span>1");
 	},
-	comvertStringToHTMLHilight:function(str,hsRule,me){//ここの処理はWorkerに投げたい。
+	comvertStringToHTMLHilight:function(str,hsRule,me,index){//ここの処理はWorkerに投げたい。
 		var size = hsRule.getSize();
-		
+		var el = new ExecutedLine(str);
+		var retText =str;
 		for(var priority in hsRule.getRouleList()){
 			var hilightRule = hsRule.getRouleList()[priority];
 			var rexStr = hilightRule.getRegix();
 			rexStr=rexStr.match(/\(/)?rexStr:"("+rexStr+")";
 			var re = new RegExp(rexStr,"g");
 			var className= hilightRule.getCssClassName();
-			var prefix = me.maskStringA1+className+"_prefix"+me.maskStringA2+hilightRule.getPrefix()+me.maskStringB1;
-			str=str.replace(re,function(str, p1, offset, s){ 
-				hilightRule.executeCallBack(str);
-				return me.maskStringA1+className+me.maskStringA2 + prefix+p1 + me.maskStringB1;
-			});//~s///g
-			
+			if(retText.match(re)){
+				var prefix = me.maskStringA1+className+"_prefix"+me.maskStringA2+hilightRule.getPrefix()+me.maskStringB1;
+				el = hilightRule.executeCallBack(retText,el,index);
+				retText = el.getText().replace(re,function(preText, p1, offset, s){
+					var viewText = p1;
+					if(index!==undefined){
+						viewText=me.convertClearString(viewText);
+					}
+					return me.maskStringA1+className+me.maskStringA2 + prefix+viewText + me.maskStringB1;
+				});
+			};//~s///g
 		}//戻す
-		return me.comvertStringToHTML(str).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>");
+		el.setHtml(me.comvertStringToHTML(retText).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>"));
+
+		return el;
+	},
+	convertClearString:function(text){
+		text = text.replace(/[+\\\|\[\]\{\}\(\)\*\.\?&\$\"\'\!\~\^#,<>1-9a-zA-Y_]/g,"0")//\"
+		.replace(/[^0]{1}/g,"　").replace(/0/g," ")
+		return text;
+		
 	},
 	comvertStringToHTMLHilightRow:function(str,hsRule,me){
 		
@@ -502,7 +531,7 @@ var HilightingSyntaxRule=function(name,cssClassName,regix,preRoule,type,scope,ca
 	this.type=type;//行なのか文字列なのか
 	this.scope=scope;//ページとするのか、
 	this.callback=callback;
-	this.prefix=prefix;
+	this.prefix = prefix!==undefined?prefix:"";
 }
 HilightingSyntaxRule.prototype={
 	getName:function(){
@@ -529,9 +558,58 @@ HilightingSyntaxRule.prototype={
 	getCallBack:function(){
 		return this.callback;
 	},
-	executeCallBack:function (text){
-		this.callback(text,this.regix,this.type);
+	executeCallBack:function (text,el,index){
+		if(this.callback!==undefined){
+			el = this.callback(text,this.regix,this.type,el,index);
+		}
+		return el;
 	}
 }
-
+var ExecutedLine=function(text){
+	this.text=text;
+	this.html=text;
+	this.addRowText="";
+	this.addRowHtml="";
+	this.overrideOffset=0;
+	this.bgColor;
+	this.bgColorAdditionalRow;
+}
+ExecutedLine.prototype={
+	setText:function(text){
+		this.text=text;
+	},
+	getText:function(){
+		return this.text;
+	},
+	setHtml:function(html){
+		this.html = html;
+	},
+	getHtml:function(){
+		return this.html;
+	},
+	setAddRowText:function(addRowText){
+		this.addRowText = addRowText;
+	},
+	getAddRowText:function(){
+		return this.addRowText;
+	},
+	setAddRowHtml:function(addRowHtml){
+		this.addRowHtml = addRowHtml;
+	},
+	getAddRowHtml:function(){
+		return this.addRowHtml;
+	},
+	setOverrideOffset:function(overrideOffset){
+		this.overrideOffset = overrideOffset;
+	},
+	getOverrideOffset:function(){
+		return this.overrideOffset;
+	},
+	setBgColor:function(bgColor){
+		this.bgColor = bgColor;
+	},
+	getBgColor:function(){
+		return this.bgColor;
+	}
+}
 	
