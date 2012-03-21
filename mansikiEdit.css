@@ -88,6 +88,18 @@ span.page_prefix{
 	font-weight:bold;
 	letter-spacing: -1px;
 }
+/*---------------------------*/
+
+span.koma{
+	color:#FF008C;
+}
+span.page_prefix{
+	color:#FF008C;
+	text-decoration:underline overline;
+	background-color:white;
+	font-weight:bold;
+	letter-spacing: -1px;
+}
 
 
 

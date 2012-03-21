@@ -1,11 +1,12 @@
 //ここをWorkerに投げる。
 var SyntaxHilighter = function(){
-	this.maskStringA1="000"+new Date().getTime()+"888";
-	this.maskStringA2="000"+new Date().getTime()+"999";
-	this.maskStringB1="111"+new Date().getTime()+"888";
+	this.maskStringA1="000A"+new Date().getTime()+"D888";
+	this.maskStringA2="000B"+new Date().getTime()+"E999";
+	this.maskStringB1="111C"+new Date().getTime()+"F888";
 	this.maskReA1 = new RegExp(this.maskStringA1, "g");
 	this.maskReA2 = new RegExp(this.maskStringA2, "g");
 	this.maskReB1 = new RegExp(this.maskStringB1, "g");
+	this.maskReA12 = new RegExp(this.maskStringA1+"(.+)"+this.maskStringA2, "g");
 }
 SyntaxHilighter.prototype={
 	comvertStringToHTML:function(str){//ここの処理はWorkerに投げたい。
@@ -25,19 +26,24 @@ SyntaxHilighter.prototype={
 			rexStr=rexStr.match(/\(/)?rexStr:"("+rexStr+")";
 			var re = new RegExp(rexStr,"g");
 			var className= hilightRule.getCssClassName();
+			//console.log("className:"+className+"/retText:"+retText+"/rexStr:"+rexStr);
 			if(retText.match(re)){
-				var prefix = me.maskStringA1+className+"_prefix"+me.maskStringA2+hilightRule.getPrefix()+me.maskStringB1;
+				//console.log("★★★★★★className:"+className+"/retText:"+retText+"/rexStr:"+rexStr);
+				var prefix = hilightRule.getPrefix().length>0?me.maskStringA1+className+"_prefix"+me.maskStringA2+hilightRule.getPrefix()+me.maskStringB1:"";
 				el = hilightRule.executeCallBack(retText,el,index);
 				retText = el.getText().replace(re,function(preText, p1, offset, s){
 					var viewText = p1;
-					if(index!==undefined){
+					if(index!==undefined && el.isOverride==true){
 						viewText=me.convertClearString(viewText);
 					}
-					return me.maskStringA1+className+me.maskStringA2 + prefix+viewText + me.maskStringB1;
+					return me.maskStringA1 + className + me.maskStringA2 + prefix+viewText + me.maskStringB1;
 				});
 			};//~s///g
 		}//戻す
+		el.setText(el.getText().replace(me.maskReA12,"").replace(me.maskReB1,""));
+		el.setOverrideOffset(el.getText().length-str.length);
 		el.setHtml(me.comvertStringToHTML(retText).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>"));
+		//console.log(me.comvertStringToHTML(retText).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>"));
 
 		return el;
 	},
@@ -136,6 +142,8 @@ var ExecutedLine=function(text){
 	this.addRowText="";
 	this.addRowHtml="";
 	this.overrideOffset=0;
+	this.isOverride=false;
+	this.isThrough=false;
 	this.bgColor;
 	this.bgColorAdditionalRow;
 }
@@ -145,6 +153,12 @@ ExecutedLine.prototype={
 	},
 	getText:function(){
 		return this.text;
+	},
+	isOverride:function(){
+		return this.isOverride;
+	},
+	setOverride:function(isOverride){
+		return this.isOverride=isOverride;
 	},
 	setHtml:function(html){
 		this.html = html;
