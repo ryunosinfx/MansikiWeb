@@ -8,7 +8,7 @@ function MansikiInit(){
 var MansikiRowCondition = function(preRow,text,regexp,type,rowstat){
 	this.rowColor="";
 	this.textColer="";
-	this.rowType=type;
+	this.type=type;
 	this.text=text;
 	this.preRow=preRow;
 	this.regexp=regexp;
@@ -30,11 +30,11 @@ var MansikiRowCondition = function(preRow,text,regexp,type,rowstat){
 }
 MansikiRowCondition.prototype={
 	getParentObj:function(type){//再帰でたどる
-		if(preRow!==undefined){
-			if(preRow.rowType==type){
-				return RowObje;
+		if(this.preRow!==undefined){
+			if(this.preRow.type==type){
+				return this.RowObje;
 			}else{
-				return preRow.getParentObj(type);
+				return this.preRow.getParentObj(type);
 			}
 		}
 		return "";
@@ -59,6 +59,17 @@ MansikiRowCondition.prototype={
 	},
 	isOverride:function(){
 		return this.RowObje.isForceFormat();
+	},
+	getIndent:function(){
+		if(this.preRow===undefined){
+			return "";
+		}
+		var preRowText = this.preRow.text;
+		var indent = getCurrentMansikiRowIndent(this.type,this.RowObje.rowstat,preRowText);
+		if(indent===undefined || indent.length <1 ){
+			return "";
+		}
+		return indent;
 	},
 	getFormatedRow:function(){
 		var formated = this.RowObje.getFormatedRow();
@@ -112,8 +123,8 @@ var MansikiWorkManager = function(){
 MansikiWorkManager.prototype={
 	buildMansikiHilight:function (){
 		var list = new HilightingSyntax();
-		var callbackFunc = function(text,regexp,type,el,index){
-			return mansikiWorkMng.add(text,regexp,type,mansikiWorkMng,el,index);
+		var callbackFunc = function(text,regexp,type,el,index,isEditingRow){
+			return mansikiWorkMng.add(text,regexp,type,mansikiWorkMng,el,index,isEditingRow);
 		};
 		//ページ単位 name,cssClassName,regix,preRoule,type,scope
 		var pageRule =new HilightingSyntaxRule(name,"page","^\\\[Page\\\](.+)$","","page","page",callbackFunc,"[Page]");
@@ -158,29 +169,38 @@ MansikiWorkManager.prototype={
 		this.rowStatsOld=this.rowStats;
 		this.rowStats={};
 	},
-	add:function(text,regexp,type,me,el,foleanIndex){//基本
+	add:function(text,regexp,type,me,el,foleanIndex,isEditingRow){//基本
 		var size = me.rowConditionList.length;
 		if(size > 0){
 			var index = size-1;
 			var pre = me.rowConditionList[index];
+			var prepre = me.rowConditionList[index-1];
 			var oldRowObj = me.rowConditionListOld[size];
+			
+			var result = "AAAA"+this.rowConditionList.length;
+			for(var i=0;i<me.rowConditionList.length && isEditingRow;i++){
+				result+=i+"["+me.rowConditionList[i].text+"];";
+			}
+			//console.log(new Date().getTime()+"/"+isEditingRow+"/"+foleanIndex+"/"+result);
 			if(oldRowObj!==undefined && oldRowObj.text===text && text.length >0){
 				oldRowObj.preRow=pre;
 				this.rowConditionList.push(oldRowObj);
-				el.setText(oldRowObj.getFormatedRow());
-				el.setBgColor(oldRowObj.getRowColor());
-				el.setOverride(oldRowObj.isOverride());
-				//this.rowStats[index]=this.rowStatsOld[index];
 				me.makeRowStat(me,type,size,foleanIndex)
-				return el;//ここで行の内容を書き換える
+				//console.log("pre:["+pre.text+"]/prepre:["+(prepre===undefined?"":prepre.text)+"]");
+				return me.prepareELobj(el,oldRowObj);//ここで行の内容を書き換える
 			}
 		}
 		var newRowObj= new MansikiRowCondition(pre,text,regexp,type,me.makeRowStat(me,type,size,foleanIndex));
+		//console.log(isEditingRow+"/text:["+text+"]/pre:["+(pre===undefined?"":pre.text)+"]");
 		me.rowConditionList.push(newRowObj);
-		el.setText(newRowObj.getFormatedRow());
-		el.setBgColor(newRowObj.getRowColor());
-		el.setOverride(newRowObj.isOverride());
-		return el;//ここで行の内容を書き換える
+		return me.prepareELobj(el,newRowObj);//ここで行の内容を書き換える
+	},
+	prepareELobj:function(el,rowObj){
+		el.setText(rowObj.getFormatedRow());
+		el.setBgColor(rowObj.getRowColor());
+		el.setOverride(rowObj.isOverride());
+		el.setIndent(rowObj.getIndent());
+		return el;
 	},
 	makeRowStat:function(me,type,index,foleanIndex){
 		 var rowstat =new MansikiRowStat();
@@ -295,7 +315,7 @@ var MansikiKomaManager =function(index,rowstat,border,style,parentPage){
 	this.picZIndex;
 	this.canvas;
 	this.rowStat;
-	console.log("new MansikiKomaManager!");
+	//console.log("new MansikiKomaManager!");
 }
 MansikiKomaManager.prototype={
 	feedStat:function(rowStat){
@@ -737,6 +757,64 @@ function getCurrentMansikiRowColor(rowstat){
 	var code=(rowstat.pageIndex%2)+"";
 	//console.log("rowstat.pageIndex:"+rowstat.pageIndex+"/code:"+code);
 	return mansikiBgColorsMap[code];
+}
+
+function getCurrentMansikiRowIndent(type,rowstat,pretext){
+	var indexLevelPar =4;
+	var getRowIndentLevel=function(text){
+			var regix = new RegExp("(^[\\\s|\\\t]+)", "g");
+			var retIndex = 0;
+			if(pretext.match(regix)){
+				var target = RegExp.$1;
+				target=target.replace(/\t/g,"     ");
+				retIndex = Math.ceil(target.length / indexLevelPar);
+			}
+			return retIndex;
+		};
+	var currentIndentLevel = getRowIndentLevel(pretext);
+	var funcConvertLevelToString = function(indentLevel){
+			var level = currentIndentLevel>indentLevel?currentIndentLevel:indentLevel;
+			var baseIndentStr =" ";
+			var retStr = "";
+			level= level!==undefined ? level*indexLevelPar:indexLevelPar;
+			for(var j=0;j<level;j++){
+				retStr+=baseIndentStr;
+			}
+			//console.log("retStr:["+retStr+"]"+retStr.length+"/["+rowstat.level+"]/"+level);
+			return retStr;
+		};
+	var funcs ={"func":function(text,self){alert(text+","+index);}
+		,"page":function(rowstat){return "";}//ページ
+		,"koma":function(rowstat){return "";}//コマ
+		,"fukidashi":function(rowstat){return "";}//吹き出し
+		,"nalation":function(rowstat){return "";}//ナレーション
+		,"sean":function(rowstat){return "";}//シーン
+		,"setting":function(rowstat){return "	";}//設定
+		,"background":function(rowstat){return "";}//背景
+		,"note":function(rowstat){return "";}//ノート
+		,"quote":function(rowstat){return "";}//注釈
+		,"review":function(rowstat){return "";}//レビュー記録
+		,"comment":function(rowstat){return "";}//コメント
+		,"row":function(rowstat){
+			 var retIndent ="";
+			retIndent =rowstat.pageIndex>0 ? funcConvertLevelToString(1) : "";
+			retIndent =retIndent.length <2 && rowstat.komaIndex>0 ? funcConvertLevelToString(2) : "";
+			retIndent =retIndent.length <3 && rowstat.fukidashiIndex>0 ? funcConvertLevelToString(3) : "";
+			retIndent =retIndent.length <3 && rowstat.nalationIndex>0 ? funcConvertLevelToString(3) : "";
+			retIndent =retIndent.length <3 && rowstat.seanIndex>0 ? funcConvertLevelToString(3) : "";
+			retIndent =retIndent.length <3 && rowstat.backgroundIndex>0 ? funcConvertLevelToString(3) : "";
+			retIndent =retIndent.length <3 && rowstat.settingIndex>0 ? funcConvertLevelToString(3) : "";
+			retIndent =retIndent.length <3 && rowstat.noteIndex>0 ? funcConvertLevelToString(3) : "";
+			retIndent =retIndent.length <3 && rowstat.quoteIndex>0 ? funcConvertLevelToString(3) : "";
+			retIndent =retIndent.length <3 && rowstat.reviewIndex>0  ? funcConvertLevelToString(3) : ""
+			retIndent =retIndent.length <3 && rowstat.commentIndex>0 ? funcConvertLevelToString(3) : "";
+			retIndent =retIndent.length <1 ? funcConvertLevelToString(0) : "";
+			 
+			//console.log("currentIndentLevel:"+currentIndentLevel+"/retIndent:["+retIndent+"]"+"/pretext:["+pretext+"]"+retIndent.length);
+			return retIndent;
+		}//何もない;
+	};
+	return funcs[type](rowstat);
 }
 //
 var MansikiStyle=function(){

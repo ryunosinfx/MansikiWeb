@@ -16,7 +16,7 @@ SyntaxHilighter.prototype={
 		.replace(/pre&nbsp;style/g,"pre style").replace(/span&nbsp;class/g,"span class");
 		return str.replace(/[　]{1}/g,"<span class='space2'>&emsp;</span>1");
 	},
-	comvertStringToHTMLHilight:function(str,hsRule,me,index){//ここの処理はWorkerに投げたい。
+	comvertStringToHTMLHilight:function(str,hsRule,me,index,isAddrow,isEditingRow){//ここの処理はWorkerに投げたい。
 		var size = hsRule.getSize();
 		var el = new ExecutedLine(str);
 		var retText =str;
@@ -30,7 +30,7 @@ SyntaxHilighter.prototype={
 			if(retText.match(re)){
 				//console.log("★★★★★★className:"+className+"/retText:"+retText+"/rexStr:"+rexStr);
 				var prefix = hilightRule.getPrefix().length>0?me.maskStringA1+className+"_prefix"+me.maskStringA2+hilightRule.getPrefix()+me.maskStringB1:"";
-				el = hilightRule.executeCallBack(retText,el,index);
+				el = hilightRule.executeCallBack(retText,el,index,isEditingRow);
 				retText = el.getText().replace(re,function(preText, p1, offset, s){
 					var viewText = p1;
 					if(index!==undefined && el.isOverride==true){
@@ -40,6 +40,10 @@ SyntaxHilighter.prototype={
 				});
 			};//~s///g
 		}//戻す
+		if(isAddrow===true && isEditingRow===true){
+			el.setText(el.getIndent()+el.getText());
+			retText=el.getIndent()+retText;
+		}
 		el.setText(el.getText().replace(me.maskReA12,"").replace(me.maskReB1,""));
 		el.setOverrideOffset(el.getText().length-str.length);
 		el.setHtml(me.comvertStringToHTML(retText).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>"));
@@ -55,6 +59,94 @@ SyntaxHilighter.prototype={
 	},
 	comvertStringToHTMLHilightRow:function(str,hsRule,me){
 		
+	},
+	comvertStringToHTMLHilightNew:function(str,hsRule,me,index){///重すぎて動かなくなってしまった。
+		var size = hsRule.getSize();
+		var el = new ExecutedLine(str);
+		var retText =str;
+		var classList={};
+		var prefixList={};
+		var typePiroity=[];
+		var markingOnString ={};
+		
+		console.log("ccccc");
+		for(var priority in hsRule.getRouleList()){
+			var hilightRule = hsRule.getRouleList()[priority];
+			var type= hilightRule.getType();
+			var asStart={"type":type,"mode":"start"};
+			var asEnd={"type":type,"mode":"end"};
+			var rexStr = hilightRule.getRegix();
+			rexStr=rexStr.match(/\(/)?rexStr:"("+rexStr+")";
+			var re = new RegExp(rexStr,"g");
+			classList[type]=hilightRule.getCssClassName();
+			typePiroity.push(type);
+		console.log("ddd");
+			if(retText.match(re)){//ここのロジックを大幅に変える。
+				console.log("ccccc");
+				el = hilightRule.executeCallBack(retText,el,index);
+				prefixList[type]=hilightRule.getPrefix().length>0?me.maskStringA1+className+"_prefix"+me.maskStringA2+hilightRule.getPrefix()+me.maskStringB1:"";
+				retText = el.getText().replace(re,function(preText, p1, offset, s){
+					var viewText = p1;
+					if(index!==undefined && el.isOverride==true){
+						viewText=me.convertClearString(viewText);
+					}
+					return me.maskStringA1 +viewText + me.maskStringB1;
+				});
+				var retTextStart=retText.replace(me.maskReA1,"");
+				var retTextend=retText.replace(me.maskReB1,"");
+				var splitedTextStart = retTextend.split(me.maskStringA1);//う？ここで分割すると誰がだれだか・・・
+				var splitedTextEnd = retTextStart.split(me.maskStringB1);//う？ここで分割すると誰がだれだか・・・
+				var planeText = splitedTextEnd.join("");
+				var cursor=0;
+				for(var j=0;j<splitedTextStart.length;j++){
+					cursor=splitedTextStart[j].length;
+					if(markingOnString[cursor]===undefined){
+						markingOnString[cursor]={};
+					}
+					markingOnString[cursor][type]=asStart;
+					cursor=splitedTextEnd[j].length;
+					if(markingOnString[cursor]===undefined){
+						markingOnString[cursor]={};
+					}
+					markingOnString[cursor][type]=asEnd;
+				}
+				retText=planeText;
+			};//~s///g
+		}//戻す
+		console.log("aaaa");
+		var addTokens=[];
+		for(var i =0;i<=retText.length;i++){//フォースはどうするのか？位置文字ずつ
+		console.log("zzzz i:"+i);
+			if(markingOnString[i]!==undefined){//まあ取り合えずあるのだけやる
+				var addToken="";
+				for(var n=0;n=typePiroity.length;n++){
+					var typeA=typePiroity[n];
+					var token= markingOnString[i][typeA];
+					if(token!==undefined){
+						if(token.mode=="start"){
+							//addToken+=me.maskStringA1 + classList[typeA] + me.maskStringA2 + prefixList[typeA];
+						}else{
+							//addToken = me.maskStringB1+addToken;
+						}
+					}
+				}
+				//addTokens.push(addToken);
+			}else{
+				//addTokens.push("");
+			}
+			
+		console.log("zzzz");
+			if(i<retText.length){
+				//addTokens.push(retText.substring(i,i+1));
+			}
+		}
+		console.log("bbb");
+		el.setText(retText);
+		el.setOverrideOffset(retText.length-str.length);
+		el.setHtml(me.comvertStringToHTML(addTokens.join("")).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>"));
+		//console.log(me.comvertStringToHTML(retText).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>"));
+
+		return el;
 	}
 }
 var HilightingSyntax= function(){
@@ -129,9 +221,9 @@ HilightingSyntaxRule.prototype={
 	getCallBack:function(){
 		return this.callback;
 	},
-	executeCallBack:function (text,el,index){
+	executeCallBack:function (text,el,index,isEditingRow){
 		if(this.callback!==undefined){
-			el = this.callback(text,this.regix,this.type,el,index);
+			el = this.callback(text,this.regix,this.type,el,index,isEditingRow);
 		}
 		return el;
 	}
@@ -145,6 +237,7 @@ var ExecutedLine=function(text){
 	this.isOverride=false;
 	this.isThrough=false;
 	this.bgColor;
+	this.indent="";
 	this.bgColorAdditionalRow;
 }
 ExecutedLine.prototype={
@@ -183,6 +276,12 @@ ExecutedLine.prototype={
 	},
 	getOverrideOffset:function(){
 		return this.overrideOffset;
+	},
+	setIndent:function(indent){
+		this.indent = indent;
+	},
+	getIndent:function(){
+		return this.indent;
 	},
 	setBgColor:function(bgColor){
 		this.bgColor = bgColor;
