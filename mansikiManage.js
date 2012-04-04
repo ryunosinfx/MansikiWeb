@@ -123,11 +123,11 @@ var MansikiWorkManager = function(){
 MansikiWorkManager.prototype={
 	buildMansikiHilight:function (){
 		var list = new HilightingSyntax();
-		var callbackFunc = function(text,regexp,type,el,index,isEditingRow){
-			return mansikiWorkMng.add(text,regexp,type,mansikiWorkMng,el,index,isEditingRow);
+		var callbackFunc = function(text,regexp,type,el,index,isEditingRow,isTypeSet){
+			return mansikiWorkMng.add(text,regexp,type,mansikiWorkMng,el,index,isEditingRow,isTypeSet);
 		};
 		//ページ単位 name,cssClassName,regix,preRoule,type,scope
-		var pageRule =new HilightingSyntaxRule(name,"page","^\\\[Page\\\](.+)$","","page","page",callbackFunc,"[Page]");
+		var pageRule =new HilightingSyntaxRule(name,"page","^\\s*\\\[Page\\\](.+)$","","page","page",callbackFunc,"[Page]");
 		list.addRule(pageRule,"ZAAA");
 		//コマ単位
 		var komaRule =new HilightingSyntaxRule(name,"koma","\\\[Koma\\\](.+)$","","koma","koma",callbackFunc,"[Koma]");
@@ -169,7 +169,7 @@ MansikiWorkManager.prototype={
 		this.rowStatsOld=this.rowStats;
 		this.rowStats={};
 	},
-	add:function(text,regexp,type,me,el,foleanIndex,isEditingRow){//基本
+	add:function(text,regexp,type,me,el,foleanIndex,isEditingRow,isTypeSet){//基本
 		var size = me.rowConditionList.length;
 		if(size > 0){
 			var index = size-1;
@@ -184,20 +184,22 @@ MansikiWorkManager.prototype={
 			//console.log(new Date().getTime()+"/"+isEditingRow+"/"+foleanIndex+"/"+result);
 			if(oldRowObj!==undefined && oldRowObj.text===text && text.length >0){
 				oldRowObj.preRow=pre;
-				this.rowConditionList.push(oldRowObj);
+				if(isTypeSet===false){this.rowConditionList.push(oldRowObj);}
 				me.makeRowStat(me,type,size,foleanIndex)
 				//console.log("pre:["+pre.text+"]/prepre:["+(prepre===undefined?"":prepre.text)+"]");
-				return me.prepareELobj(el,oldRowObj);//ここで行の内容を書き換える
+				return me.prepareELobj(el,oldRowObj,isTypeSet);//ここで行の内容を書き換える
 			}
 		}
 		var newRowObj= new MansikiRowCondition(pre,text,regexp,type,me.makeRowStat(me,type,size,foleanIndex));
 		//console.log(isEditingRow+"/text:["+text+"]/pre:["+(pre===undefined?"":pre.text)+"]");
-		me.rowConditionList.push(newRowObj);
-		return me.prepareELobj(el,newRowObj);//ここで行の内容を書き換える
+		if(isTypeSet===false){me.rowConditionList.push(newRowObj);}
+		return me.prepareELobj(el,newRowObj,isTypeSet);//ここで行の内容を書き換える
 	},
-	prepareELobj:function(el,rowObj){
+	prepareELobj:function(el,rowObj,isTypeSet){
 		el.setText(rowObj.getFormatedRow());
-		el.setBgColor(rowObj.getRowColor());
+		if(isTypeSet===false){
+			el.setBgColor(rowObj.getRowColor());
+		}
 		el.setOverride(rowObj.isOverride());
 		el.setIndent(rowObj.getIndent());
 		return el;
@@ -334,7 +336,7 @@ MansikiKomaManager.prototype={
 		return true;
 	},
 	getRowColor:function(){
-		return "#017318";
+		return "#00E6FF";
 	}
 }
 //
@@ -689,7 +691,7 @@ MansikiRowStat.prototype={
 		funcs[type](this,index);
 	},
 	addOne:function(type,index){
-		this.set(type,index===undefined?0:index+1);
+		this.set(type,index===undefined?1:index+1);
 	},
 	cleanPage:function(){this.clean("page");},
 	cleanKoma:function(){this.clean("koma");},
@@ -740,6 +742,7 @@ MansikiRowStat.prototype={
 		this.cleanRow();
 		this.cleanRowColor();
 		this.cleanIndentLevel();
+		//console.log(this.toSource());
 	},
 	getID:function(){
 		return 
@@ -780,7 +783,7 @@ function getCurrentMansikiRowIndent(type,rowstat,pretext){
 			for(var j=0;j<level;j++){
 				retStr+=baseIndentStr;
 			}
-			//console.log("retStr:["+retStr+"]"+retStr.length+"/["+rowstat.level+"]/"+level);
+			//console.log("retStr:["+retStr+"]"+retStr.length+"/["+rowstat.level+"]/"+level+"/indentLevel:"+indentLevel);
 			return retStr;
 		};
 	var funcs ={"func":function(text,self){alert(text+","+index);}
@@ -798,19 +801,19 @@ function getCurrentMansikiRowIndent(type,rowstat,pretext){
 		,"row":function(rowstat){
 			 var retIndent ="";
 			retIndent =rowstat.pageIndex>0 ? funcConvertLevelToString(1) : "";
-			retIndent =retIndent.length <2 && rowstat.komaIndex>0 ? funcConvertLevelToString(2) : "";
-			retIndent =retIndent.length <3 && rowstat.fukidashiIndex>0 ? funcConvertLevelToString(3) : "";
-			retIndent =retIndent.length <3 && rowstat.nalationIndex>0 ? funcConvertLevelToString(3) : "";
-			retIndent =retIndent.length <3 && rowstat.seanIndex>0 ? funcConvertLevelToString(3) : "";
-			retIndent =retIndent.length <3 && rowstat.backgroundIndex>0 ? funcConvertLevelToString(3) : "";
-			retIndent =retIndent.length <3 && rowstat.settingIndex>0 ? funcConvertLevelToString(3) : "";
-			retIndent =retIndent.length <3 && rowstat.noteIndex>0 ? funcConvertLevelToString(3) : "";
-			retIndent =retIndent.length <3 && rowstat.quoteIndex>0 ? funcConvertLevelToString(3) : "";
-			retIndent =retIndent.length <3 && rowstat.reviewIndex>0  ? funcConvertLevelToString(3) : ""
-			retIndent =retIndent.length <3 && rowstat.commentIndex>0 ? funcConvertLevelToString(3) : "";
-			retIndent =retIndent.length <1 ? funcConvertLevelToString(0) : "";
+			retIndent =retIndent.length <2*indexLevelPar && rowstat.komaIndex>0 ? funcConvertLevelToString(2) : retIndent;
+			retIndent =retIndent.length <3*indexLevelPar && rowstat.fukidashiIndex>0 ? funcConvertLevelToString(3) : retIndent;
+			retIndent =retIndent.length <3*indexLevelPar && rowstat.nalationIndex>0 ? funcConvertLevelToString(3) : retIndent;
+			retIndent =retIndent.length <3*indexLevelPar && rowstat.seanIndex>0 ? funcConvertLevelToString(3) : retIndent;
+			retIndent =retIndent.length <3*indexLevelPar && rowstat.backgroundIndex>0 ? funcConvertLevelToString(3) : retIndent;
+			retIndent =retIndent.length <3*indexLevelPar && rowstat.settingIndex>0 ? funcConvertLevelToString(3) : retIndent;
+			retIndent =retIndent.length <3*indexLevelPar && rowstat.noteIndex>0 ? funcConvertLevelToString(3) : retIndent;
+			retIndent =retIndent.length <3*indexLevelPar && rowstat.quoteIndex>0 ? funcConvertLevelToString(3) : retIndent;
+			retIndent =retIndent.length <3*indexLevelPar && rowstat.reviewIndex>0  ? funcConvertLevelToString(3) : retIndent;
+			retIndent =retIndent.length <3*indexLevelPar && rowstat.commentIndex>0 ? funcConvertLevelToString(3) : retIndent;
+			retIndent =retIndent.length <1*indexLevelPar ? funcConvertLevelToString(0) : retIndent;
 			 
-			//console.log("currentIndentLevel:"+currentIndentLevel+"/retIndent:["+retIndent+"]"+"/pretext:["+pretext+"]"+retIndent.length);
+			//console.log("currentIndentLevel:"+currentIndentLevel+"/retIndent.length:["+retIndent.length+"]/retIndent:["+retIndent+"]"+"/pretext:["+"]"+retIndent.length+"/"+rowstat.pageIndex);
 			return retIndent;
 		}//何もない;
 	};

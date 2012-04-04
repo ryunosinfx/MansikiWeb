@@ -16,22 +16,43 @@ SyntaxHilighter.prototype={
 		.replace(/pre&nbsp;style/g,"pre style").replace(/span&nbsp;class/g,"span class");
 		return str.replace(/[　]{1}/g,"<span class='space2'>&emsp;</span>1");
 	},
+	setPreData:function(str,hsRule,me,index,isAddrow,isEditingRow){
+		me.str=str;
+		me.hsRule=hsRule;
+		me.index=index;
+		me.isAddrow=isAddrow;
+		me.isEditingRow=isEditingRow;
+	},
+	getPreDataObj:function (me){//Worker化に対応
+		return JSON.stringify(me);
+	},
+	loadPreDataByObj:function(me,preDataObjText){
+		var preDataObj = JSON.parse(preDataObjText);
+		me.setPreData(preDataObj.str,preDataObj.hsRule,me,preDataObj.index,preDataObj.isAddrow,preDataObj.isEditingRow);
+	},
+	execute:function(me){
+		return me.comvertStringToHTMLHilight(me.str,me.hsRule,me,me.index,me.isAddrow,me.isEditingRow);
+	},
 	comvertStringToHTMLHilight:function(str,hsRule,me,index,isAddrow,isEditingRow){//ここの処理はWorkerに投げたい。
-		var size = hsRule.getSize();
+		var size = hsRule.size;
 		var el = new ExecutedLine(str);
 		var retText =str;
-		for(var priority in hsRule.getRouleList()){
-			var hilightRule = hsRule.getRouleList()[priority];
-			var rexStr = hilightRule.getRegix();
+		var typeOfFirst= "";
+		for(var priority in hsRule.ruleList){
+			var isTypeSet= true;
+			var hilightRule = hsRule.ruleList[priority];
+			var rexStr = hilightRule.regix;
 			rexStr=rexStr.match(/\(/)?rexStr:"("+rexStr+")";
 			var re = new RegExp(rexStr,"g");
-			var className= hilightRule.getCssClassName();
-			//console.log("className:"+className+"/retText:"+retText+"/rexStr:"+rexStr);
+			var className= hilightRule.cssClassName;
 			if(retText.match(re)){
-				//console.log("★★★★★★className:"+className+"/retText:"+retText+"/rexStr:"+rexStr);
-				var prefix = hilightRule.getPrefix().length>0?me.maskStringA1+className+"_prefix"+me.maskStringA2+hilightRule.getPrefix()+me.maskStringB1:"";
-				el = hilightRule.executeCallBack(retText,el,index,isEditingRow);
-				retText = el.getText().replace(re,function(preText, p1, offset, s){
+				if(typeOfFirst===""){
+					typeOfFirst=hilightRule.type;
+					isTypeSet=false;
+				}
+				var prefix = hilightRule.prefix.length>0?me.maskStringA1+className+"_prefix"+me.maskStringA2+hilightRule.prefix+me.maskStringB1:"";
+				el = hilightRule.executeCallBack(retText,el,index,isEditingRow,isTypeSet);
+				retText = el.text.replace(re,function(preText, p1, offset, s){
 					var viewText = p1;
 					if(index!==undefined && el.isOverride==true){
 						viewText=me.convertClearString(viewText);
@@ -41,13 +62,12 @@ SyntaxHilighter.prototype={
 			};//~s///g
 		}//戻す
 		if(isAddrow===true && isEditingRow===true){
-			el.setText(el.getIndent()+el.getText());
-			retText=el.getIndent()+retText;
+			el.text = el.indent + el.text;
+			retText = el.indent + retText;
 		}
-		el.setText(el.getText().replace(me.maskReA12,"").replace(me.maskReB1,""));
-		el.setOverrideOffset(el.getText().length-str.length);
-		el.setHtml(me.comvertStringToHTML(retText).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>"));
-		//console.log(me.comvertStringToHTML(retText).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>"));
+		el.text = el.text.replace(me.maskReA12,"").replace(me.maskReB1,"");
+		el.overrideOffset = el.text.length-str.length;
+		el.html=me.comvertStringToHTML(retText).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>");
 
 		return el;
 	},
@@ -197,33 +217,9 @@ var HilightingSyntaxRule=function(name,cssClassName,regix,preRoule,type,scope,ca
 	this.prefix = prefix!==undefined?prefix:"";
 }
 HilightingSyntaxRule.prototype={
-	getName:function(){
-		return this.name;
-	},
-	getCssClassName:function(){
-		return this.cssClassName;
-	},
-	getRegix:function(){
-		return this.regix;
-	},
-	getPreRoule:function(){
-		return this.preRoule;
-	},
-	getType:function(){
-		return this.type;
-	},
-	getScope:function(){
-		return this.scope;
-	},
-	getPrefix:function(){
-		return this.prefix;
-	},
-	getCallBack:function(){
-		return this.callback;
-	},
-	executeCallBack:function (text,el,index,isEditingRow){
+	executeCallBack:function (text,el,index,isEditingRow,isTypeSet){
 		if(this.callback!==undefined){
-			el = this.callback(text,this.regix,this.type,el,index,isEditingRow);
+			el = this.callback(text,this.regix,this.type,el,index,isEditingRow,isTypeSet);
 		}
 		return el;
 	}

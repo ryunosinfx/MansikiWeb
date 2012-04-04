@@ -161,7 +161,7 @@ HilightingEditor.prototype={
 			}else{
 				isCaretRow=false;
 			}
-			if(me.data.length > i && me.data[i]===rowText && domRow.length > 0 && isCaretRow==false){//データが動いていないかつカーソルの行位以外はスルー
+			if(me.data.length > i && me.data[i]===rowText && rowText.replace(/^[\s|\t]+/g,"").length > 0&& domRow.length > 0 && isCaretRow==false){//データが動いていないかつカーソルの行位以外はスルー
 				continue;//次の行を処理する。
 			}
 			//行単位初期化
@@ -212,21 +212,17 @@ HilightingEditor.prototype={
 				}
 			}
 			domRow.width(nowWidth);
-			if(isCaretRow){
-//				me.caretSpacerUpper.html(me.SyntaxHilighter.comvertStringToHTML(rowText.substring(0,atCurrentCaret)));				//カーソルまでの修飾済み文字列を設定
+			if(isCaretRow){//TODO　まだキャレットがうまく行を指定できていない。
 				var elAtCaret=me.SyntaxHilighter.comvertStringToHTMLHilight(rowText.substring(0,atCurrentCaret),mansikiWorkMng.getHilightRules(),me.SyntaxHilighter,i,diff < 0,true);
-				var html = elAtCaret.getHtml();
+				var html = elAtCaret.html;
 				me.caretSpacerUpper.html(html);//カーソルまでの修飾済み文字列を設定
 				me.caretSpacerUpper.width(0);
 				me.caret.css("top",caretTop-rowHeight-2);//キャレット最終位置
 				nowCaretLeft=me.fetchWidth(document.getElementById(me.classIdPrefix+"Upper"),rowHeight,true);
 				me.caretSpacerUpper.width(nowCaretLeft);
 				me.caret.css("left",nowCaretLeft).text(caretLetter);
-				me.textarea2.val(atCurrentCaret+":"+currentCaret+"/"+rowTextLength+"/"+amountLength+"/i:"+i+"/caretTop:"+caretTop+"/diff:"+diff+"/offsetYUpper:"+offsetYUpper+"/rowHeight:"+rowHeight+"/a:"+(topCaret+offsetYUpper*1-rowHeight-2)+"/top:"+topCaret+"/left:"+left+"/width:"+width+"/html:"+rowText.substring(0,atCurrentCaret)+"/"+html+"\n"+topLog);
-				//インデント時のキャレット場所適正化
-					console.log("atCurrentCaret:"+atCurrentCaret+"/rowText:["+rowText+"]/elAtCaret.getText():["+elAtCaret.getText()+"]");
 				var topCaretAtCaret=topCaret;
-				htmlConvertedToCaret=htmlConvertedToCaret;
+				htmlConvertedToCaret=comverted;
 
 			}
 		}
@@ -244,6 +240,9 @@ HilightingEditor.prototype={
 		mansikiWorkMng.startRefresh();
 		var domRowsOffset=0;
 		var overrideOffset=0;
+		
+		var mwh = new mansikiWorkerHandler();
+		
 		for(var j=0;j<domRowsArray.length;j++){
 			domRow = domRowsArray[j];
 			var domRowDom=document.getElementById(domRow.attr('id'));
@@ -252,12 +251,15 @@ HilightingEditor.prototype={
 			}
 			if(list[j] !== undefined){//ここで強制入力を反映
 				var el = me.SyntaxHilighter.comvertStringToHTMLHilight(list[j],mansikiWorkMng.getHilightRules(),me.SyntaxHilighter,undefined,diff < 0,caretRowNo==j);
-				var rowData = el.getHtml();
-				list[j] = el.getText();
-				//console.log("el.getText():"+el.getText());
-				overrideOffset+=el.getOverrideOffset();
-				if(el.getBgColor()!==undefined ){
-					domRow.html(rowData).css("background-color",el.getBgColor());
+				
+				me.SyntaxHilighter.setPreData(list[j],mansikiWorkMng.getHilightRules(),me.SyntaxHilighter,undefined,diff < 0,caretRowNo==j);
+				mwh.execute(mwh,me.SyntaxHilighter,function(){console.log("i am a callback!");});
+				list[j] = el.text;
+				overrideOffset+=el.overrideOffset;
+				if(caretRowNo==j){
+					elAtCaret=el;
+				}else if(el.bgColor!==undefined ){
+					domRow.html(el.html).css("background-color",el.bgColor);
 				}
 			}
 		}
@@ -275,13 +277,12 @@ HilightingEditor.prototype={
 		me.textarea.get(0).selectionEnd=currentEnd+overrideOffset;//カーソル位置
 		me.nowTime=new Date().getTime();
 		me.domRows=domRows;
-		if(elAtCaret.getText().match(/^\s+$/)){//
-			me.readjustCaret(me,topCaretAtCaret,caretRowNo,offsetYUpper,isAddedRows,rowHeight,diff,elAtCaret.getText(),htmlConvertedToCaret);
+		if(elAtCaret.text.match(/^\s+$/)){//
+			me.readjustCaret(me,topCaretAtCaret,caretRowNo,offsetYUpper,isAddedRows,rowHeight,diff,elAtCaret.text,htmlConvertedToCaret);
 		}
 		
 	},
 	readjustCaret:function(me,topCaret,rowIndex,offsetYUpper,isAddedRows,rowHeight,diff,rowText,comverted){//ただしインデントにのみ限る
-		//console.log(rowIndex+"/"+offsetYUpper+"/"+isAddedRows+"/"+rowHeight+"/"+diff+"/"+rowText+"/"+comverted+"/");
 		var domRow = me.domRows.eq(rowIndex).css("background-color",me.caretRowColor);
 		var caretTop = topCaret+offsetYUpper+(isAddedRows ? rowHeight*(diff*2+(diff!=0 ? -2:0)):0)-2;
 		me.caretSpacerUpper.css("top",caretTop);		//カーソル上空間
