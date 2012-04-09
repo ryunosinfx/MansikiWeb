@@ -113,6 +113,7 @@ HilightingEditor.prototype={
 		var text = me.getFormatedTextCRLF(me.textarea.val());
 		me.textarea.val(text);
 		var list = text.split("\n");
+		me.list = list;
 		var diff = domRows.length - list.length;//行数変動を観測
 		if(nowTime-me.nowTime<100 && diff===0){//指定時間内はスキップただし行数変動は除く
 			me.timer = setTimeout(function(){me.onEdit(event);},10);
@@ -122,6 +123,7 @@ HilightingEditor.prototype={
 		var numsHPadding = 2;
 		var viewWidthPlus = 0;
 		var rowHeight = (me.lineHeight)*1+2;
+		me.rowHeight=rowHeight;
 		var numsWidth = me.baseLineNumWidth-(numsHPadding*2);
 		var width = me.view.attr('scrollWidth')-viewWidthPlus*2;
 		var maxWidth=me.textareaWidth;
@@ -233,16 +235,19 @@ HilightingEditor.prototype={
 			rowNums.eq(n).remove();//行番号も削除
 		}
 		//追加前のやつ。
+		me.domRows=domRows;
 		var domRowsArray = [];
 		for(var j=0;j<domRows.length;j++){
 			domRowsArray.push(domRows.eq(j));
 		}
 		mansikiWorkMng.startRefresh();
 		var domRowsOffset=0;
-		var overrideOffset=0;
-		
+		me.overrideOffset=0;
+		me.currentCaret=currentCaret;
+		me.maxWidth=maxWidth;
 		var mwh = new mansikiWorkerHandler();
 		
+		me.resultMap ={};
 		for(var j=0;j<domRowsArray.length;j++){
 			domRow = domRowsArray[j];
 			var domRowDom=document.getElementById(domRow.attr('id'));
@@ -250,12 +255,13 @@ HilightingEditor.prototype={
 				domRowDom.style.width=maxWidth;
 			}
 			if(list[j] !== undefined){//ここで強制入力を反映
-				var el = me.SyntaxHilighter.comvertStringToHTMLHilight(list[j],mansikiWorkMng.getHilightRules(),me.SyntaxHilighter,undefined,diff < 0,caretRowNo==j);
+				var el = me.SyntaxHilighter.comvertStringToHTMLHilight(list[j],mansikiWorkMng.getHilightRules(),me.SyntaxHilighter,undefined,j,diff < 0,caretRowNo);
 				
-				me.SyntaxHilighter.setPreData(list[j],mansikiWorkMng.getHilightRules(),me.SyntaxHilighter,undefined,diff < 0,caretRowNo==j);
-				mwh.execute(mwh,me.SyntaxHilighter,function(){console.log("i am a callback!");});
+				me.SyntaxHilighter.setPreData(me.SyntaxHilighter,list[j],mansikiWorkMng.getHilightRules(),undefined,j,diff < 0,caretRowNo);
+				;
+				mwh.execute(mwh,me.SyntaxHilighter.getPreDataObj(),me.onEditAfterCollBack,me);
 				list[j] = el.text;
-				overrideOffset+=el.overrideOffset;
+				me.overrideOffset+=el.overrideOffset;
 				if(caretRowNo==j){
 					elAtCaret=el;
 				}else if(el.bgColor!==undefined ){
@@ -264,24 +270,66 @@ HilightingEditor.prototype={
 			}
 		}
 		//選択範囲処理
+		me.nowTotalHeight = nowTotalHeight;
 		me.onSelected(me,currentCaret,currentEnd,text,caretRowNo,maxWidth,rowHeight,nowCaretLeft,nowTime);
-		me.textarea.width(maxWidth).height(nowTotalHeight).val(list.join("\n"));	
-		me.frame.width(maxWidth).height(nowTotalHeight);	
-		me.lineNumInner.height(nowTotalHeight);		
+		me.textarea.width(maxWidth).height(nowTotalHeight).val(list.join("\n"));	//
+		me.frame.width(maxWidth).height(nowTotalHeight);							//
+		me.lineNumInner.height(nowTotalHeight);										//
 		me.view.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-1);		
 		me.selectionView.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-2-rowHeight);		
 		me.findView.width(maxWidth+viewWidthPlus).height(nowTotalHeight).css("top",(nowTotalHeight)*-3-rowHeight-2);		
-		me.data = list.concat();//データにリストをコピー
-		me.findInTheArea({"data":{"self":me}});
-		me.textarea.get(0).selectionStart=currentCaret+overrideOffset;//カーソル位置
-		me.textarea.get(0).selectionEnd=currentEnd+overrideOffset;//カーソル位置
+		me.data = list.concat();//データにリストをコピー//
+		me.textarea.get(0).selectionStart=me.currentCaret+me.overrideOffset;//カーソル位置
+		me.textarea.get(0).selectionEnd=me.currentEnd+me.overrideOffset;//カーソル位置
 		me.nowTime=new Date().getTime();
-		me.domRows=domRows;
 		if(elAtCaret.text.match(/^\s+$/)){//
 			me.readjustCaret(me,topCaretAtCaret,caretRowNo,offsetYUpper,isAddedRows,rowHeight,diff,elAtCaret.text,htmlConvertedToCaret);
 		}
 		
 	},
+	onEditAfterCollBack:function(me,el){
+		
+		var domRows = me.domRows;
+		var rowIndex = el.rowIndex;
+		//追加前のやつ。
+		var domRowsArray = [];
+		for(var j=0;j<domRows.length;j++){
+			domRowsArray.push(domRows.eq(j));
+		}
+		mansikiWorkMng.startRefresh();
+		var domRowsOffset=0;
+		var overrideOffset=0;
+		
+		domRow = domRowsArray[rowIndex];
+		me.list[rowIndex] = el.text;
+		me.overrideOffset+=el.overrideOffset;
+		if(caretRowNo==j){
+			elAtCaret=el;
+		}else if(el.bgColor!==undefined ){
+			domRow.html(el.html).css("background-color",el.bgColor);
+		}
+	},
+	countDoneLines:function(me){
+		var count = 0;
+		var domRows = me.domRows;
+		for(var j=0;j<domRows.length;j++){
+			if(me.resultMap[j]===undefined){
+				return ;
+			}
+		}
+		me.onEditDoLast(me);
+	},
+	onEditDoLast:function(me){
+		me.textarea.width(me.maxWidth).height(me.nowTotalHeight).val(me.list.join("\n"));
+		me.frame.width(me.maxWidth).height(me.nowTotalHeight);	
+		me.lineNumInner.height(me.nowTotalHeight);	
+		me.data = me.list.concat();//データにリストをコピー
+		me.textarea.get(0).selectionStart=currentCaret+me.overrideOffset;//カーソル位置
+		me.textarea.get(0).selectionEnd=currentEnd+me.overrideOffset;//カーソル位置
+		me.findInTheArea({"data":{"self":me}});//検索処理
+		me.nowTime=new Date().getTime();
+		
+	}
 	readjustCaret:function(me,topCaret,rowIndex,offsetYUpper,isAddedRows,rowHeight,diff,rowText,comverted){//ただしインデントにのみ限る
 		var domRow = me.domRows.eq(rowIndex).css("background-color",me.caretRowColor);
 		var caretTop = topCaret+offsetYUpper+(isAddedRows ? rowHeight*(diff*2+(diff!=0 ? -2:0)):0)-2;

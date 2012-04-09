@@ -123,9 +123,7 @@ var MansikiWorkManager = function(){
 MansikiWorkManager.prototype={
 	buildMansikiHilight:function (){
 		var list = new HilightingSyntax();
-		var callbackFunc = function(text,regexp,type,el,index,isEditingRow,isTypeSet){
-			return mansikiWorkMng.add(text,regexp,type,mansikiWorkMng,el,index,isEditingRow,isTypeSet);
-		};
+		var callbackFunc = true;
 		//ページ単位 name,cssClassName,regix,preRoule,type,scope
 		var pageRule =new HilightingSyntaxRule(name,"page","^\\s*\\\[Page\\\](.+)$","","page","page",callbackFunc,"[Page]");
 		list.addRule(pageRule,"ZAAA");
@@ -194,6 +192,14 @@ MansikiWorkManager.prototype={
 		//console.log(isEditingRow+"/text:["+text+"]/pre:["+(pre===undefined?"":pre.text)+"]");
 		if(isTypeSet===false){me.rowConditionList.push(newRowObj);}
 		return me.prepareELobj(el,newRowObj,isTypeSet);//ここで行の内容を書き換える
+	},
+	executeCallBack:function (hilightRule,text,el,index,isEditingRow,isTypeSet){
+		if(hilightRule.callback!==undefined){
+			//return this.add(text,regexp,type,mansikiWorkMng,el,index,isEditingRow,isTypeSet);
+			//console.log("aaaaaaaaaaaaaaa");
+			el = this.add(text,hilightRule.regix,hilightRule.type,this,el,index,isEditingRow,isTypeSet);
+		}
+		return el;
 	},
 	prepareELobj:function(el,rowObj,isTypeSet){
 		el.setText(rowObj.getFormatedRow());

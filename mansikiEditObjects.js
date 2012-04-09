@@ -16,24 +16,24 @@ SyntaxHilighter.prototype={
 		.replace(/pre&nbsp;style/g,"pre style").replace(/span&nbsp;class/g,"span class");
 		return str.replace(/[　]{1}/g,"<span class='space2'>&emsp;</span>1");
 	},
-	setPreData:function(str,hsRule,me,index,isAddrow,isEditingRow){
+	setPreData:function(me,str,hsRule,index,rowIndex,isAddrow,caretRowNo){
 		me.str=str;
 		me.hsRule=hsRule;
 		me.index=index;
+		me.rowIndex=rowIndex;
 		me.isAddrow=isAddrow;
-		me.isEditingRow=isEditingRow;
+		me.caretRowNo=caretRowNo;
 	},
 	getPreDataObj:function (me){//Worker化に対応
-		return JSON.stringify(me);
+		return {str:me.str,hsRule:me.hsRule,me.index:index,rowIndex:me.rowIndex,isAddrow:me.isAddrow,caretRowNo:me.caretRowNo};
 	},
-	loadPreDataByObj:function(me,preDataObjText){
-		var preDataObj = JSON.parse(preDataObjText);
-		me.setPreData(preDataObj.str,preDataObj.hsRule,me,preDataObj.index,preDataObj.isAddrow,preDataObj.isEditingRow);
+	loadPreDataByObj:function(me,preDataObj){
+		me.setPreData(me,preDataObj.str,preDataObj.hsRule,preDataObj.index,preDataObj.rowIndex,preDataObj.isAddrow,preDataObj.caretRowNo);
 	},
 	execute:function(me){
-		return me.comvertStringToHTMLHilight(me.str,me.hsRule,me,me.index,me.isAddrow,me.isEditingRow);
+		return me.comvertStringToHTMLHilight(me,me.str,me.hsRule,me.index,me.rowIndex,me.isAddrow,me.caretRowNo);
 	},
-	comvertStringToHTMLHilight:function(str,hsRule,me,index,isAddrow,isEditingRow){//ここの処理はWorkerに投げたい。
+	comvertStringToHTMLHilight:function(me,str,hsRule,index,rowIndex,isAddrow,caretRowNo){//ここの処理はWorkerに投げたい。
 		var size = hsRule.size;
 		var el = new ExecutedLine(str);
 		var retText =str;
@@ -51,7 +51,7 @@ SyntaxHilighter.prototype={
 					isTypeSet=false;
 				}
 				var prefix = hilightRule.prefix.length>0?me.maskStringA1+className+"_prefix"+me.maskStringA2+hilightRule.prefix+me.maskStringB1:"";
-				el = hilightRule.executeCallBack(retText,el,index,isEditingRow,isTypeSet);
+				el = mansikiWorkMng.executeCallBack(hilightRule,retText,el,index,caretRowNo==rowIndex,isTypeSet);
 				retText = el.text.replace(re,function(preText, p1, offset, s){
 					var viewText = p1;
 					if(index!==undefined && el.isOverride==true){
@@ -61,10 +61,11 @@ SyntaxHilighter.prototype={
 				});
 			};//~s///g
 		}//戻す
-		if(isAddrow===true && isEditingRow===true){
+		if(isAddrow===true && caretRowNo==rowIndex===true){
 			el.text = el.indent + el.text;
 			retText = el.indent + retText;
 		}
+		el.rowIndex = rowIndex;
 		el.text = el.text.replace(me.maskReA12,"").replace(me.maskReB1,"");
 		el.overrideOffset = el.text.length-str.length;
 		el.html=me.comvertStringToHTML(retText).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>");
@@ -217,12 +218,7 @@ var HilightingSyntaxRule=function(name,cssClassName,regix,preRoule,type,scope,ca
 	this.prefix = prefix!==undefined?prefix:"";
 }
 HilightingSyntaxRule.prototype={
-	executeCallBack:function (text,el,index,isEditingRow,isTypeSet){
-		if(this.callback!==undefined){
-			el = this.callback(text,this.regix,this.type,el,index,isEditingRow,isTypeSet);
-		}
-		return el;
-	}
+
 }
 var ExecutedLine=function(text){
 	this.text=text;
@@ -235,54 +231,7 @@ var ExecutedLine=function(text){
 	this.bgColor;
 	this.indent="";
 	this.bgColorAdditionalRow;
+	this.rowIndex=0;
 }
 ExecutedLine.prototype={
-	setText:function(text){
-		this.text=text;
-	},
-	getText:function(){
-		return this.text;
-	},
-	isOverride:function(){
-		return this.isOverride;
-	},
-	setOverride:function(isOverride){
-		return this.isOverride=isOverride;
-	},
-	setHtml:function(html){
-		this.html = html;
-	},
-	getHtml:function(){
-		return this.html;
-	},
-	setAddRowText:function(addRowText){
-		this.addRowText = addRowText;
-	},
-	getAddRowText:function(){
-		return this.addRowText;
-	},
-	setAddRowHtml:function(addRowHtml){
-		this.addRowHtml = addRowHtml;
-	},
-	getAddRowHtml:function(){
-		return this.addRowHtml;
-	},
-	setOverrideOffset:function(overrideOffset){
-		this.overrideOffset = overrideOffset;
-	},
-	getOverrideOffset:function(){
-		return this.overrideOffset;
-	},
-	setIndent:function(indent){
-		this.indent = indent;
-	},
-	getIndent:function(){
-		return this.indent;
-	},
-	setBgColor:function(bgColor){
-		this.bgColor = bgColor;
-	},
-	getBgColor:function(){
-		return this.bgColor;
-	}
 }
