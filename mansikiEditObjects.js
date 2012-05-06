@@ -1,4 +1,6 @@
 //ここをWorkerに投げる。
+
+var shBackup ;
 var SyntaxHilighter = function(){
 	this.maskStringA1="000A"+new Date().getTime()+"D888";
 	this.maskStringA2="000B"+new Date().getTime()+"E999";
@@ -25,7 +27,7 @@ SyntaxHilighter.prototype={
 		me.caretRowNo=caretRowNo;
 	},
 	getPreDataObj:function (me){//Worker化に対応
-		return {str:me.str,hsRule:me.hsRule,me.index:index,rowIndex:me.rowIndex,isAddrow:me.isAddrow,caretRowNo:me.caretRowNo};
+		return {str:me.str,hsRule:me.hsRule,index:me.index,rowIndex:me.rowIndex,isAddrow:me.isAddrow,caretRowNo:me.caretRowNo};
 	},
 	loadPreDataByObj:function(me,preDataObj){
 		me.setPreData(me,preDataObj.str,preDataObj.hsRule,preDataObj.index,preDataObj.rowIndex,preDataObj.isAddrow,preDataObj.caretRowNo);
@@ -38,7 +40,9 @@ SyntaxHilighter.prototype={
 		var el = new ExecutedLine(str);
 		var retText =str;
 		var typeOfFirst= "";
+		//console.log(hsRule.toSource());
 		for(var priority in hsRule.ruleList){
+			//console.log(el.toSource()+priority);
 			var isTypeSet= true;
 			var hilightRule = hsRule.ruleList[priority];
 			var rexStr = hilightRule.regix;
@@ -51,7 +55,8 @@ SyntaxHilighter.prototype={
 					isTypeSet=false;
 				}
 				var prefix = hilightRule.prefix.length>0?me.maskStringA1+className+"_prefix"+me.maskStringA2+hilightRule.prefix+me.maskStringB1:"";
-				el = mansikiWorkMng.executeCallBack(hilightRule,retText,el,index,caretRowNo==rowIndex,isTypeSet);
+				el = mansikiWorkMng.executeCallBack(hilightRule,retText,el,index,caretRowNo==rowIndex,isTypeSet);// TODO mansikiWorkMngをポータブルにする。
+				
 				retText = el.text.replace(re,function(preText, p1, offset, s){
 					var viewText = p1;
 					if(index!==undefined && el.isOverride==true){
@@ -61,6 +66,8 @@ SyntaxHilighter.prototype={
 				});
 			};//~s///g
 		}//戻す
+		el.text=el.text+"";
+		//console.log(el.text+"/"+priority);
 		if(isAddrow===true && caretRowNo==rowIndex===true){
 			el.text = el.indent + el.text;
 			retText = el.indent + retText;
@@ -234,4 +241,77 @@ var ExecutedLine=function(text){
 	this.rowIndex=0;
 }
 ExecutedLine.prototype={
+}
+
+//Worker渡しデータ
+var MansikiHiliteData = function (){
+	this.text='';//CSSのクラス名接頭文字
+	this.classIdPrefix='';//CSSのクラス名接頭文字
+	this.data=[];//全データ
+	this.list=[];//全データの改行分割リスト
+	this.dataConverted=[];//各行のHTMLデータ
+	this.domRowsExist=[];//DOMの情報はすでにあるか
+	this.diff=0;//行数変動数
+	this.rowIdList=[];//各行のIDリスト
+	this.shDataList=[];//各行のハイライト用の出たリスト
+	this.resultMap={};//処理済み判別マップ
+	this.isThrowList=[];//その行は処理飛ばしして問題ないか
+	this.isAddedRows=false;//実際に行の追加はあったか
+	this.currentCaret=0;//キャレット位置
+	this.caretRowNo=0;//キャレットの行番号
+	this.isCaretRowList=[];//キャレット行かどうかのリスト
+	this.htmlConvertedToCaret='';//キャレット行の行はじめからキャレットまでのHTML
+	this.atCurrentCaret=0;//キャレットまでの文字数
+	this.elList=[];//CSSのクラス名接頭文字
+	this.ErrorMsg = '';
+}
+
+
+function executeTheJob(sh,hilightData){
+	//追加前のやつ。
+	mansikiWorkMng.startRefresh();
+	var ErrorMsg = '';
+	var lensum = 0;
+	hilightData.resultMap ={};
+	hilightData.isThrowList=[];
+	hilightData.isCaretRowList=[];
+	hilightData.elList=[];
+	var amountLength = 0;
+	var atCurrentCaret =0;
+	//ここからWorker行き
+	for(var i= 0;i<hilightData.list.length;i++){
+		var isCaretRow = false;
+		var isCaretRowShowed = false;
+		var rowText = hilightData.list[i];					//本来その行に存在する文字列情報
+		hilightData.rowIdList[i] = hilightData.rowIdList[i]===undefined ? hilightData.classIdPrefix+(i+1):hilightData.rowIdList[i];
+		var rowTextLength = rowText.length;	//行文字数
+		amountLength += rowTextLength;			//カーソル位置ー今までの全行文字数＋行の長さ//行トータルの集計
+		atCurrentCaret = hilightData.currentCaret + rowTextLength - amountLength - i;//キャレット位置
+		if(isCaretRow===false && isCaretRowShowed==false && (0 <= atCurrentCaret && atCurrentCaret <= rowTextLength )){
+			isCaretRow=true;
+			isCaretRowShowed==true;
+			hilightData.caretRowNo =i;
+			hilightData.atCurrentCaret = atCurrentCaret;
+		}else{
+			isCaretRow=false;
+		}
+		if(hilightData.data.length > i && hilightData.data[i]===rowText && rowText.replace(/^[\s|\t]+/g,"").length > 0 
+			&&  hilightData.domRowsExist[i]==true && isCaretRow==false){//データが動いていないかつカーソルの行位以外はスルー
+			hilightData.isThrowList[i]=true;
+			continue;//次の行を処理する。
+		}
+		var textConverted = sh.comvertStringToHTML(rowText);	
+		if(isCaretRow===true){
+			hilightData.htmlConvertedToCaret = textConverted
+		}
+		hilightData.isCaretRowList[i]=isCaretRow;
+		//行単位初期化
+		hilightData.dataConverted[i] = textConverted		//データとして変換済みをリストに登録
+		sh.loadPreDataByObj(sh,hilightData.shDataList[i]);	
+		hilightData.elList[i] = sh.execute(sh)	//データとして変換済みをリストに登録
+		lensum+=hilightData.elList[i].text.length;
+	}
+	ErrorMsg+='/'+hilightData.elList.length+'_'+lensum;
+	hilightData.ErrorMsg = ErrorMsg;
+	return hilightData;
 }
