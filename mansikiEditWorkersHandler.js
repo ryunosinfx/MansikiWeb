@@ -16,8 +16,11 @@ mansikiWorkerHandler.prototype={
 			//alert("イベント発生元のオブジェクト：y:"+i);
 			me.currentWorker = new Worker('mansikiEditWorker.js');
 			//alert("イベント発生元のオブジェクト：2");
+			
+			console.log('kill worker!13:');
 			me.currentWorker.addEventListener('message', me.messageHandler, true);
 			me.currentWorker.addEventListener('error', me.errorHandler, true);
+			console.log('kill worker14:');
 		}
 	},
 	execute:function(me,jobObj,callback,selfObject){
@@ -39,6 +42,7 @@ mansikiWorkerHandler.prototype={
 		me.workers[me.callCount].postMessage(jobObj);//function抜きのオブジェクトは渡せる
 	},
 	clearWorkerInfo: function(me,callCount){
+			console.log('kill worker!11:');
 		if(me.workers[me.callCount] !== undefined){
 			var callbackKey = me.callbackKeys[callCount];
 			var callback = mansikiUIQueueForWorkerObject[callbackKey];
@@ -49,9 +53,11 @@ mansikiWorkerHandler.prototype={
 			}
 			me.workers[callCount].terminate(); // ぬっころす;
 			me.workers[callCount]=undefined;//メモリから排除
+			console.log('kill worker!12:');
 		}
 	},
 	messageHandler: function(event) {
+		console.log('kill worker!20:');
 		var retObj = event.data;
 		var me = event.target.self;
 		var callbackKey = retObj.callbackKey;
@@ -63,7 +69,7 @@ mansikiWorkerHandler.prototype={
 			if(retObj.callCount !== me.callCount){
 				me.clearWorkerInfo(me,me.callCount);
 			}
-			console.log('retObj.result:', retObj.result.ErrorMsg);
+			//console.log('retObj.result:', retObj.result.ErrorMsg);
 			callback(selfObject,retObj.result);
 		}
 		me.clearWorkerInfo(me,me.callCount);

@@ -100,6 +100,17 @@ span.page_prefix{
 	font-weight:bold;
 	letter-spacing: -1px;
 }
+/*---------------------------*/
+input.mansiki_menu_botton{
+	padding :2px;
+	border :0px;
+	margin :0px;
+	text-align :center;
+	word-spacing:0px;
+	letter-spacing:0px;
+	
+}
+
 
 
 
