@@ -30,10 +30,10 @@
 			<div class="menu">
 				<input id="findOnEditor" type="text" />
 				<input type="file" id="loadFile" />
-				<input type="button" value="next" id='next' class="mansiki_menu_botton"/>
-				<input type="button" value="prev" id='prev' class="mansiki_menu_botton" />
-				<input type="button" value="load" id='load' class="mansiki_menu_botton" />
-				<input type="button" value="save" id='save' class="mansiki_menu_botton" />
+				<input type="button" value="next" class="mansiki_menu_botton"/>
+				<input type="button" value="prev" class="mansiki_menu_botton" />
+				<input type="button" value="load" class="mansiki_menu_botton" />
+				<input type="button" value="save" class="mansiki_menu_botton" />
 			</div>
 			<div id="ancer"></div>
 			</from>

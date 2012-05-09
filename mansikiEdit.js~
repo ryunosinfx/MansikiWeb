@@ -48,7 +48,7 @@ HilightingEditor.prototype={
 		var mfu = new MansikiFileUtil();
 		mfu.bindSave(mfu,$('#'+saveId),'click',me.textarea);
 		mfu.bindLoad(mfu,$('#'+loadId),'click',document.getElementById(fileId),me.textarea,me.onEdit,me);
-		//$('#'+fileId).trigger("focus");
+		$('#'+fileId).trigger("focus");
 	},
 	initEditor:function(width,height,findInput){
 		this.height = height;

@@ -1,0 +1,114 @@
+/*-----base--------*/
+*{
+border-width:0px;
+margin:0px;
+padding:0px;
+}
+/*-----frame--------*/
+
+input,textarea{
+	border:solid black 1px;
+	overflow:hidden;
+}
+div.rows,div.selectedRows{
+	border:solid red 0px;
+	margin:0px;
+	padding:0px;
+	background-color:#000;
+	overflow:hidden;
+	word-wrap:word-break;
+	
+}
+div.selectedRows{
+	position:relative;
+	background-color:#010;
+}
+span.space{
+	word-spacing:0px;
+	opacity:0;
+}
+span.space2{
+	word-spacing:0px;
+	opacity:0;
+	background-color:#95FF00;
+}
+span.Selected{
+	word-spacing:0px;
+	opacity:1;
+	background-color:#95FF00;
+}
+span.findHilight{
+	word-spacing:0px;
+	opacity:1;
+	background-color:#FF8800;
+	color:red;
+}
+div.nums{
+	border:solid red 0px;
+	margin:0px;
+	background-color:#ccc;
+	overflow:hidden;
+	word-wrap:word-break;
+	text-align:right;
+	font-size:10px;
+}
+
+div.inneredit{
+	width:400px;
+	height:300px;
+	border:solid 1px green;
+	overflow:scroll;
+}
+
+div.inneredit textarea{
+	width:600px;
+	height:600px;
+	overflow:hidden;
+	background-color:#68FF75;
+}
+/*---------------------------*/
+.HilightingEditor,.HilightingEditor .inputText{
+	font-family:"Takao Pゴシック",monospace,"Takaoゴシック","ＭＳ ゴシック","Andale Mono",sans-serif;
+	f ont-family:"Andale Mono";
+	word-spacing:0px;
+	letter-spacing:0px;
+}
+span.lsa{
+	letter-spacing:-2px;
+}
+/*---------------------------*/
+
+span.page{
+	color:red;
+}
+span.page_prefix{
+	color:red;
+	text-decoration:underline overline;
+	background-color:white;
+	font-weight:bold;
+	letter-spacing: -1px;
+}
+/*---------------------------*/
+
+span.koma{
+	color:#FF008C;
+}
+span.page_prefix{
+	color:#FF008C;
+	text-decoration:underline overline;
+	background-color:white;
+	font-weight:bold;
+	letter-spacing: -1px;
+}
+/*---------------------------*/
+input.mansiki_menu_botton{
+	padding :2px;
+	border :0px;
+	margin :0px;
+	text-align :center;
+
+}
+
+
+
+
