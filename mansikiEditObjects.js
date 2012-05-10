@@ -295,11 +295,12 @@ function executeTheJob(sh,hilightData){
 		}else{
 			isCaretRow=false;
 		}
-		if(hilightData.data.length > i && hilightData.data[i]===rowText && rowText.replace(/^[\s|\t]+/g,"").length > 0 
-			&&  hilightData.domRowsExist[i]==true && isCaretRow==false){//データが動いていないかつカーソルの行位以外はスルー
+		var old = hilightData.data[i]; 
+		if( rowText.replace(/^[\s|\t]+/g,"").length > 0 && isCaretRow==false){//データが動いていないかつカーソルの行位以外はスルー
 			hilightData.isThrowList[i]=true;
 			continue;//次の行を処理する。
 		}
+		//console.log(i+'/'+hilightData.list.length+'/'+rowText.replace(/^[\s|\t]+/g,"").length+'/'+isCaretRow);
 		var textConverted = sh.comvertStringToHTML(rowText);	
 		if(isCaretRow===true){
 			hilightData.htmlConvertedToCaret = textConverted

@@ -48,7 +48,6 @@ HilightingEditor.prototype={
 		var mfu = new MansikiFileUtil();
 		mfu.bindSave(mfu,$('#'+saveId),'click',me.textarea);
 		mfu.bindLoad(mfu,$('#'+loadId),'click',document.getElementById(fileId),me.textarea,me.onEdit,me);
-		//$('#'+fileId).trigger("focus");
 	},
 	initEditor:function(width,height,findInput){
 		this.height = height;
@@ -132,7 +131,7 @@ HilightingEditor.prototype={
 		this.bindFuncButtons(this);
 	},
 	onEdit:function(event){//将来は背景を全部Canvasにすべき？
-		var me = event.data===undefined ? event:event.data.self;
+		var me = event!==undefined && event.data.self===undefined  ? event:event.data.self;
 		//var me = event.data.self;
 		var nowTime=new Date().getTime()+me.editCallCount%10;
 		var currentCaret = me.textarea.get(0).selectionStart;//カーソル位置// TODO DOM
@@ -152,15 +151,15 @@ HilightingEditor.prototype={
 		if( isTheFirefoxBug || text.length <2 && text!==me.bkText && me.bkText.length > 1){//処理完了までに入力があった場合。見分ける方法は。短時間にX行が１行になった場合。
 			 text = me.bkText;
 			 me.lineNum.focus();
-			 me.textarea.val(me.bkText+inTheFirefoxBugInputText);
-			 me.textarea.focus();
-			 me.textarea.keyup();
-			 me.textarea.keyup();
-			 me.textarea.keyup();
-			 me.textarea.keyup();
+			 //me.textarea.get(0).val(me.bkText+inTheFirefoxBugInputText);
+			 me.textarea.get(0).focus();
+			 me.textarea.get(0).keyup();
+			 me.textarea.get(0).keyup();
+			 me.textarea.get(0).keyup();
+			 me.textarea.get(0).keyup();
 			 me.textarea.get(0).selectionEnd = me.caretLength;
 			 
-		//console.log('text.length!'+text.length+'/'+(text!==me.bkText)+'/'+me.bkText.length+'/'+me.caretLength+'/'+me.caretRowCount );
+			//console.log('text.length!'+text.length+'/'+(text!==me.bkText)+'/'+me.bkText.length+'/'+me.caretLength+'/'+me.caretRowCount );
 			 me.timer = setTimeout(function(){me.tran=false;me.onEdit(event);},2);
 			return;
 		}
@@ -170,8 +169,9 @@ HilightingEditor.prototype={
 			//console.log('SAME!SAME! diff:'+diff);
 			return ;
 		}
-		if(nowTime-me.nowTime<100+me.editCallCount%10  && me.tran!==false){//指定時間内はスキップただし行数変動は除く
-			me.timer = setTimeout(function(){me.tran=false;me.onEdit(event);},2);
+		clearTimeout(me.timer);
+		if(nowTime-me.nowTime<200+me.editCallCount%10  && me.tran!==false){//指定時間内はスキップただし行数変動は除く
+			me.timer = setTimeout(function(){me.tran=false;me.onEdit(event);},200);
 			//console.log('TIME NOT CAME!');
 			return;
 		}
@@ -213,7 +213,6 @@ HilightingEditor.prototype={
 			me.maxWidth = me.maxWidth+2< domRow.width()? domRow.width()+2 :me.maxWidth;// TODO DOM
 			me.hilightData.rowIdList.push(domRow.attr('id'));// TODO DOM
 			
-			
 			var rowNum = rowNums.eq(i);//行番号表示// TODO DOM
 			
 			if(rowNum.length < 1){//行番号表示の処理
@@ -223,7 +222,6 @@ HilightingEditor.prototype={
 				rowNum.css("line-height",me.lineHeight+"px").css("height",(me.rowHeight-2)+"px");//行の高さと実際の高さを指定// TODO DOM
 			}
 			rowNum.html(i+1);//行番号表示// TODO DOM
-			 me.hilightData.domRowsExist.push(domRow.lenght>0);
 			domRowsArray.push(domRow);// TODO DOM
 			me.SyntaxHilighter.setPreData(me.SyntaxHilighter,me.hilightData.list[i],mansikiWorkMng.getHilightRules(mansikiWorkMng),undefined,i,me.diff < 0,0);
 			me.hilightData.shDataList.push(me.SyntaxHilighter.getPreDataObj(me.SyntaxHilighter));
@@ -244,15 +242,12 @@ HilightingEditor.prototype={
 		}
 		me.hilightData.text = me.text;
 		//me.mwh.execute(me.mwh,me.hilightData,me.onEditAfterCallBack,me);//ここからWorkerに投げる！
-		
 		me.onEditAfterCallBack(me,executeTheJob(me.SyntaxHilighter,me.hilightData));
 	},
 	onEditAfterCallBack:function(me,hilightData){//単位を行じゃなくて1アクションに集約
 		//ここからWorker CallBack
 		me.hilightDataAfter=hilightData;
 		if(me.hilightDataAfter.editCallCount !== me.editCallCount){//すでに新しい入力が走っている場合はキャンセル。
-			//console.log("me.hilightDataAfter.editCallCount:"+me.hilightDataAfter.editCallCount+'/me.editCallCount:'+me.editCallCount);
-			//me.timer = setTimeout(function(){me.tran=false;me.onEdit(me.event);},me.editCallCount%20);
 			return ;
 		}
 		var lineLength = me.hilightDataAfter.list.length;
@@ -262,19 +257,19 @@ HilightingEditor.prototype={
 		//Firefox Bug?IME対応
 		var nowTime=new Date().getTime()+me.editCallCount%10;
 		for(var i= 0;i<me.hilightDataAfter.list.length;i++){
-			var caretTop = me.topCaret+me.offsetYUpper+(me.hilightDataAfter.isAddedRows ? 
-				me.rowHeight*(me.hilightDataAfter.diff*2):0)-2;
+			var caretTop = me.topCaret+me.offsetYUpper+(me.hilightDataAfter.isAddedRows ? me.rowHeight*(me.hilightDataAfter.diff*2):0)-2;
 			if(nowTime-me.nowTime<20+me.editCallCount%10 && me.hilightDataAfter.isCaretRowList[i]===true &&caretTop <1 && me.caretRowCount  > 1){
 				 me.textarea.keyup();
 				 return ;
 			}
 		}
 		for(var i= 0;i<me.hilightDataAfter.list.length;i++){
+			var domRow = me.domRows.eq(i);// TODO DOM
 			if(me.hilightDataAfter.isThrowList[i]===true){
+				domRow.css("background-color",me.basicRowColor);
 				continue;//変更なし行はこちら。
 			}
-			
-			var domRow = me.domRows.eq(i);// TODO DOM
+			console.log("AAAA"+i);
 			if(me.hilightDataAfter.isCaretRowList[i]===true && domRow.position()!==null){//var stringAtCaret ="A";//キャレットの表示//caretsカーソル
 				var position = domRow.position();//位置を取得// TODO DOM
 				me.topCaret = position.top;//topLog+="/["+i+"]:"+topCaret;// TODO DOM
@@ -350,22 +345,13 @@ HilightingEditor.prototype={
 		var nowTotalHeight = me.hilightDataAfter.list.length * me.rowHeight + 100;
 		var isAddedRows = nowTotalHeight > me.height;
 		var nowTotalHeight = isAddedRows ? nowTotalHeight:me.height;
-		//me.joind = me.hilightDataAfter.list.join("\n");
-		//console.log("/me.nowTotalHeight:"+nowTotalHeight+"/me.caretRowNo:"+me.hilightDataAfter.caretRowNo+"/me.diff:"+me.hilightDataAfter.diff+"/me.isAddedRows:"+isAddedRows+"/me.list.length:"+me.hilightDataAfter.list.length+"/me.offsetYUpper:"+me.offsetYUpper+'/'+(me.hilightDataAfter.currentCaret*1 + me.overrideOffset*1)
-		//+'/'+me.hilightDataAfter.atCurrentCaret +'/'+me.hilightDataAfter.caretRowNo );
-		
 		if(me.hilightDataAfter.list.length < 2 && me.text.length<2 || me.hilightDataAfter.text!==me.text ){//すでに新しい入力が走っている場合はキャンセル。
-			//console.log("WHITE!!!me.hilightDataAfter.editCallCount:"+me.hilightDataAfter.editCallCount+'/me.editCallCount:'+me.editCallCount+'/'+me.text.length+'/'+me.hilightDataAfter.list.concat().length+'/'+me.hilightDataAfter.atCurrentCaret +'/'+me.hilightDataAfter.caretRowNo +'/'+me.hilightDataAfter.isAddedRows+'/err:'+me.hilightDataAfter.ErrorMsg);
-			//me.timer = setTimeout(function(){me.tran=false;me.onEdit(me.event);},me.editCallCount%20);
 			if(me.hilightDataAfter.list.length < 2 && me.text.length<2 ||me.hilightDataAfter.editCallCount !== me.editCallCount){
-				//console.log("Black");
 				return ;
 			}
 		}
 		if(me.hilightDataAfter.editCallCount !== me.editCallCount){//すでに新しい入力が走っている場合はキャンセル。
 			me.hilightDataAfter.editCallCount++;
-			//console.log("me.hilightDataAfter.editCallCount:"+me.hilightDataAfter.editCallCount+'/me.editCallCount:'+me.editCallCount+'AAA');
-			//me.timer = setTimeout(function(){me.tran=false;me.onEdit(me.event);},me.editCallCount%20);
 			return ;
 		}
 		me.frame.width(me.maxWidth).height(nowTotalHeight);	
@@ -386,15 +372,11 @@ HilightingEditor.prototype={
 		me.tran=false;
 		me.readjustCaret(me);
 		//Firefox Bug? IME周り対応
-		if( me.textarea.get(0).selectionEnd>10 && me.joind.length >10 &&  me.joind!==me.bkText){
+		if( me.textarea.get(0).selectionEnd >10 && me.joind.length >10 &&  me.joind!==me.bkText){
 			me.bkText = me.joind;
-			//ta.value = me.joind;
 			me.caretRowCount = me.hilightDataAfter.list.length;
 			me.textarea.val(me.joind);
 			me.caretLength = me.textarea.get(0).selectionEnd;
-		}else{
-			 me.lineNum.focus();
-			 me.textarea.focus();
 		}
 		//console.log('GOAL!'+me.textarea.val().length+'/'+me.textarea.attr('id')+'/'+ta.value);
 	},
@@ -406,7 +388,7 @@ HilightingEditor.prototype={
 		var caretTop = me.topCaret + me.offsetYUpper + (me.hilightDataAfter.isAddedRows ? rowHeight*(me.hilightDataAfter.diff*2+(me.hilightDataAfter.diff!=0 ? -2:0)):0)-2;
 		//console.log("caretTop:"+(caretTop-4)+'/'+me.topCaret +'/'+me.offsetYUpper+'/'+me.hilightDataAfter.diff);
 		if(me.topCaret <1 && me.caretRowCount  > 1){
-			 me.textarea.keyup();
+			 me.textarea.get(0).keyup();
 			 return ;
 		}
 		me.caretSpacerUpper.css("top",caretTop);		//カーソル上空間
@@ -489,9 +471,9 @@ HilightingEditor.prototype={
 		attachPoint.append(this.outerParent);
 		this.textarea.unbind("keyup",this.onEdit).bind("keyup",{"self":this},this.onEdit);
 		this.textarea.unbind("click",this.onEdit).bind("click",{"self":this},this.onEdit);
-		this.textarea.unbind("mousedown",this.onMouseDown).bind("mousedown",{"self":this},this.onMouseDown);
-		this.textarea.unbind("mouseup",this.onMouseUp).bind("mouseup",{"self":this},this.onMouseUp);
-		this.textarea.unbind("mousemove",this.onMoveEdit).bind("mousemove",{"self":this},this.onMoveEdit);
+		//this.textarea.unbind("mousedown",this.onMouseDown).bind("mousedown",{"self":this},this.onMouseDown);
+		//this.textarea.unbind("mouseup",this.onMouseUp).bind("mouseup",{"self":this},this.onMouseUp);
+		//this.textarea.unbind("mousemove",this.onMoveEdit).bind("mousemove",{"self":this},this.onMoveEdit);
 		this.textarea.unbind("select",this.onEdit).bind("select",{"self":this},this.onEdit);
 		this.outer.unbind("scroll",this.onScroll).bind("scroll",{"self":this},this.onScroll);
 		this.outerParent.unbind("scroll",this.onScrollOuterParent).bind("scroll",{"self":this},this.onScrollOuterParent);
@@ -520,7 +502,7 @@ HilightingEditor.prototype={
 	getFormatedTextCRLF:function(text){
 		return text.replace(/\t/g, "    ").replace(/(\r|\n|\r\n)/g, "\n");
 	},
-    fetchWidth:function(domObj,rowHeight,isFit){
+    fetchWidth:function(domObj,rowHeight,isFit){//ここが諸悪の根源
     	var count = 1;
     	var width = domObj.style.width.replace(/px/,"")*1 ;
     	width=width<1?domObj.scrollWidth:width;

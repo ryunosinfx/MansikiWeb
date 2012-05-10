@@ -25,20 +25,26 @@ MansikiFileUtil.prototype={
 		var inputFileDomObj = event.data.inputFile;
 		var reader = new FileReader();
 		var fs = inputFileDomObj.files;
+		var f = fs[0];
 		var dataPoolObj = event.data.dataPool;
 		var callbackFunc = event.data.callback;
 		var cmdObj = event.data.cmd;
+		if (f===undefined || f.type===undefined) {
+        	alert("指定がないので表示できません。");
+        	return ;
+        }
 		
-		if (fs===undefined || !fs.type.match('text.*')) {
-        	alert("テキスト以外は表示できません。");
+		if (!f.type.match('text.*') && !f.type.match('.*javascript')) {
+        	alert("テキスト以外は表示できません。mimeType ="+f.type);
         	return ;
         }
         
         // ファイル読取が完了した際に呼ばれる処理
         reader.onload = function (evt) {
 			var text= reader.result;
+			alert(text);
 			dataPoolObj.val(text);
-			if(callbackFunc!==undefined){
+			if(callbackFunc!==undefined && cmdObj!==undefined){
 				callbackFunc(cmdObj);
 			}
         }
@@ -46,7 +52,7 @@ MansikiFileUtil.prototype={
 		reader.onerror = function (evt) {
 			alert("読み取り時にエラーが発生しました。");
 		}
-        reader.readAsText(fs, 'utf-8');
+        reader.readAsText(f, 'utf-8');
 	},
 	createBlob:function(me){
 		return ;
