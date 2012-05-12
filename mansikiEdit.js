@@ -33,6 +33,7 @@ var HilightingEditor= function(id, width,height){
 	this.mwh = new mansikiWorkerHandler();
 	this.text = '';
 	this.joind='';
+	this.joindList=[];
 	this.hilightData.text='-1';
 	this.bkText='';
 	this.caretLength=0;
@@ -141,22 +142,29 @@ HilightingEditor.prototype={
 		var text = me.getFormatedTextCRLF(me.textarea.val());
 		var isTheFirefoxBug=false;
 		var inTheFirefoxBugInputText = '';
+		
 		//Firefox Bug?対応
 		me.hilightData.list = text.split("\n");
+		
 		var diff = domRows.length - me.hilightData.list.length;//行数変動を観測
-		if(nowTime-me.nowTime<100+me.editCallCount%10 && me.caretRowCount >1 && me.hilightData.list.length <3){
+		for(var i= 0;i<me.hilightData.list.length && i<domRows.length;i++){
+			me.topCaret = domRows.eq(i).position().top;//topLog+="/["+i+"]:"+topCaret;// TODO DOM
+			var caretTop = me.topCaret+me.offsetYUpper+(me.hilightData.isAddedRows ? me.rowHeight*(diff*2):0)-2;
+			if(nowTime-me.nowTime<20+me.editCallCount%10 && me.hilightData.isCaretRowList[i]===true && caretTop <1 && me.caretRowCount  > 1){
+				isTheFirefoxBug=true;
+				break;
+			}
+		}
+		if(nowTime-me.nowTime<200+me.editCallCount%10 && me.caretRowCount >1 && me.hilightData.list.length <3){
 			isTheFirefoxBug=true;
 			inTheFirefoxBugInputText = text;
 		}
-		if( isTheFirefoxBug || text.length <2 && text!==me.bkText && me.bkText.length > 1){//処理完了までに入力があった場合。見分ける方法は。短時間にX行が１行になった場合。
+		if( isTheFirefoxBug || me.hilightData.list.length <2 && text.length <2 && text!==me.bkText && me.bkText.length > 1){//処理完了までに入力があった場合。見分ける方法は。短時間にX行が１行になった場合。
 			 text = me.bkText;
+			clearTimeout(me.timer);
 			 me.lineNum.focus();
-			 //me.textarea.get(0).val(me.bkText+inTheFirefoxBugInputText);
-			 me.textarea.get(0).focus();
-			 me.textarea.get(0).keyup();
-			 me.textarea.get(0).keyup();
-			 me.textarea.get(0).keyup();
-			 me.textarea.get(0).keyup();
+			 me.textarea.val(me.bkText+inTheFirefoxBugInputText);
+			 me.textarea.focus();
 			 me.textarea.get(0).selectionEnd = me.caretLength;
 			 
 			//console.log('text.length!'+text.length+'/'+(text!==me.bkText)+'/'+me.bkText.length+'/'+me.caretLength+'/'+me.caretRowCount );
@@ -169,8 +177,8 @@ HilightingEditor.prototype={
 			//console.log('SAME!SAME! diff:'+diff);
 			return ;
 		}
-		clearTimeout(me.timer);
 		if(nowTime-me.nowTime<200+me.editCallCount%10  && me.tran!==false){//指定時間内はスキップただし行数変動は除く
+			clearTimeout(me.timer);
 			me.timer = setTimeout(function(){me.tran=false;me.onEdit(event);},200);
 			//console.log('TIME NOT CAME!');
 			return;
@@ -247,29 +255,19 @@ HilightingEditor.prototype={
 	onEditAfterCallBack:function(me,hilightData){//単位を行じゃなくて1アクションに集約
 		//ここからWorker CallBack
 		me.hilightDataAfter=hilightData;
-		if(me.hilightDataAfter.editCallCount !== me.editCallCount){//すでに新しい入力が走っている場合はキャンセル。
-			return ;
-		}
 		var lineLength = me.hilightDataAfter.list.length;
-		var joindList =[];
+		me.joindList =[];
 		me.tran=true;
 		
+		console.log("AAAAXXX/");
 		//Firefox Bug?IME対応
-		var nowTime=new Date().getTime()+me.editCallCount%10;
-		for(var i= 0;i<me.hilightDataAfter.list.length;i++){
-			var caretTop = me.topCaret+me.offsetYUpper+(me.hilightDataAfter.isAddedRows ? me.rowHeight*(me.hilightDataAfter.diff*2):0)-2;
-			if(nowTime-me.nowTime<20+me.editCallCount%10 && me.hilightDataAfter.isCaretRowList[i]===true &&caretTop <1 && me.caretRowCount  > 1){
-				 me.textarea.keyup();
-				 return ;
-			}
-		}
 		for(var i= 0;i<me.hilightDataAfter.list.length;i++){
 			var domRow = me.domRows.eq(i);// TODO DOM
 			if(me.hilightDataAfter.isThrowList[i]===true){
 				domRow.css("background-color",me.basicRowColor);
 				continue;//変更なし行はこちら。
 			}
-			console.log("AAAA"+i);
+			console.log("AAAA"+i+'/'+me.hilightDataAfter.list.length);
 			if(me.hilightDataAfter.isCaretRowList[i]===true && domRow.position()!==null){//var stringAtCaret ="A";//キャレットの表示//caretsカーソル
 				var position = domRow.position();//位置を取得// TODO DOM
 				me.topCaret = position.top;//topLog+="/["+i+"]:"+topCaret;// TODO DOM
@@ -315,9 +313,8 @@ HilightingEditor.prototype={
 				domRow.css("background-color",me.basicRowColor);
 			}
 			me.onEditAfterCallBackByRow(me,me.hilightDataAfter.elList[i]);
-			joindList.push(me.hilightDataAfter.elList[i].text);
+			me.joindList.push(me.hilightDataAfter.elList[i].text);
 		}
-		me.joind =joindList.join("\n");
 		//console.log('now:'+lineLength+'/'+me.hilightDataAfter.list.length);
 		me.elAtCaret=elAtCaret;
 		me.onEditDoLast(me);
@@ -345,15 +342,6 @@ HilightingEditor.prototype={
 		var nowTotalHeight = me.hilightDataAfter.list.length * me.rowHeight + 100;
 		var isAddedRows = nowTotalHeight > me.height;
 		var nowTotalHeight = isAddedRows ? nowTotalHeight:me.height;
-		if(me.hilightDataAfter.list.length < 2 && me.text.length<2 || me.hilightDataAfter.text!==me.text ){//すでに新しい入力が走っている場合はキャンセル。
-			if(me.hilightDataAfter.list.length < 2 && me.text.length<2 ||me.hilightDataAfter.editCallCount !== me.editCallCount){
-				return ;
-			}
-		}
-		if(me.hilightDataAfter.editCallCount !== me.editCallCount){//すでに新しい入力が走っている場合はキャンセル。
-			me.hilightDataAfter.editCallCount++;
-			return ;
-		}
 		me.frame.width(me.maxWidth).height(nowTotalHeight);	
 		me.lineNumInner.height(nowTotalHeight);	
 		me.view.width(me.maxWidth+me.viewWidthOffset).height(nowTotalHeight).css("top",(nowTotalHeight)*-1);		
@@ -372,7 +360,11 @@ HilightingEditor.prototype={
 		me.tran=false;
 		me.readjustCaret(me);
 		//Firefox Bug? IME周り対応
-		if( me.textarea.get(0).selectionEnd >10 && me.joind.length >10 &&  me.joind!==me.bkText){
+		
+		me.joind = me.joindList.join("\n");;
+		if( me.textarea.get(0).selectionEnd >=me.joind.length  && me.joind.length >10 
+			&& me.joind!==me.bkText 
+			&& me.hilightDataAfter.list.length === me.joindList.length){
 			me.bkText = me.joind;
 			me.caretRowCount = me.hilightDataAfter.list.length;
 			me.textarea.val(me.joind);
@@ -388,7 +380,7 @@ HilightingEditor.prototype={
 		var caretTop = me.topCaret + me.offsetYUpper + (me.hilightDataAfter.isAddedRows ? rowHeight*(me.hilightDataAfter.diff*2+(me.hilightDataAfter.diff!=0 ? -2:0)):0)-2;
 		//console.log("caretTop:"+(caretTop-4)+'/'+me.topCaret +'/'+me.offsetYUpper+'/'+me.hilightDataAfter.diff);
 		if(me.topCaret <1 && me.caretRowCount  > 1){
-			 me.textarea.get(0).keyup();
+			 me.textarea.keyup();
 			 return ;
 		}
 		me.caretSpacerUpper.css("top",caretTop);		//カーソル上空間

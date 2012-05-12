@@ -295,8 +295,8 @@ function executeTheJob(sh,hilightData){
 		}else{
 			isCaretRow=false;
 		}
-		var old = hilightData.data[i]; 
-		if( rowText.replace(/^[\s|\t]+/g,"").length > 0 && isCaretRow==false){//データが動いていないかつカーソルの行位以外はスルー
+		var old =(hilightData.data[i]+"").replace(/^[\s\t\r\n]+/g,""); 
+		if( rowText.replace(/^[\s\t]+/g,"").length > 0 && isCaretRow==false && old===rowText){//データが動いていないかつカーソルの行位以外はスルー
 			hilightData.isThrowList[i]=true;
 			continue;//次の行を処理する。
 		}
