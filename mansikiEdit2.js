@@ -21,8 +21,10 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.dellCount=0;
 	this.retCount=0;
 	this.maxWidth=width;
+	this.textWidth =0;
 	this.isMouseDown=false;
 	this.nowMouseDown=false;
+	this.nowKeyInput=false;
 	this.selectStartRows=-1;
 	this.selectStartChars=-1;
 	this.selectedRowTopOffset=this.height+this.lineHeight*2;
@@ -36,7 +38,8 @@ HilightingEditor.prototype={
 	init:function(){
 		this.charBox = $("<div id='"+this.prefix+"charBox'></div>").css("width","0px").css("position","absolute").css("opacity",0).css("overflow","hidden");
 		var field = $("<div id='"+this.prefix+this.prefix+"'></div>").css("width",this.width).css("height",this.height)
-			.css("border-width","1px").css("border-style","solid").css("border-coloer","green").css("overflow","hidden").css("text-wrap","none");
+			.css("border-width","1px").css("border-style","solid").css("border-coloer","green").css("overflow","hidden").css("text-wrap","none")
+			.css("cursor","text");
 		var selectTopRow = $("<div id='"+this.prefix+this.prefix+"selectTopRow'></div>").css("width",this.width).css("height",this.height)
 			.css("border-width","1px").css("border-style","solid").css("border-coloer","blue").css("overflow","hidden").css("background-color","blue")
 			.css("top",0-this.height).css("opacity",0.5).css("width",this.width).css("height",this.lineHeight).css("position","relative").css("z-index","150");
@@ -48,7 +51,7 @@ HilightingEditor.prototype={
 			.css("top",0-this.height).css("opacity",0.5).css("width",this.width).css("height",this.lineHeight).css("position","relative").css("z-index","150");
 		this.ancer.append(field);
 		var viewField = $("<div id='"+this.prefix+this.prefix+"View'></div>").css("width",this.width).css("height",this.height)
-			.css("overflow","hidden").css("text-wrap","none").css("position","relative").css("top",-this.lineHeight*2).css("z-index","100");
+			.css("overflow","hidden").css("text-wrap","none").css("position","relative").css("top",-this.lineHeight*2).css("z-index","100").css("cursor","text");
 			
 		this.field = field;
 		field.append(viewField);
@@ -67,6 +70,9 @@ HilightingEditor.prototype={
 		this.selectTopRow = selectTopRow;
 		this.selectMiddleRow = selectMiddleRow;
 		this.selectBottomRow = selectBottomRow;
+		this.selectTopRow.css("visibility","hidden");
+		this.selectMiddleRow.css("visibility","hidden");
+		this.selectBottomRow.css("visibility","hidden");
 	},
 	onKeyHack:function(event){//ショートカットキー
 	},
@@ -96,21 +102,23 @@ HilightingEditor.prototype={
 		}
 	},
 	onSelect:function(event){
+		var me = event.data.self;
+		me.viewField.css("cursor","wait");
 		var keyCode = event.keyCode;
 		var wicth=event.which;
 		var modifiers=event.modifiers;
-		var me = event.data.self;
 		var x =event.clientX;
 		var y =event.clientY;
 		me.createTextField(me);
-		me.rowNum = Math.floor((y+me.topOffset)/me.lineHeight)+1;
+		me.rowNum = me.nowKeyInput === false ?Math.floor((y+me.topOffset)/me.lineHeight)+1:me.rowNum;
+		me.nowKeyInput = false;
 		var rows = me.doc.split("\n");
 		var newX = 0;
 		if(rows.length < me.rowNum){
 			newX = 0;
 			me.rowNum = rows.length;
 		}
-		var textWidth = me.culcTextWidth(me,rows[me.rowNum-1],x);
+		var textWidth = me.textWidth!==undefined ?me.textWidth :me.culcTextWidth(me,rows[me.rowNum-1],x);
 		if(textWidth!==undefined){
 			newX = textWidth;
 		}else{
@@ -190,6 +198,8 @@ HilightingEditor.prototype={
 		
 		me.textField.css("top",(me.rowNum-1)*me.lineHeight+me.topRowOffset*(me.rowNum-1));
 		me.textField.css("left",newX+me.leftOffset-0).focus();
+		me.textWidth=undefined ;
+		me.viewField.css("cursor","text");
 	
 	},
 	createTextField:function(me){
@@ -204,6 +214,7 @@ HilightingEditor.prototype={
 	onInput:function(event){
 		var nowTime = new Date().getTime();
 		var me = event.data.self;
+		me.viewField.css("cursor","wait");
 		var keyCode = event.keyCode;
 		var wicth=event.which;
 		var modifiers=event.modifiers;
@@ -220,6 +231,7 @@ HilightingEditor.prototype={
 		if(keyCode=="40" && me.rowNum < me.rowCount){//down
 			me.rowNum++;
 			isAddedRow=true;
+			console.log("XXXX1 me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/text:"+text+"/isAddedRow:"+isAddedRow);
 		}
 		if(keyCode=="37" && me.offsetOnRow >= 0){//left
 			me.offsetOnRow--;
@@ -233,15 +245,29 @@ HilightingEditor.prototype={
 		if(keyCode=="13" ){//enter
 			me.retCount++;
 		}
+		
+		if(event.shiftKey===true && me.isMouseDown===false){
+			me.nowMouseDown=true;
+			me.nowKeyInput =true;
+			var rows = me.doc.split("\n");
+			me.textWidth = me.culcTextWidth(me,rows[me.rowNum-1].substring(0,me.offsetOnRow));
+			me.onSelect(event);
+			me.nowKeyInput =false;
+		}else{
+			me.nowMouseDown=false;
+		}
 		if(event.shiftKey===false){//SHIFT押し以外
 			me.selectTopRow.css("visibility","hidden");
 			me.selectMiddleRow.css("visibility","hidden");
 			me.selectBottomRow.css("visibility","hidden");
+			me.isMouseDown=false;
+		}else{
+			me.isMouseDown=true;
 		}
 		if(nowTime - me.nowTime > me.timeInterval){
 			
 			var text = me.textField.val();
-			//console.log("CCCCCCC1 me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/text:"+text);
+			console.log("CCCCCCC1 me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/text:"+text+"/event.shiftKey:"+event.shiftKey);
 			//console.log("retCount:"+me.retCount+"/me.dellCount:"+me.dellCount+"/offsetOnRow:"+me.offsetOnRow);
 			var addRowCount = text.split("\n").length-1;
 			me.rowNum +=addRowCount;
@@ -249,7 +275,7 @@ HilightingEditor.prototype={
 			var rowUpOffset = 0;
 			var rowUp = 0;
 			
-			//console.log("CCCCCCC2 me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/addRowCount:"+addRowCount);
+			console.log("CCCCCCC2 me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/addRowCount:"+addRowCount);
 			if(text.length < 1){//FreeCaret
 				if(rows[me.rowNum-1]!== undefined && me.rowNum < me.rowCount && me.offsetOnRow > rows[me.rowNum-1].length && isAddedRow===false && isUp===false){
 					me.rowNum++;
@@ -260,19 +286,24 @@ HilightingEditor.prototype={
 					me.rowNum--;
 					me.offsetOnRow = rows[me.rowNum-1].length + me.offsetOnRow+1;
 				}
-			console.log("CCCCCCC3b me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/preCaret:"+preCaret);
+			//console.log("CCCCCCC3b me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/preCaret:"+preCaret);
 				if(rows[me.rowNum-2]!== undefined && rows[me.rowNum-1]!== undefined && me.rowNum > 0 && me.rowCount > 0 
-					&& me.offsetOnRow  > rows[me.rowNum-1].length && isUp===true){
+					&& me.offsetOnRow  > rows[me.rowNum-1].length && isUp===false){
 					me.offsetOnRow = rows[me.rowNum-2].length ;
 					me.rowNum--;
 				}
 			}
-			console.log("CCCCCCC4 me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/preCaret:"+preCaret);
-			if(rows[me.rowNum-1]!==undefined && me.offsetOnRow > rows[me.rowNum-1].length){
+			if(rows[me.rowNum]!==undefined){
+				if(isAddedRow===true && me.offsetOnRow > rows[me.rowNum].length){
+					me.rowNum++;
+				}
+			}
+			//console.log("CCCCCCC4 me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/preCaret:"+preCaret);
+			if(rows[me.rowNum-1]!==undefined && me.offsetOnRow > rows[me.rowNum-1].length && addRowCount < 1){
 				me.offsetOnRow = rows[me.rowNum-1].length;
 			}
 			
-			console.log("CCCCCCC5 me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/preCaret:"+preCaret);
+			//console.log("CCCCCCC5 me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/preCaret:"+preCaret);
 			if(me.dellCount > 0){
 				var charCount = 0;
 				var preCharCount = 0;
@@ -297,20 +328,20 @@ HilightingEditor.prototype={
 				me.rowNum-=rowUp;
 			}
 			
-			console.log("CCCCCCCxx me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/preCaret:"+preCaret);
+			//console.log("CCCCCCCxx me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/preCaret:"+preCaret);
 			if(me.retCount>0 && addRowCount >0){
 				var preOnRow = rows[me.rowNum-2] ===undefined ? "":rows[me.rowNum-2];
 				var offsetPreOnRow = me.offsetOnRow < preOnRow.length ?  me.offsetOnRow : preOnRow.length;
 				rows[me.rowNum-2]=preOnRow.substring(0,offsetPreOnRow-me.dellCount)
 					+text+preOnRow.substring(offsetPreOnRow-me.dellCount,preOnRow.length);
 				me.offsetOnRow =0;
-			console.log("AAAAAAAAAAA offsetPreOnRow:"+offsetPreOnRow+"/me.offsetOnRow:"+me.offsetOnRow+"/preOnRow:"+preOnRow);
+			//console.log("AAAAAAAAAAA offsetPreOnRow:"+offsetPreOnRow+"/me.offsetOnRow:"+me.offsetOnRow+"/preOnRow:"+preOnRow);
 			}else{
 				var testOnRow = rows[me.rowNum-1] ===undefined ? "":rows[me.rowNum-1];
 				var offsetOnRow = me.offsetOnRow <testOnRow.length ? me.offsetOnRow : testOnRow.length;
 				var preCaret = testOnRow.substring(0,offsetOnRow-me.dellCount+rowUpOffset)+text;
 				rows[me.rowNum-1]= preCaret+testOnRow.substring(offsetOnRow,testOnRow.length);
-			console.log("BBBBBBBBBBB offsetOnRow:"+offsetOnRow+"/me.offsetOnRow:"+me.offsetOnRow+"/preCaret:"+preCaret);
+			//console.log("BBBBBBBBBBB offsetOnRow:"+offsetOnRow+"/me.offsetOnRow:"+me.offsetOnRow+"/preCaret:"+preCaret);
 			}
 			
 			var resultText = "";
@@ -357,18 +388,22 @@ HilightingEditor.prototype={
 					isMod=true;
 				}
 			}
-			var textWidth = me.culcTextWidth(me,preCaret);
+			me.textWidth = me.culcTextWidth(me,preCaret);
 			me.textField.val("");
 			var doc = me.doc;
 			me.viewField.html(me.doc.replace(/\n/g,"<br />"));
-			me.textField.css("top",(me.rowNum-1)*me.lineHeight+me.topRowOffset*(me.rowNum-1));
-			me.textField.css("left",textWidth+me.leftOffset-0).focus();
+			//me.textField.css("top",(me.rowNum-1)*me.lineHeight+me.topRowOffset*(me.rowNum-1));
+			//me.textField.css("left",me.textWidth+me.leftOffset-0).focus();
+			me.nowKeyInput =true;
+			me.onSelect(event);
 			if(isMod===true){
 				me.viewField.css("width",me.maxWidth+me.lineHeight);
 			}
+			me.nowKeyInput = false;
 			me.dellCount =0;
 			me.retCount=0;
 		}
+		me.viewField.css("cursor","text");
 	},
 	culcTextWidth:function(me,text,target){
 		var chars = text===undefined ?"":text.split("");
