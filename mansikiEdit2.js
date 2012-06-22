@@ -33,6 +33,10 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.keyUpCount = 0;
 	this.nowOffsetCharNo = 0;
 	this.nowSelectedText = "";
+	this.clipBoard="";
+	this.clipTime="";
+	this.lastPastString="";
+	this.lastPastTime="";
 }
 
 HilightingEditor.prototype={
@@ -50,6 +54,7 @@ HilightingEditor.prototype={
 		var selectBottomRow = $("<div id='"+this.prefix+this.prefix+"selectBottomRow'></div>").css("width",this.width).css("height",this.height)
 			.css("border-width","1px").css("border-style","solid").css("border-coloer","gray").css("overflow","hidden").css("background-color","orange")
 			.css("top",0-this.height).css("opacity",0.5).css("width",this.width).css("height",this.lineHeight).css("position","relative").css("z-index","150");
+		var selectTextarea = $("<textarea id='"+this.prefix+this.prefix+"selectTextarea'></textarea>").css("visibility","hidden").val("aaa");
 		this.ancer.append(field);
 		var viewField = $("<div id='"+this.prefix+this.prefix+"View'></div>").css("width",this.width).css("height",this.height)
 			.css("line-Height",this.lineHeight+"px")
@@ -60,6 +65,7 @@ HilightingEditor.prototype={
 		field.append(selectTopRow);
 		field.append(selectBottomRow);
 		field.append(selectMiddleRow);
+		field.append(selectTextarea);
 		field.bind('keyup',{"self":this},this.onKeyHack);
 		field.bind('mousedown',{"self":this},this.onMouseDown);
 		field.bind('mouseup',{"self":this},this.onMouseUp);
@@ -72,6 +78,7 @@ HilightingEditor.prototype={
 		this.selectTopRow = selectTopRow;
 		this.selectMiddleRow = selectMiddleRow;
 		this.selectBottomRow = selectBottomRow;
+		this.selectTextarea = selectTextarea;
 		this.selectTopRow.css("visibility","hidden");
 		this.selectMiddleRow.css("visibility","hidden");
 		this.selectBottomRow.css("visibility","hidden");
@@ -108,6 +115,8 @@ HilightingEditor.prototype={
 	onSelect:function(event){
 		var me = event.data.self;
 		me.viewField.css("cursor","wait");
+		var selection = window.getSelection();
+		selection.removeAllRanges();
 		var keyCode = event.keyCode;
 		var wicth=event.which;
 		var modifiers=event.modifiers;
@@ -127,6 +136,8 @@ HilightingEditor.prototype={
 		}else{
 			newX = x;
 		}
+		me.viewField.get(0).selectionStart = 0;
+		me.viewField.get(0).selectionEnd = 10;
 		
 		var areaStartRowNo =me.rowNum; 
 		var areaStartCharNo =me.offsetOnRow; 
@@ -152,6 +163,7 @@ HilightingEditor.prototype={
 			var rowNumDiff = areaEndRowNo-areaStartRowNo ;
 			var textSelectStart = rows[areaStartRowNo-1]===undefined ? "":rows[areaStartRowNo-1];
 			var textSelectEnd = rows[areaEndRowNo-1];
+			textSelectEnd = textSelectEnd===undefined ?textSelectStart:textSelectEnd;
 			var textOffsetStart = me.culcTextWidth(me,textSelectStart.substring(0,areaStartCharNo));
 			var textWidthEnd = me.culcTextWidth(me,textSelectEnd.substring(0,areaEndCharNo));
 			
@@ -205,17 +217,19 @@ HilightingEditor.prototype={
 				me.selectTopRow.css("width",textWidthStart);
 			}
 		}
+		me.selectTextarea.val(me.nowSelectedText);
 	//	console.log("XXXXXXXX me.selectStartRows:"+me.selectStartRows+"/me.selectStartChars:"+me.selectStartChars+"/me.rowNum:"+me.rowNum
 	//		+"/me.isMouseDown:"+me.isMouseDown+"/me.nowMouseDown:"+me.nowMouseDown+"/event.shiftKey:"+event.shiftKey
 	//		+"/event.ctrlKey:"+event.ctrlKey+"/me.nowSelectedText:"+me.nowSelectedText);
 		if(me.rowNum <1) me.rowNum = 1;
 		if(newX <0) newX = 0;
 		me.textField.css("top",(me.rowNum-1)*me.lineHeight+me.topRowOffset);
-		me.textField.css("left",newX+me.leftOffset-0).focus();
+		me.textField.css("left",newX+me.leftOffset-0);
+		me.textField.val(me.nowSelectedText).focus();
+		selection.selectAllChildren(me.textField.get(0));
 		me.textWidth=undefined ;
 		me.nowKeyInput = false;
 		me.viewField.css("cursor","text");
-	
 	},
 	createTextField:function(me){
 		if(me.textField===undefined){
@@ -275,6 +289,11 @@ HilightingEditor.prototype={
 			me.retCount++;
 		}
 		
+		if(event.ctrlKey===true){
+			me.selectTextarea.focus();
+		}else{
+			me.textField.focus();
+		}
 		if(event.shiftKey===true && me.isMouseDown===false){
 			me.nowMouseDown=true;
 			me.nowKeyInput =true;
@@ -293,12 +312,18 @@ HilightingEditor.prototype={
 		}else{
 			me.isMouseDown=true;
 		}
+		var text = me.textField.val();
 		if(keyCode=="67" && event.ctrlKey===true){
-			alert(me.nowSelectedText);
+			//me.clipBoard=me.nowSelectedText;
+			//me.clipTime=new Date().getTime();
+			text="";
+		}
+		if(keyCode=="86" && event.ctrlKey===true){
+			
 		}
 		if(nowTime - me.nowTime > me.timeInterval){
 			
-			var text = me.textField.val();
+			me.textField.val("");
 			//console.log("CCCCCCC1 me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/text:"+text+"/event.shiftKey:"+event.shiftKey);
 			//console.log("retCount:"+me.retCount+"/me.dellCount:"+me.dellCount+"/offsetOnRow:"+me.offsetOnRow);
 			var addRowCount = text.split("\n").length-1;
@@ -425,7 +450,6 @@ HilightingEditor.prototype={
 				}
 			}
 			me.textWidth = me.culcTextWidth(me,preCaret);
-			me.textField.val("");
 			var doc = me.doc;
 			me.viewField.html(me.doc.replace(/\n/g,"<br />"));
 			//me.textField.css("top",(me.rowNum-1)*me.lineHeight+me.topRowOffset*(me.rowNum-1));
