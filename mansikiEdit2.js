@@ -33,10 +33,7 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.keyUpCount = 0;
 	this.nowOffsetCharNo = 0;
 	this.nowSelectedText = "";
-	this.clipBoard="";
-	this.clipTime="";
-	this.lastPastString="";
-	this.lastPastTime="";
+	this.isCut = false;
 }
 
 HilightingEditor.prototype={
@@ -145,9 +142,50 @@ HilightingEditor.prototype={
 		var areaEndCharNo =me.offsetOnRow;
 		
 		//select処理
-		if(me.isMouseDown===false && (me.nowKeyInput === false || event.shiftKey===false && event.ctrlKey===false)){
+		console.log("me.isMouseDown:"+me.isMouseDown+"/me.nowMouseDown:"+me.nowMouseDown+"/event.shiftKey:"+event.shiftKey+"/event.ctrlKey:"+event.ctrlKey
+			+"/me.nowKeyInput:"+me.nowKeyInput+"/me.isCut:"+me.isCut);
+			
+		areaStartCharNo = areaStartRowNo > me.selectStartRows ? me.selectStartChars : areaStartCharNo ;
+		areaEndCharNo = areaStartRowNo > me.selectStartRows ? areaEndCharNo:me.selectStartChars;
+		areaStartRowNo = areaStartRowNo > me.selectStartRows ? me.selectStartRows : areaStartRowNo;
+		areaEndRowNo = areaEndRowNo < me.selectStartRows ? me.selectStartRows : areaEndRowNo;
+		var rowNumDiff = areaEndRowNo-areaStartRowNo ;
+		var textSelectStart = rows[areaStartRowNo-1]===undefined ? "":rows[areaStartRowNo-1];
+		var textSelectEnd = rows[areaEndRowNo-1];
+		textSelectEnd = textSelectEnd===undefined ?textSelectStart:textSelectEnd;
+		var textOffsetStart = me.culcTextWidth(me,textSelectStart.substring(0,areaStartCharNo));
+		var textWidthEnd = me.culcTextWidth(me,textSelectEnd.substring(0,areaEndCharNo));
+			
+		if(me.isMouseDown===false && me.nowMouseDown===false 
+		|| me.isMouseDown===false && (me.nowKeyInput === false || event.shiftKey===false && event.ctrlKey===false)){
 			//me.selectStartRows=-1;
 			//me.selectStartChars=-1;
+			var retText="";
+			if(rowNumDiff == 1){
+				if(me.isCut === true){
+					rows[areaStartRowNo-1]=textSelectStart.substring(0,areaStartCharNo);
+					rows[areaEndRowNo-1]=textSelectEnd.substring(areaEndCharNo,textSelectEnd.length);
+				}
+			}else if(rowNumDiff  > 1){
+				if(me.isCut === true){
+					rows[areaStartRowNo-1]=textSelectStart.substring(0,areaStartCharNo);
+					for(var i = 0;i< rowNumDiff-1 ;i++){
+						rows[areaStartRowNo + i]="";
+					}
+					rows[areaEndRowNo-1]=textSelectEnd.substring(areaEndCharNo,textSelectEnd.length);
+				}
+			}else{
+				if(me.isCut === true){
+					rows[areaStartRowNo-1]=textSelectStart.substring(0,areaStartCharNo)+textSelectStart.substring(areaEndCharNo,textSelectStart.length);
+		console.log("☆"+rows[areaStartRowNo-1]);
+				}
+			}
+			for(var i=0;i<rows.length ;i++){
+				if(rows[i]!==undefined){
+					
+				}
+			}
+			me.doc=rows.join("\n");
 		}else if(me.nowMouseDown===true){
 			me.selectStartRows=me.rowNum;
 			me.selectStartChars=me.offsetOnRow;
@@ -156,17 +194,6 @@ HilightingEditor.prototype={
 			me.selectBottomRow.css("visibility","hidden");
 			me.nowSelectedText="";
 		}else{
-			areaStartCharNo = areaStartRowNo > me.selectStartRows ? me.selectStartChars : areaStartCharNo ;
-			areaEndCharNo = areaStartRowNo > me.selectStartRows ? areaEndCharNo:me.selectStartChars;
-			areaStartRowNo = areaStartRowNo > me.selectStartRows ? me.selectStartRows : areaStartRowNo;
-			areaEndRowNo = areaEndRowNo < me.selectStartRows ? me.selectStartRows : areaEndRowNo;
-			var rowNumDiff = areaEndRowNo-areaStartRowNo ;
-			var textSelectStart = rows[areaStartRowNo-1]===undefined ? "":rows[areaStartRowNo-1];
-			var textSelectEnd = rows[areaEndRowNo-1];
-			textSelectEnd = textSelectEnd===undefined ?textSelectStart:textSelectEnd;
-			var textOffsetStart = me.culcTextWidth(me,textSelectStart.substring(0,areaStartCharNo));
-			var textWidthEnd = me.culcTextWidth(me,textSelectEnd.substring(0,areaEndCharNo));
-			
 			//console.log("CCCCCCCCCC rowNumDiff:"+rowNumDiff+"/me.selectStartChars:"+me.selectStartChars+"/textWidthEnd:"
 			//	+textWidthEnd+"/me.selectStartRows :"+me.selectStartRows +"/me.offsetOnRow:"+me.offsetOnRow
 			//	+"/me.rowNum:"+me.rowNum);
@@ -215,7 +242,7 @@ HilightingEditor.prototype={
 			//	+"/textWidthStart:"+textWidthStart);
 				}
 				me.selectTopRow.css("width",textWidthStart);
-			}
+			}console.log("☆☆☆☆☆");
 		}
 		me.selectTextarea.val(me.nowSelectedText);
 	//	console.log("XXXXXXXX me.selectStartRows:"+me.selectStartRows+"/me.selectStartChars:"+me.selectStartChars+"/me.rowNum:"+me.rowNum
@@ -266,6 +293,7 @@ HilightingEditor.prototype={
 		var retCount =0;
 		var isAddedRow=false;
 		var isUp=false;
+		me.isCut=false;
 		console.log("keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modifiers+"/event.ctrlKey:"+event.ctrlKey);
 		if(keyCode=="38" && me.rowNum>1){//up
 			me.rowNum--;
@@ -313,13 +341,25 @@ HilightingEditor.prototype={
 			me.isMouseDown=true;
 		}
 		var text = me.textField.val();
-		if(keyCode=="67" && event.ctrlKey===true){
-			//me.clipBoard=me.nowSelectedText;
+		if(keyCode=="67" && event.ctrlKey===true){//Copy
+			me.clipBoard=me.nowSelectedText;
 			//me.clipTime=new Date().getTime();
 			text="";
-		}
-		if(keyCode=="86" && event.ctrlKey===true){
-			
+			me.textField.val("");
+			me.isMouseDown=true;
+		}else if(keyCode=="86" && event.ctrlKey===true){//peast
+			me.isMouseDown=false;
+			me.nowMouseDown=false;
+			me.textField.val("");
+		}else if(keyCode=="88" && event.ctrlKey===true){//Cut
+			me.isCut=true;
+			me.isMouseDown=false;
+			me.nowMouseDown=false;
+			text="";
+			me.textField.val("");
+		}else if(event.ctrlKey===true){//Ctl
+			text="";
+			me.textField.val("");
 		}
 		if(nowTime - me.nowTime > me.timeInterval){
 			
@@ -450,12 +490,12 @@ HilightingEditor.prototype={
 				}
 			}
 			me.textWidth = me.culcTextWidth(me,preCaret);
-			var doc = me.doc;
-			me.viewField.html(me.doc.replace(/\n/g,"<br />"));
 			//me.textField.css("top",(me.rowNum-1)*me.lineHeight+me.topRowOffset*(me.rowNum-1));
 			//me.textField.css("left",me.textWidth+me.leftOffset-0).focus();
 			me.nowKeyInput =true;
 			me.onSelect(event);
+			var doc = me.doc;
+			me.viewField.html(me.doc.replace(/\n/g,"<br />"));
 			if(isMod===true){
 				me.viewField.css("width",me.maxWidth+me.lineHeight);
 			}
