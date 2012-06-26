@@ -281,7 +281,8 @@ HilightingEditor.prototype={
 		me.textField.css("top",(me.rowNum-1)*me.lineHeight+me.topRowOffset);
 		me.textField.css("left",newX+me.leftOffset-0);
 		me.textField.val(me.nowSelectedText).focus();
-		selection.selectAllChildren(me.textField.get(0));
+		//selection.selectAllChildren(me.textField.get(0));
+		me.textField.get(0).select();
 		var selectedText = window.getSelection().toString();
 		console.log("★★★★★★★"+selectedText+"★★★★★★★");
 		me.textWidth=undefined ;
