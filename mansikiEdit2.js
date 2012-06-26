@@ -34,6 +34,8 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.nowOffsetCharNo = 0;
 	this.nowSelectedText = "";
 	this.isCut = false;
+	this.isPeast = false;
+	this.isPreShortCuts = false;
 	this.dellCountrowUpOffset=0;
 }
 
@@ -108,7 +110,7 @@ HilightingEditor.prototype={
 	onMouseMove:function(event){
 		var me = event.data.self;
 		me.nowMouseDown = false;
-		if(me.isMouseDown===true || me.isMouseDownNew===true){
+		if(me.isMouseDown===true && me.isMouseDownNew===true){
 			me.onSelect(event);
 		}
 	},
@@ -123,7 +125,7 @@ HilightingEditor.prototype={
 		var x =event.clientX;
 		var y =event.clientY;
 		me.createTextField(me);
-		me.rowNum = me.nowKeyInput === false ?Math.floor((y+me.topOffset)/me.lineHeight)+1:me.rowNum;
+		me.rowNum = me.nowKeyInput === false ?Math.floor((y+me.topOffset+me.lineHeight)/me.lineHeight)+1:me.rowNum;
 		var rows = me.doc.split("\n");
 		var newX = 0;
 		if(rows.length < me.rowNum){
@@ -138,7 +140,7 @@ HilightingEditor.prototype={
 		}
 		me.viewField.get(0).selectionStart = 0;
 		me.viewField.get(0).selectionEnd = 10;
-		
+		if(me.rowNum <1) me.rowNum = 1;
 		var areaStartRowNo =me.rowNum; 
 		var areaStartCharNo =me.offsetOnRow; 
 		var areaEndRowNo =me.rowNum; 
@@ -160,8 +162,10 @@ HilightingEditor.prototype={
 		var textWidthEnd = me.culcTextWidth(me,textSelectEnd.substring(0,areaEndCharNo));
 			
 		if(me.isMouseDown===false && me.nowMouseDown===false 
-		|| me.isMouseDown===false && (me.nowKeyInput === false || event.shiftKey===false && event.ctrlKey===false)
-		|| me.isMouseDownNew===false && (me.nowKeyInput === false && event.shiftKey===false && event.ctrlKey===false)){
+		|| me.isMouseDown===false && 
+			(me.nowKeyInput === false || event.shiftKey===false && event.ctrlKey===false || me.isPeast===true||me.isCut===true)
+		|| me.isMouseDownNew===false && (me.nowKeyInput === false && event.shiftKey===false && event.ctrlKey===false)
+		||me.isPreShortCuts===true){
 			//me.selectStartRows=-1;
 			//me.selectStartChars=-1;
 			var retText="";
@@ -174,7 +178,7 @@ HilightingEditor.prototype={
 				if(me.isCut === true){
 					rows[areaStartRowNo-1]=textSelectStart.substring(0,areaStartCharNo);
 					for(var i = 0;i< rowNumDiff-1 ;i++){
-						rows[areaStartRowNo + i]="";
+						rows[areaStartRowNo + i]=undefined;
 					}
 					rows[areaEndRowNo-1]=textSelectEnd.substring(areaEndCharNo,textSelectEnd.length);
 				}
@@ -184,12 +188,22 @@ HilightingEditor.prototype={
 		console.log("☆"+rows[areaStartRowNo-1]);
 				}
 			}
+			var resultText="";
+			var lf="";
 			for(var i=0;i<rows.length ;i++){
 				if(rows[i]!==undefined){
-					
+					resultText+=lf+rows[i];
 				}
+				lf= "\n";
 			}
-			me.doc=rows.join("\n");
+			me.doc=resultText;
+			console.log("☆★☆☆");
+			if(me.isMouseDown===false && (me.nowKeyInput === true && event.shiftKey===false  || me.isPeast===true||me.isCut===true)){
+				me.selectTopRow.css("visibility","hidden");
+				me.selectMiddleRow.css("visibility","hidden");
+				me.selectBottomRow.css("visibility","hidden");
+				me.nowSelectedText="";
+			}
 		}else if(me.nowMouseDown===true){
 			me.selectStartRows=me.rowNum;
 			me.selectStartChars=me.offsetOnRow;
@@ -197,6 +211,7 @@ HilightingEditor.prototype={
 			me.selectMiddleRow.css("visibility","hidden");
 			me.selectBottomRow.css("visibility","hidden");
 			me.nowSelectedText="";
+			console.log("☆☆☆★★☆");
 		}else{
 			//console.log("CCCCCCCCCC rowNumDiff:"+rowNumDiff+"/me.selectStartChars:"+me.selectStartChars+"/textWidthEnd:"
 			//	+textWidthEnd+"/me.selectStartRows :"+me.selectStartRows +"/me.offsetOnRow:"+me.offsetOnRow
@@ -248,6 +263,15 @@ HilightingEditor.prototype={
 				me.selectTopRow.css("width",textWidthStart);
 			}console.log("☆☆☆☆☆");
 		}
+		if(me.isPreShortCuts===true){
+			me.isPreShortCuts=false;
+		}else if(me.isPeast===true||me.isCut===true){
+			me.isPreShortCuts=true;
+			me.isPeast=false;
+			me.isCut=false;
+		}else{
+			me.isPreShortCuts===false;
+		}
 		me.selectTextarea.val(me.nowSelectedText);
 	//	console.log("XXXXXXXX me.selectStartRows:"+me.selectStartRows+"/me.selectStartChars:"+me.selectStartChars+"/me.rowNum:"+me.rowNum
 	//		+"/me.isMouseDown:"+me.isMouseDown+"/me.nowMouseDown:"+me.nowMouseDown+"/event.shiftKey:"+event.shiftKey
@@ -258,6 +282,8 @@ HilightingEditor.prototype={
 		me.textField.css("left",newX+me.leftOffset-0);
 		me.textField.val(me.nowSelectedText).focus();
 		selection.selectAllChildren(me.textField.get(0));
+		var selectedText = window.getSelection().toString();
+		console.log("★★★★★★★"+selectedText+"★★★★★★★");
 		me.textWidth=undefined ;
 		me.nowKeyInput = false;
 		me.viewField.css("cursor","text");
@@ -280,6 +306,7 @@ HilightingEditor.prototype={
 			me.keyUpCount =0;
 		}else{
 			if(k=="8" || k=="37" || k=="38" || k=="39" || k=="40"  || k=="13" ){//連打
+				me.textField.val("");
 				me.onInput(event);
 			}
 		}
@@ -298,27 +325,35 @@ HilightingEditor.prototype={
 		var isAddedRow=false;
 		var isUp=false;
 		me.isCut=false;
+		me.isPeast=false;
+		var isNotCharKey=false;
 		console.log("keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modifiers+"/event.ctrlKey:"+event.ctrlKey);
 		if(keyCode=="38" && me.rowNum>1){//up
 			me.rowNum--;
 			isUp = true;
+			isNotCharKey=event.shiftKey===true?false:true;
 		}
 		if(keyCode=="40" && me.rowNum < me.rowCount){//down
 			me.rowNum++;
 			isAddedRow=true;
 			console.log("XXXX1 me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/text:"+text+"/isAddedRow:"+isAddedRow);
+			isNotCharKey=event.shiftKey===true?false:true;
 		}
 		if(keyCode=="37" && me.offsetOnRow >= 0){//left
 			me.offsetOnRow--;
+			isNotCharKey=event.shiftKey===true?false:true;
 		}
 		if(keyCode=="39" ){//right
 			me.offsetOnRow++;
+			isNotCharKey=event.shiftKey===true?false:true;
 		}
 		if(keyCode=="8" ){//delete
 			me.dellCount++;
+			isNotCharKey=true;
 		}
 		if(keyCode=="13" ){//enter
 			me.retCount++;
+			//isNotCharKey=true;
 		}
 		
 		if(event.ctrlKey===true){
@@ -329,8 +364,7 @@ HilightingEditor.prototype={
 		if(keyCode=="8" && me.isMouseDown===true){//delete
 			me.isMouseDown=false;
 			me.nowMouseDown=false;
-			text="";
-			me.textField.val("");
+			isNotCharKey=true;
 		}else
 		if(event.shiftKey===true && me.isMouseDown===false){
 			me.nowMouseDown=true;
@@ -341,6 +375,10 @@ HilightingEditor.prototype={
 			me.nowKeyInput =false;
 		}else{
 			me.nowMouseDown=false;
+		}
+		if(isNotCharKey===true){
+			text="";
+			me.textField.val("");
 		}
 		if(event.shiftKey===false && event.ctrlKey===false){//SHIFT押し以外
 			me.selectTopRow.css("visibility","hidden");
@@ -361,6 +399,8 @@ HilightingEditor.prototype={
 			me.isMouseDown=false;
 			me.nowMouseDown=false;
 			me.textField.val("");
+			me.isPeast=true;
+			//alert("peast!");
 		}else if(keyCode=="88" && event.ctrlKey===true){//Cut
 			me.isCut=true;
 			me.isMouseDown=false;
@@ -439,14 +479,15 @@ HilightingEditor.prototype={
 				}
 			}
 			
-			//fgsconsole.log("CCCCCCCxx me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/preCaret:"+preCaret);
+			console.log("CCCCCCCxx me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/preCaret:"+preCaret+"/text:"+text);
 			if(me.retCount>0 && addRowCount >0){
 				var preOnRow = rows[me.rowNum-2] ===undefined ? "":rows[me.rowNum-2];
 				var offsetPreOnRow = me.offsetOnRow < preOnRow.length ?  me.offsetOnRow : preOnRow.length;
 				rows[me.rowNum-2]=preOnRow.substring(0,offsetPreOnRow-me.dellCount)
 					+text+preOnRow.substring(offsetPreOnRow-me.dellCount,preOnRow.length);
 				me.offsetOnRow =0;
-			//console.log("AAAAAAAAAAA offsetPreOnRow:"+offsetPreOnRow+"/me.offsetOnRow:"+me.offsetOnRow+"/preOnRow:"+preOnRow);
+			me.textField.val("");
+			console.log("AAAAAAAAAAA offsetPreOnRow:"+offsetPreOnRow+"/me.offsetOnRow:"+me.offsetOnRow+"/preOnRow:"+preOnRow);
 			}else{
 			    var preText = rows[me.rowNum-1];
 				var testOnRow = rows[me.rowNum-1] ===undefined ? "":rows[me.rowNum-1];
@@ -454,7 +495,8 @@ HilightingEditor.prototype={
 				preCaret = testOnRow.substring(0,offsetOnRow-me.dellCount)+text;
 				rows[me.rowNum-1]= preCaret+testOnRow.substring(offsetOnRow,testOnRow.length);
 				me.offsetOnRow=preCaret.length+1;
-			//console.log("BBBBBBBBBBB offsetOnRow:"+offsetOnRow+"/testOnRow:"+testOnRow+"/me.offsetOnRow:"+me.offsetOnRow+"/preCaret:"+preCaret+"/testOnRow.length:"+testOnRow.length+"/rows[me.rowNum-1]:"+rows[me.rowNum-1]+"/preText:"+preText+"/"+text+"/"+me.dellCountrowUpOffset);
+			me.textField.val("");
+			console.log("BBBBBBBBBBB offsetOnRow:"+offsetOnRow+"/testOnRow:"+testOnRow+"/me.offsetOnRow:"+me.offsetOnRow+"/preCaret:"+preCaret+"/testOnRow.length:"+testOnRow.length+"/rows[me.rowNum-1]:"+rows[me.rowNum-1]+"/preText:"+preText+"/"+text+"/"+me.dellCountrowUpOffset);
 			}
 			
 			var resultText = "";
@@ -462,6 +504,9 @@ HilightingEditor.prototype={
 			
 			for(var n = 0 ;n<rows.length;n++){
 				var rowtext = rows[n];
+				if(rowtext===undefined){
+					continue;
+				}
 				if(me.dellCount>0 && n < me.rowNum + rowUpOffset &&  n >= me.rowNum ){//Del
 					resultText += rowtext;
 				}else{
