@@ -35,14 +35,16 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.nowSelectedText = "";
 	this.isCut = false;
 	this.isPeast = false;
+	this.isBk=false;
 	this.isPreShortCuts = false;
+	this.isSwithMouseDown = false;
 	this.dellCountrowUpOffset=0;
 }
 
 HilightingEditor.prototype={
 	init:function(){
 		this.charBox = $("<div id='"+this.prefix+"charBox'></div>").css("width","0px").css("position","absolute").css("opacity",0).css("overflow","hidden");
-		var field = $("<div id='"+this.prefix+this.prefix+"'></div>").css("width",this.width).css("height",this.height)
+		var field = $("<div id='"+this.prefix+this.prefix+"field'></div>").css("width",this.width).css("height",this.height)
 			.css("border-width","1px").css("border-style","solid").css("border-coloer","green").css("overflow","scroll").css("text-wrap","none")
 			.css("cursor","text").css("line-Height",this.lineHeight+"px");
 		var selectTopRow = $("<div id='"+this.prefix+this.prefix+"selectTopRow'></div>").css("width",this.width).css("height",this.height)
@@ -125,7 +127,7 @@ HilightingEditor.prototype={
 		var x =event.clientX;
 		var y =event.clientY;
 		me.createTextField(me);
-		me.rowNum = me.nowKeyInput === false ?Math.floor((y+me.topOffset+me.lineHeight)/me.lineHeight)+1:me.rowNum;
+		me.rowNum = me.nowKeyInput === false ?Math.floor((y+me.topOffset+me.lineHeight/2)/me.lineHeight)+1:me.rowNum;
 		var rows = me.doc.split("\n");
 		var newX = 0;
 		if(rows.length < me.rowNum){
@@ -145,10 +147,11 @@ HilightingEditor.prototype={
 		var areaStartCharNo =me.offsetOnRow; 
 		var areaEndRowNo =me.rowNum; 
 		var areaEndCharNo =me.offsetOnRow;
-		
+		var scrollY = me.field.scrollTop();
+		var scrollX = me.field.scrollLeft();
 		//select処理
 		console.log("me.isMouseDown:"+me.isMouseDown+"/me.nowMouseDown:"+me.nowMouseDown+"/event.shiftKey:"+event.shiftKey+"/event.ctrlKey:"+event.ctrlKey
-			+"/me.nowKeyInput:"+me.nowKeyInput+"/me.isCut:"+me.isCut+"/newX:"+newX+"/me.textWidth:"+me.textWidth);
+			+"/me.nowKeyInput:"+me.nowKeyInput+"/me.isCut:"+me.isCut+"/newX:"+newX+"/me.textWidth:"+me.textWidth+"/scrollY:"+scrollY+"/scrollX:"+scrollX);
 			
 		areaStartCharNo = areaStartRowNo > me.selectStartRows ? me.selectStartChars : areaStartCharNo ;
 		areaEndCharNo = areaStartRowNo > me.selectStartRows ? areaEndCharNo:me.selectStartChars;
@@ -163,27 +166,27 @@ HilightingEditor.prototype={
 			
 		if(me.isMouseDown===false && me.nowMouseDown===false 
 		|| me.isMouseDown===false && 
-			(me.nowKeyInput === false || event.shiftKey===false && event.ctrlKey===false || me.isPeast===true||me.isCut===true)
+			(me.nowKeyInput === false || event.shiftKey===false && event.ctrlKey===false || me.isPeast===true||me.isCut===true||me.isBk===true)
 		|| me.isMouseDownNew===false && (me.nowKeyInput === false && event.shiftKey===false && event.ctrlKey===false)
 		||me.isPreShortCuts===true){
 			//me.selectStartRows=-1;
 			//me.selectStartChars=-1;
 			var retText="";
 			if(rowNumDiff == 1){
-				if(me.isCut === true){
-					rows[areaStartRowNo-1]=textSelectStart.substring(0,areaStartCharNo);
-					rows[areaEndRowNo-1]=textSelectEnd.substring(areaEndCharNo,textSelectEnd.length);
+				if(me.isCut === true || me.isBk === true && me.isSwithMouseDown===true){
+					rows[areaStartRowNo-1]=textSelectStart.substring(0,areaStartCharNo)+textSelectEnd.substring(areaEndCharNo,textSelectEnd.length);;
+					rows[areaEndRowNo-1]=undefined;
 				}
 			}else if(rowNumDiff  > 1){
-				if(me.isCut === true){
-					rows[areaStartRowNo-1]=textSelectStart.substring(0,areaStartCharNo);
+				if(me.isCut === true || me.isBk === true && me.isSwithMouseDown===true){
+					rows[areaStartRowNo-1]=textSelectStart.substring(0,areaStartCharNo)+textSelectEnd.substring(areaEndCharNo,textSelectEnd.length);
 					for(var i = 0;i< rowNumDiff-1 ;i++){
 						rows[areaStartRowNo + i]=undefined;
 					}
-					rows[areaEndRowNo-1]=textSelectEnd.substring(areaEndCharNo,textSelectEnd.length);
+					rows[areaEndRowNo-1]=undefined;
 				}
 			}else{
-				if(me.isCut === true){
+				if(me.isCut === true || me.isBk === true && me.isSwithMouseDown===true){
 					rows[areaStartRowNo-1]=textSelectStart.substring(0,areaStartCharNo)+textSelectStart.substring(areaEndCharNo,textSelectStart.length);
 		console.log("☆"+rows[areaStartRowNo-1]);
 				}
@@ -197,14 +200,15 @@ HilightingEditor.prototype={
 				lf= "\n";
 			}
 			me.doc=resultText;
-			console.log("☆★☆☆");
-			if(me.isMouseDown===false && (me.nowKeyInput === true && event.shiftKey===false  || me.isPeast===true||me.isCut===true)){
+			console.log("☆★☆☆:me.isBk:"+me.isBk);
+			if(me.isMouseDown===false && (me.nowKeyInput === true && event.shiftKey===false  || me.isPeast===true||me.isCut===true||me.isBk===true)){
 				me.selectTopRow.css("visibility","hidden");
 				me.selectMiddleRow.css("visibility","hidden");
 				me.selectBottomRow.css("visibility","hidden");
 				me.nowSelectedText="";
 			}
 		}else if(me.nowMouseDown===true){
+			me.culcTextWidth(me,rows[me.rowNum-1],x);
 			me.selectStartRows=me.rowNum;
 			me.selectStartChars=me.offsetOnRow;
 			me.selectTopRow.css("visibility","hidden");
@@ -217,15 +221,15 @@ HilightingEditor.prototype={
 			//	+textWidthEnd+"/me.selectStartRows :"+me.selectStartRows +"/me.offsetOnRow:"+me.offsetOnRow
 			//	+"/me.rowNum:"+me.rowNum);
 			me.selectTopRow.css("visibility","visible");
-			me.selectTopRow.css("top",(areaStartRowNo-1)*me.lineHeight+me.topRowOffset-this.selectedRowTopOffset);
+			me.selectTopRow.css("top",(areaStartRowNo-1)*me.lineHeight+me.topRowOffset-this.selectedRowTopOffset+scrollY);
 			
-			me.selectTopRow.css("left",textOffsetStart);
+			me.selectTopRow.css("left",textOffsetStart+scrollX);
 			if(rowNumDiff == 1){
 				me.selectTopRow.css("width",me.maxWidth-textOffsetStart);
 				me.selectBottomRow.css("visibility","visible");
 				me.selectMiddleRow.css("visibility","hidden");
-				me.selectBottomRow.css("top",(areaEndRowNo)*me.lineHeight+me.topRowOffset-this.selectedRowBottomOffset+2);
-				me.selectBottomRow.css("left",0 ).css("width",textWidthEnd);
+				me.selectBottomRow.css("top",(areaEndRowNo)*me.lineHeight+me.topRowOffset-this.selectedRowBottomOffset+2+scrollY);
+				me.selectBottomRow.css("left",scrollX ).css("width",textWidthEnd);
 				
 				me.nowSelectedText = textSelectStart.substring(areaStartCharNo,textSelectStart.length);
 								+ "\n"
@@ -237,10 +241,10 @@ HilightingEditor.prototype={
 				me.selectTopRow.css("width",me.maxWidth-textOffsetStart);
 				me.selectBottomRow.css("visibility","visible");
 				me.selectMiddleRow.css("visibility","visible");
-				me.selectMiddleRow.css("top",(areaStartRowNo-1)*me.lineHeight+me.topRowOffset-this.selectedRowMiddleOffset);
-				me.selectMiddleRow.css("left",0).css("width",me.maxWidth).css("height",((rowNumDiff-1)*me.lineHeight-2));
-				me.selectBottomRow.css("top",(areaEndRowNo)*me.lineHeight-this.selectedRowBottomOffset +2);
-				me.selectBottomRow.css("left",0 ).css("width",textWidthEnd);
+				me.selectMiddleRow.css("top",(areaStartRowNo-1)*me.lineHeight+me.topRowOffset-this.selectedRowMiddleOffset+scrollY);
+				me.selectMiddleRow.css("left",scrollX).css("width",me.maxWidth).css("height",((rowNumDiff-1)*me.lineHeight-2));
+				me.selectBottomRow.css("top",(areaEndRowNo)*me.lineHeight-this.selectedRowBottomOffset +2+scrollY);
+				me.selectBottomRow.css("left",scrollX ).css("width",textWidthEnd);
 			//console.log("EEEE rowNumDiff:"+rowNumDiff+"/areaStartRowNo:"+areaStartRowNo+"/areaEndRowNo:"
 			//	+areaEndRowNo+"/me.selectStartRows :"+me.selectStartRows +"/me.selectStartChars:"+me.selectStartChars
 			//	+"/me.rowNum:"+me.rowNum);
@@ -255,7 +259,7 @@ HilightingEditor.prototype={
 				me.nowSelectedText =textSelectStart.substring(areaStartCharNo,areaEndCharNo);
 				var textWidthStart = me.culcTextWidth(me, me.nowSelectedText );
 				if(areaStartCharNo > areaEndCharNo){
-					me.selectTopRow.css("left",textOffsetStart-textWidthStart);
+					me.selectTopRow.css("left",textOffsetStart-textWidthStart+scrollX);
 			//		console.log("FFFF areaStartCharNo:"+areaStartCharNo+"/textOffsetStart-textWidthStart:"+(textOffsetStart-textWidthStart)+"/areaEndCharNo:"
 			//	+areaEndCharNo+"/me.newX :"+newX +"/me.textOffsetStart:"+textOffsetStart
 			//	+"/textWidthStart:"+textWidthStart);
@@ -278,13 +282,13 @@ HilightingEditor.prototype={
 	//		+"/event.ctrlKey:"+event.ctrlKey+"/me.nowSelectedText:"+me.nowSelectedText);
 		if(me.rowNum <1) me.rowNum = 1;
 		if(newX <0) newX = 0;
-		me.textField.css("top",(me.rowNum-1)*me.lineHeight+me.topRowOffset);
-		me.textField.css("left",newX+me.leftOffset-0);
+		me.textField.css("top",(me.rowNum-1)*me.lineHeight+me.topRowOffset-1+scrollY);
+		me.textField.css("left",newX+me.leftOffset-0+scrollX);
 		me.textField.val(me.nowSelectedText).focus();
 		//selection.selectAllChildren(me.textField.get(0));
 		me.textField.get(0).select();
 		var selectedText = window.getSelection().toString();
-		console.log("★★★★★★★"+selectedText+"★★★★★★★");
+		//console.log("★★★★★★★"+selectedText+"★★★★★★★");
 		me.textWidth=undefined ;
 		me.nowKeyInput = false;
 		me.viewField.css("cursor","text");
@@ -328,6 +332,9 @@ HilightingEditor.prototype={
 		me.isCut=false;
 		me.isPeast=false;
 		var isNotCharKey=false;
+		me.isSwithMouseDown=false;
+		me.isBk=false;
+		var nowIsMouseDown = me.isMouseDown;
 		console.log("keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modifiers+"/event.ctrlKey:"+event.ctrlKey);
 		if(keyCode=="38" && me.rowNum>1){//up
 			me.rowNum--;
@@ -351,6 +358,7 @@ HilightingEditor.prototype={
 		if(keyCode=="8" ){//delete
 			me.dellCount++;
 			isNotCharKey=true;
+			me.isBk=true;
 		}
 		if(keyCode=="13" ){//enter
 			me.retCount++;
@@ -411,6 +419,10 @@ HilightingEditor.prototype={
 		}else if(event.ctrlKey===true){//Ctl
 			text="";
 			me.textField.val("");
+		}
+		
+		if(me.isMouseDown!==nowIsMouseDown){
+			me.isSwithMouseDown=true;
 		}
 		if(nowTime - me.nowTime > me.timeInterval){
 			
@@ -493,11 +505,11 @@ HilightingEditor.prototype={
 			    var preText = rows[me.rowNum-1];
 				var testOnRow = rows[me.rowNum-1] ===undefined ? "":rows[me.rowNum-1];
 				var offsetOnRow = me.offsetOnRow <testOnRow.length ? me.offsetOnRow : testOnRow.length;
-				preCaret = testOnRow.substring(0,offsetOnRow-me.dellCount)+text;
+				preCaret = testOnRow.substring(0,offsetOnRow-(me.isSwithMouseDown===true?0:me.dellCount-rowUpOffset))+text;
 				rows[me.rowNum-1]= preCaret+testOnRow.substring(offsetOnRow,testOnRow.length);
 				me.offsetOnRow=preCaret.length+1;
 			me.textField.val("");
-			console.log("BBBBBBBBBBB offsetOnRow:"+offsetOnRow+"/testOnRow:"+testOnRow+"/me.offsetOnRow:"+me.offsetOnRow+"/preCaret:"+preCaret+"/testOnRow.length:"+testOnRow.length+"/rows[me.rowNum-1]:"+rows[me.rowNum-1]+"/preText:"+preText+"/"+text+"/"+me.dellCountrowUpOffset);
+			console.log("BBBBBBBBBBB offsetOnRow:"+offsetOnRow+"/testOnRow:"+testOnRow+"/me.offsetOnRow:"+me.offsetOnRow+"/preCaret:"+preCaret+"/testOnRow.length:"+testOnRow.length+"/rows[me.rowNum-1]:"+rows[me.rowNum-1]+"/preText:"+preText+"/"+text+"/"+me.dellCountrowUpOffset+"#"+me.isSwithMouseDown+"#"+addRowCount);
 			}
 			
 			var resultText = "";
