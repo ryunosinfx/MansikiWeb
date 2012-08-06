@@ -14,6 +14,8 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.fontSize=12;
 	this.wordSpacing="0px";
 	this.letterSpacing="0px";
+	this.topSpacePx=80;
+	this.leftSpacePx=30;
 	this.LeftBarAWidth=30;
 	this.LeftBarBWidth=10;
 	this.LeftBarCWidth=10;
@@ -43,9 +45,9 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.selectStartRows=-1;
 	this.selectStartChars=-1;
 	this.SyntaxHilighter = new SyntaxHilighter();
-	this.selectedRowTopOffset=this.height+this.lineHeight*2;
-	this.selectedRowBottomOffset=this.height+this.lineHeight*4+4;
-	this.selectedRowMiddleOffset=this.height+this.lineHeight*1+4;
+	this.selectedRowTopOffset=this.height+this.lineHeight*3+2;
+	this.selectedRowBottomOffset=this.height+this.lineHeight*5+4;
+	this.selectedRowMiddleOffset=this.height+this.lineHeight*2+4;
 	this.keyUpCount = 0;
 	this.nowOffsetCharNo = 0;
 	this.nowSelectedText = "";
@@ -62,6 +64,9 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.lastLineNum=0;
 	this.viewAreaRecio=1;
 	
+	this.rows=[];
+	this.currentHeight = this.height;
+	
 	this.scrollBarHeight=-18;
 	this.CurrentOffsetTop=0;
 	this.lastInputedArray = [];
@@ -69,6 +74,10 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.isDorgableCodeMap = false;
 	this.startClickYCodeMap = 0;
 	this.startTopCodeMap = 0;
+	this.presetWidth = width;
+	this.presetHeight = height;
+	this.TolgeAdjustSizeIsFull = false;
+	this.isReflesh = false;
 }
 
 HilightingEditor.prototype={
@@ -84,27 +93,30 @@ HilightingEditor.prototype={
 			.css("border-width","1px").css("border-style","solid").css("border-coloer","green").css("overflow","hidden");
 		var field = $("<div id='"+this.prefix+"field'></div>")
 			.css("border-width","0px").css("border-style","solid").css("border-coloer","green").css("overflow","scroll").css("text-wrap","none")
-			.css("cursor","text").css("line-Height",this.lineHeight+"px").css("float","left").css("background-color","red").css("padding","0px").css("margin","0px");
+			.css("cursor","text").css("line-Height",this.lineHeight+"px").css("float","left").css("background-color","none").css("padding","0px").css("margin","0px");
 		var middleField = $("<div id='"+this.prefix+"middleField'></div>")
-			.css("border-width","1px").css("border-style","solid").css("border-coloer","red").css("overflow","hidden").css("text-wrap","none")
-			.css("line-Height",this.lineHeight+"px");
+			.css("border-width","1px").css("border-style","solid").css("border-coloer","red").css("background-color","red").css("overflow","hidden").css("text-wrap","none")
+			.css("line-Height",this.lineHeight+"px").css("z-index","50");
 		var selectTopRow = $("<div id='"+this.prefix+"selectTopRow'></div>")
 			.css("border-width","1px").css("border-style","solid").css("border-coloer","blue").css("overflow","hidden").css("background-color","blue")
-			.css("top",0-this.height).css("opacity",0.5).css("width",this.currentWidth).css("height",this.lineHeight).css("position","relative").css("z-index","150");
+			.css("opacity",0.5).css("width",this.currentWidth).css("height",this.lineHeight).css("position","relative").css("z-index","150");
 		var selectMiddleRow = $("<div id='"+this.prefix+"selectMiddleRow'></div>")
 			.css("border-width","1px").css("border-style","solid").css("border-coloer","green").css("overflow","hidden").css("background-color","green")
-			.css("top",0-this.height).css("opacity",0.5).css("width",this.currentWidth).css("height",this.lineHeight).css("position","relative").css("z-index","150");
+			.css("opacity",0.5).css("width",this.currentWidth).css("height",this.lineHeight).css("position","relative").css("z-index","150");
 		var selectBottomRow = $("<div id='"+this.prefix+"selectBottomRow'></div>")
 			.css("border-width","1px").css("border-style","solid").css("border-coloer","gray").css("overflow","hidden").css("background-color","orange")
-			.css("top",0-this.height).css("opacity",0.5).css("width",this.currentWidth).css("height",this.lineHeight).css("position","relative").css("z-index","150");
+			.css("opacity",0.5).css("width",this.currentWidth).css("height",this.lineHeight).css("position","relative").css("z-index","150");
 		var viewField = this.setStanderdCSSops($("<div id='"+this.prefix+"View'></div>")
-			.css("overflow","hidden").css("position","relative").css("top",-this.lineHeight*2).css("z-index","100").css("cursor","text"));
+			.css("overflow","hidden").css("position","relative").css("z-index","100").css("cursor","text"));
 		var viewArea = $("<div id='"+this.prefix+"viewArea'></div>")
 			.css("border-width","1px").css("border-style","solid").css("border-coloer","blue").css("background-color","#0095FF")
 			.css("opacity",0.5).css("width",this.currentWidth).css("height",this.lineHeight).css("position","relative").css("z-index","550");
 		var rowNumRowHilight = $("<div id='"+this.prefix+"rowNumRowHilight'></div>")
 			.css("border-width","1px").css("border-style","solid").css("border-coloer","blue").css("background-color","#0095FF")
 			.css("opacity",0.5).css("height",this.lineHeight).css("position","relative").css("z-index","550").css("position","relative");
+		var textRowHilight = $("<div id='"+this.prefix+"textRowHilight'></div>")
+			.css("border-width","1px").css("border-style","solid").css("border-coloer","blue").css("background-color","#0095FF")
+			.css("opacity",0.5).css("height",this.lineHeight).css("position","relative").css("z-index","80").css("position","relative");
 			
 			
 		var leftColumnFiled =this.setStanderdCSSops($("<div id='"+this.prefix+"leftColumn'></div>").css("background-color","green").css("float","left").css("overflow","hidden"));
@@ -133,9 +145,12 @@ HilightingEditor.prototype={
 		this.viewAreaDomObj = viewArea.get(0);
 		this.middleField = middleField;
 		this.middleFieldDomObj = middleField.get(0);
+		this.textRowHilight = textRowHilight;
+		this.textRowHilightDomObj = textRowHilight.get(0);
 		field.append(middleField);
 		middleField.append(viewField);
 		middleField.append(this.compositionupdateBox);
+		middleField.append(textRowHilight);
 		middleField.append(selectTopRow);
 		middleField.append(selectBottomRow);
 		middleField.append(selectMiddleRow);
@@ -155,31 +170,40 @@ HilightingEditor.prototype={
 		this.compositionupdateBox.css("visibility","hidden");
 		this.isNowSelecting = false;
 		this.createTextField(this);
+		this.currentHeight =this.height;
 		this.adjustSize(this);
+		
 		HilightingEditorGrobalSelfPointer = this;
 		
-		
-		
 	},
-	adjustSize:function(me){
+	adjustSize:function(me,height,width){
+		if(height!==undefined){
+			me.height = height;
+		}
+		if(width!==undefined){
+			me.width = width;
+		}
+		me.currentHeight=me.height;
 		var leftColumnFiledWidth = me.LeftBarAWidth+me.LeftBarBWidth+me.LeftBarCWidth;
 		var rightColumnFiledWidth = me.RightBarAWidth+me.RightBarBWidth+me.RightBarCWidth;
 		me.leftColumnFiledWidth = leftColumnFiledWidth;
 		me.rightColumnFiledWidth = rightColumnFiledWidth;
 		me.currentWidth = me.width - leftColumnFiledWidth*1 - rightColumnFiledWidth*1;
 		
-		me.scrollBarHeight=me.fieldDomObj.clientHeight-me.height;
-		me.backPanel.css("width",me.width).css("height",me.height);
-		me.field.css("width",me.currentWidth).css("height",me.height);
-		me.middleField.css("width",me.currentWidth).css("height",me.height);
-		me.selectMiddleRow.css("width",me.currentWidth);
-		me.selectTopRow.css("width",me.currentWidth);
-		me.selectBottomRow.css("width",me.currentWidth);
-		me.viewField.css("width",me.currentWidth).css("height",me.height);
-		me.leftColumnFiled.css("width",leftColumnFiledWidth).css("height",me.height);
-		me.numberFiled.css("width",me.LeftBarAWidth).css("height",me.height);
+		me.scrollBarHeight=me.fieldDomObj.clientHeight-me.currentHeight;
+		me.backPanel.css("width",me.width).css("height",me.currentHeight);
+		me.field.css("width",me.currentWidth).css("height",me.currentHeight);
+		me.middleField.css("width",me.currentWidth).css("height",me.currentHeight);
+		me.selectMiddleRow.css("width",me.currentWidth).css("top",0-me.height);
+		me.selectTopRow.css("width",me.currentWidth).css("top",0-me.height);
+		me.selectBottomRow.css("width",me.currentWidth).css("top",0-this.height);
+		me.viewField.css("width",me.currentWidth).css("height",me.currentHeight).css("top",0-me.lineHeight*2);
+		me.textRowHilight.css("width",me.currentWidth);
+		me.leftColumnFiled.css("width",leftColumnFiledWidth).css("height",me.currentHeight);
+		me.numberFiled.css("width",me.LeftBarAWidth).css("height",me.currentHeight);
 		me.rowNumRowHilight.css("width",me.LeftBarAWidth);
-		me.rightColumnFiled.css("width",rightColumnFiledWidth).css("height",me.height);
+		me.rightColumnFiled.css("width",rightColumnFiledWidth).css("height",me.currentHeight);
+		//me.viewArea.
 		//alert("aaa"+me.scrollBarHeight);
 	},
 	setStanderdCSSops:function(jQobj){
@@ -203,11 +227,38 @@ HilightingEditor.prototype={
 			.css("z-index","200").css("width",me.width).css("line-Height",this.lineHeight+"px").css("font-size",this.fontSize+"px").css("font-family",me.fontFamily)
 			.css("word-spacing",this.wordSpacing).css("letter-spacing",this.letterSpacing).css("top",me.textareaOffsetTop).css("left",me.textareaOffsetLeft);
 			me.viewArea.bind('click',{"self":me},me.onClickCodeMap);
-			me.viewArea.bind('mousedown',{"self":me},me.onMouseDownCodeMap);
-			me.viewArea.bind('mouseup',{"self":me},me.onMouseUpCodeMap);
-			me.viewArea.bind('mouseout',{"self":me},me.onMouseOutCodeMap);
+			//me.viewArea.bind('mousedown',{"self":me},me.onMouseDownCodeMap);
+			//me.viewArea.bind('mouseup',{"self":me},me.onMouseUpCodeMap);
+			//me.viewArea.bind('mouseout',{"self":me},me.onMouseOutCodeMap);
 			me.viewArea.bind('mousemove',{"self":me},me.onDragCodeMap);
+			me.rightColumnFiled.bind('dblclick',{"self":me},me.onClickRightColumn);
+			
 		}
+	},
+	setLisnorOnButton:function(me,button,key){
+		button.bind('click',{"self":me},me[key]);
+	},
+	TolgeAdjustSizeAsFullScreen:function(event){
+		var me = event.data.self;
+		var width = me.presetWidth ;
+		var height = me.presetHeight ;
+		if(me.TolgeAdjustSizeIsFull ){
+			var windowObj = $(window);
+			width = windowObj.width()-me.leftSpacePx;
+			height = windowObj.height()-me.topSpacePx;
+			me.TolgeAdjustSizeIsFull =false;
+		}else{
+			me.TolgeAdjustSizeIsFull = true;
+		}
+		me.isReflesh = true;
+		me.adjustSize(me,height,width);
+		me.onInput(event);
+	},
+	adjustSizeOnAction:function(event){
+		var me = event.data.self;
+		var width = event.data.width;
+		var height = event.data.height;
+		me.adjustSize(me,height,width);
 	},
 	onBlur:function(event){
 		var me = event.data.self;
@@ -219,32 +270,60 @@ HilightingEditor.prototype={
 		me.showViewArea(me);
 		me.leftColumnFiledDomObj.scrollTop=me.fieldDomObj.scrollTop;
 	},
+	onClickRightColumn:function(event){
+		var me = event.data.self;
+		var y =event.clientY-me.field.position().top;
+		var rowNum = me.lastLineNum*y/me.fieldDomObj.clientHeight;
+		var charCount = 0;
+		for(var i = 0; i < me.lastLineNum && i < rowNum ;i++){
+			charCount+=me.rows[i].length+1;
+		}
+		me.fieldDomObj.scrollTop = (y-10)*1.2;
+		me.textField.get(0).selectionStart = charCount;
+		me.textField.get(0).selectionEnd = charCount;
+		me.onSelect(event);
+		//console.log("☆★☆☆☆☆ charCount"+charCount+"/me.fieldDomObj.scrollTop:"+me.fieldDomObj.scrollTop);
+	},
 	onClickCodeMap:function(event){
 		var me = event.data.self;	
-		
+		//me.isDorgableCodeMap = true;
+		me.viewArea.css("cursor","move");
+		if(me.isDorgableCodeMap){
+			me.onMouseUpCodeMap(event);
+		}else{
+			me.onMouseDownCodeMap(event);
+		}
 	},
 	onMouseDownCodeMap:function(event){//mousemove
 		var me = event.data.self;	
 		me.isDorgableCodeMap = true;
-		me.startClickYCodeMap = event.clientY;
+		me.tartClickYCodeMap = event.clientY;
+		me.viewArea.css("background-color","red");
 		me.startTopCodeMap = me.viewArea.position().top;
 		me.viewArea.css("cursor","move");
 	},
 	onMouseUpCodeMap:function(event){//mousemove
 		var me = event.data.self;
 		me.isDorgableCodeMap = false;
+		me.viewArea.css("background-color","blue");
 		me.viewArea.css("cursor","pointer");
 	},
 	onMouseOutCodeMap:function(event){//mousemove
 		var me = event.data.self;	
 		me.isDorgableCodeMap = false;
+		me.viewArea.css("background-color","blue");
 		me.viewArea.css("cursor","pointer");
 	},
 	onDragCodeMap:function(event){//mousemove
 		var me = event.data.self;	
-		var moveY = event.clientY - me.startClickYCodeMap ;
-		me.viewArea.css("cursor","move");
-		me.adjustViewArea(me,moveY);
+			var moveY = event.clientY - me.startClickYCodeMap -me.field.position().top;
+		console.log("☆★☆☆★★★ moveY :"+moveY+"/jme.isDorgableCodeMap:"+me.isDorgableCodeMap+"/me.startClickYCodeMap:"+me.startClickYCodeMap);
+		
+		if(me.isDorgableCodeMap === true){
+			var moveY = event.clientY - me.startClickYCodeMap -me.field.position().top;
+			me.viewArea.css("cursor","move");
+			me.adjustViewArea(me,moveY);
+		}
 	},
 	onClick:function(event){
 		var me = event.data.self;
@@ -325,13 +404,16 @@ HilightingEditor.prototype={
 		var areaEndCharNo	=rowsEnd[rowsEnd.length-1].length;
 		var areaEndRowNo	=rowsEnd.length;
 		
+		var rowAdjust = -1.2;
+		
 		me.CurrentRowNum = areaStartRowNo;
 		me.rowNumRowHilight.css("top",(me.CurrentRowNum-1) * me.lineHeight);
+		var testTop =(me.CurrentRowNum+2+rowAdjust)*me.lineHeight+me.topRowOffset-me.selectedRowTopOffset+scrollY+2;
+		me.textRowHilight.css("top",testTop).css("visibility","visible");
 		if(rowsStart.length*me.lineHeight >= (me.height+me.fieldDomObj.scrollTop)-me.lineHeight && me.nowKeyInput === true){
 			me.fieldDomObj.scrollTop += me.lineHeight*2;
-			
 		}
-			console.log("☆★★★★☆ me.fieldDomObj.scrollTop:"+me.fieldDomObj.scrollTop+"/rowsStart:"+rowsStart.length+"/rows.length:"+rows.length);
+		console.log("☆★★★★☆ me.fieldDomObj.scrollTop:"+me.fieldDomObj.scrollTop+"/rowsStart:"+rowsStart.length+"/rows.length:"+rows.length+"/top:"+testTop);
 		//--------------------------------------------------------
 		var offsetLeft= (startPreCaret===""?0:(me.culcTextWidth(me,startPreCaret)-me.culcTextWidth(me,startPreCaret,"textarea"))*1)+1;
 		//--------------------------------------------------------
@@ -354,7 +436,6 @@ HilightingEditor.prototype={
 		}
 		
 		me.compositionupdateBox.text("");
-		var rowAdjust = -1.2;
 		var caretTop =(areaEndRowNo+rowAdjust)*me.lineHeight-me.selectedRowMiddleOffset +2+scrollY;
 		if(me.compositionupdateBox !==undefined){
 			//console.log("☆★★★★☆ me.compositionupdateData:"+me.compositionupdateData);
@@ -552,6 +633,7 @@ HilightingEditor.prototype={
 		if(nowTime - me.nowTime > me.timeInterval){
 			me.doc = me.textField.val();
 			var rows = me.doc.split("\n");
+			me.rows=rows;
 			var lineNum = rows.length;
 			me.rowNum = rows.length;
 			var doc = ""//me.doc;
@@ -565,12 +647,13 @@ HilightingEditor.prototype={
 			me.viewField.html(doc);//me.doc.replace(/\n/g,"<br />"));
 			me.viewField.css("width",me.maxWidth+me.lineHeight);
 			me.dellCount =0;
-			var height =lineNum*me.lineHeight>200?lineNum*me.lineHeight:200;
-			me.viewField.css("height",height);
-			me.textField.css("height",height);
-			var editorHeight = height+me.lineHeight*2;
-			me.middleField.css("height",editorHeight);
-			if(lineNum !== me.lastLineNum){
+			if(lineNum !== me.lastLineNum || me.isReflesh===true){
+				var height =lineNum*me.lineHeight>200?lineNum*me.lineHeight:200;
+				//me.currentHeight = height;
+				me.viewField.css("height",height);
+				me.textField.css("height",height);
+				var editorHeight = height+me.lineHeight*3;
+				me.middleField.css("height",editorHeight);
 				var startLineNum = 10000+lineNum;
 				br = "";
 				for(var j = 10001; j<=startLineNum;j++ ){
@@ -582,13 +665,14 @@ HilightingEditor.prototype={
 				me.numberFiled.css("height",editorHeight-me.scrollBarHeight);
 				
 				me.showViewArea(me,true);
+				var height2 =height>200?(lineNum)*me.lineHeight*2-200:200;
+				me.CurrentOffsetTop= -(height2-200)*1;
+				me.viewField.css("top", - height*1);
+				me.isReflesh=false;
 			}else{
 				me.showViewArea(me);
 			}
 			//console.log("☆★★★★☆★☆★☆★☆★☆"+me.fieldDomObj.scrollTop+"/"+me.leftColumnFiledDomObj.scrollTop);
-			var height2 =height>200?(lineNum)*me.lineHeight*2-200:200;
-			me.CurrentOffsetTop= -(height2-200)*1;
-			me.viewField.css("top", - height*1);
 			me.nowKeyInput = true;
 			me.onSelect(event);
 			me.nowKeyInput = false;
@@ -600,8 +684,9 @@ HilightingEditor.prototype={
 			if(me.width < newWidthTextarea){
 				me.textField.css("width",newWidthTextarea);
 			}
-			me.viewField.css("width",me.width<=newWidthTextarea ?newWidthTextarea :me.width);
-			me.middleField.css("width",me.width<=newWidthTextarea ?newWidthTextarea :me.width);
+			me.viewField.css("width",me.currentWidth<=newWidthTextarea ?newWidthTextarea :me.currentWidth);
+			me.middleField.css("width",me.currentWidth<=newWidthTextarea ?newWidthTextarea :me.currentWidth);
+			//me.textRowHilight.css("width",me.currentWidth<=newWidthTextarea ?newWidthTextarea :me.currentWidth);
 		}
 		else{
 			//me.timer = setTimeout(function(){me.onInput(event);},me.timeInterval+10);
@@ -666,19 +751,26 @@ HilightingEditor.prototype={
 			var heightAll = me.numberFiledDomObj.clientHeight;
 			var heightView = me.fieldDomObj.clientHeight;
 			var viewAreaRecio = heightView/heightAll;
-			this.viewAreaRecio = viewAreaRecio;
-			me.viewArea.css("height",viewAreaRecio*heightView);
+			me.viewAreaRecio = viewAreaRecio;
+			me.viewArea.css("height",heightView*heightView/heightAll);
 			//console.log("☆★★★★☆★☆★☆★☆★☆"+heightView+"/"+viewAreaRecio);
 		}
-		me.viewArea.css("top",me.viewAreaRecio*scrollTop);
+		if(me.isHandScroll===false){
+			me.viewArea.css("top",me.viewAreaRecio*scrollTop);
+		}
+		me.isHandScroll=false;
+		//
 	},
 	adjustViewArea:function(me,moveY){
-		var top = me.startTopCodeMap+moveY;
+		var top = moveY-me.startTopCodeMap;
+		console.log("☆★☆☆☆☆☆★★★ top :"+top+"/j:"+me.viewArea.height()+"/me.startClickYCodeMap:"+me.startClickYCodeMap);
+		
 		top = top < 0 ? 0 :top;
-		top = top+me.viewArea.height()> me.fieldDomObj.clientHeight ? me.fieldDomObj.clientHeight-me.viewArea.height():top;
-		me.viewArea.css("top",top);
-		//console.log("☆★☆★★★ top :"+top+"/j:"+me.viewArea.height());
+		top = top-100> me.fieldDomObj.clientHeight ? me.fieldDomObj.clientHeight-100:top;
+		me.viewArea.css("top",top );
+		console.log("☆★☆★★★ top :"+top+"/j:"+me.viewArea.height()+"/me.fieldDomObj.clientHeight :"+me.fieldDomObj.clientHeight +"/me.startTopCodeMap:"+me.startTopCodeMap);
 		me.fieldDomObj.scrollTop = top /me.viewAreaRecio;
+		me.isHandScroll=true;
 	}
 	
 }
