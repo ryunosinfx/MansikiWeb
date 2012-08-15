@@ -35,7 +35,7 @@ SyntaxHilighter.prototype={
 	execute:function(me){
 		return me.comvertStringToHTMLHilight(me,me.str,me.hsRule,me.index,me.rowIndex,me.isAddrow,me.caretRowNo);
 	},
-	comvertStringToHTMLHilight:function(me,str,hsRule,index,rowIndex,isAddrow,caretRowNo){//ここの処理はWorkerに投げたい。
+	comvertStringToHTMLHilight:function(me,str,hsRule,index,rowIndex,isAddrow,caretRowNo,mansikiWorkMng){//ここの処理はWorkerに投げたい。
 		var size = hsRule.size;
 		var el = new ExecutedLine(str);
 		var retText =str;
@@ -55,8 +55,9 @@ SyntaxHilighter.prototype={
 					isTypeSet=false;
 				}
 				var prefix = hilightRule.prefix.length>0?me.maskStringA1+className+"_prefix"+me.maskStringA2+hilightRule.prefix+me.maskStringB1:"";
-				el = mansikiWorkMng.executeCallBack(hilightRule,retText,el,index,caretRowNo==rowIndex,isTypeSet);// TODO mansikiWorkMngをポータブルにする。
-				
+				if(mansikiWorkMng!==undefined){
+					el = mansikiWorkMng.executeCallBack(hilightRule,retText,el,index,caretRowNo==rowIndex,isTypeSet);// TODO mansikiWorkMngをポータブルにする。
+				}
 				retText = el.text.replace(re,function(preText, p1, offset, s){
 					var viewText = p1;
 					if(index!==undefined && el.isOverride==true){
@@ -83,98 +84,6 @@ SyntaxHilighter.prototype={
 		text = text.replace(/[+\\\|\[\]\{\}\(\)\*\.\?&\$\"\'\!\~\^#,<>1-9a-zA-Y_]/g,"0")//\"
 		.replace(/[^0]{1}/g,"　").replace(/0/g," ")
 		return text;
-		
-	},
-	comvertStringToHTMLHilightRow:function(str,hsRule,me){
-		
-	},
-	comvertStringToHTMLHilightNew:function(str,hsRule,me,index){///重すぎて動かなくなってしまった。
-		var size = hsRule.getSize();
-		var el = new ExecutedLine(str);
-		var retText =str;
-		var classList={};
-		var prefixList={};
-		var typePiroity=[];
-		var markingOnString ={};
-		
-		console.log("ccccc");
-		for(var priority in hsRule.getRouleList()){
-			var hilightRule = hsRule.getRouleList()[priority];
-			var type= hilightRule.getType();
-			var asStart={"type":type,"mode":"start"};
-			var asEnd={"type":type,"mode":"end"};
-			var rexStr = hilightRule.getRegix();
-			rexStr=rexStr.match(/\(/)?rexStr:"("+rexStr+")";
-			var re = new RegExp(rexStr,"g");
-			classList[type]=hilightRule.getCssClassName();
-			typePiroity.push(type);
-		console.log("ddd");
-			if(retText.match(re)){//ここのロジックを大幅に変える。
-				console.log("ccccc");
-				el = hilightRule.executeCallBack(retText,el,index);
-				prefixList[type]=hilightRule.getPrefix().length>0?me.maskStringA1+className+"_prefix"+me.maskStringA2+hilightRule.getPrefix()+me.maskStringB1:"";
-				retText = el.getText().replace(re,function(preText, p1, offset, s){
-					var viewText = p1;
-					if(index!==undefined && el.isOverride==true){
-						viewText=me.convertClearString(viewText);
-					}
-					return me.maskStringA1 +viewText + me.maskStringB1;
-				});
-				var retTextStart=retText.replace(me.maskReA1,"");
-				var retTextend=retText.replace(me.maskReB1,"");
-				var splitedTextStart = retTextend.split(me.maskStringA1);//う？ここで分割すると誰がだれだか・・・
-				var splitedTextEnd = retTextStart.split(me.maskStringB1);//う？ここで分割すると誰がだれだか・・・
-				var planeText = splitedTextEnd.join("");
-				var cursor=0;
-				for(var j=0;j<splitedTextStart.length;j++){
-					cursor=splitedTextStart[j].length;
-					if(markingOnString[cursor]===undefined){
-						markingOnString[cursor]={};
-					}
-					markingOnString[cursor][type]=asStart;
-					cursor=splitedTextEnd[j].length;
-					if(markingOnString[cursor]===undefined){
-						markingOnString[cursor]={};
-					}
-					markingOnString[cursor][type]=asEnd;
-				}
-				retText=planeText;
-			};//~s///g
-		}//戻す
-		console.log("aaaa");
-		var addTokens=[];
-		for(var i =0;i<=retText.length;i++){//フォースはどうするのか？位置文字ずつ
-		console.log("zzzz i:"+i);
-			if(markingOnString[i]!==undefined){//まあ取り合えずあるのだけやる
-				var addToken="";
-				for(var n=0;n=typePiroity.length;n++){
-					var typeA=typePiroity[n];
-					var token= markingOnString[i][typeA];
-					if(token!==undefined){
-						if(token.mode=="start"){
-							//addToken+=me.maskStringA1 + classList[typeA] + me.maskStringA2 + prefixList[typeA];
-						}else{
-							//addToken = me.maskStringB1+addToken;
-						}
-					}
-				}
-				//addTokens.push(addToken);
-			}else{
-				//addTokens.push("");
-			}
-			
-		console.log("zzzz");
-			if(i<retText.length){
-				//addTokens.push(retText.substring(i,i+1));
-			}
-		}
-		console.log("bbb");
-		el.setText(retText);
-		el.setOverrideOffset(retText.length-str.length);
-		el.setHtml(me.comvertStringToHTML(addTokens.join("")).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>"));
-		//console.log(me.comvertStringToHTML(retText).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>"));
-
-		return el;
 	}
 }
 var HilightingSyntax= function(){

@@ -45,6 +45,7 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.preAreaStartCharNo =0 
 	this.preAreaEndRowNo =0; 
 	this.preAreaEndCharNo =0
+	this.lastInputedArray = [];
 }
 
 HilightingEditor.prototype={
@@ -134,18 +135,24 @@ HilightingEditor.prototype={
 		var x =event.clientX;
 		var y =event.clientY;
 		me.createTextField(me);
-		me.rowNum = me.nowKeyInput === false ?Math.floor((y+me.topOffset+me.lineHeight/2)/me.lineHeight)+1:me.rowNum;
+		me.rowNum = me.nowKeyInput === false ?Math.floor((y+me.topOffset+me.lineHeight/1)/me.lineHeight)+1:me.rowNum;
 		var rows = me.doc.split("\n");
 		var newX = 0;
 		if(rows.length < me.rowNum){
 			newX = 0;
 			me.rowNum = rows.length;
 		}
-		var textWidth = me.textWidth!==undefined ?me.textWidth :me.culcTextWidth(me,rows[me.rowNum-1],x);
-		if(textWidth!==undefined){
+			console.log("☆☆☆★★★★"+me.offsetOnRow);
+		var nowTextWidth = me.culcTextWidth(me,rows[me.rowNum-1],x);
+		var textWidth = me.textWidth!==undefined ?me.textWidth :nowTextWidth;
+		if(textWidth!==undefined && me.nowKeyInput === true){
 			newX = textWidth;
+			//me.offsetOnRow = rows[me.rowNum-1]===undefined ?rows[0].length:rows[me.rowNum-1].length;
+			console.log("☆☆☆★★★★"+me.offsetOnRow);
+		
 		}else{
-			newX = x;
+			newX = nowTextWidth;
+			console.log("☆☆★☆★★★");
 		}
 		me.viewField.get(0).selectionStart = 0;
 		me.viewField.get(0).selectionEnd = 10;
@@ -175,31 +182,53 @@ HilightingEditor.prototype={
 		var textSelectStart = rows[areaStartRowNo-1]===undefined ? "":rows[areaStartRowNo-1];
 		var textSelectEnd = rows[areaEndRowNo-1];
 		textSelectEnd = textSelectEnd===undefined ?textSelectStart:textSelectEnd;
-			
+		
+		if( textSelectEnd-textSelectStart <3 && rowNumDiff===0 && (me.nowKeyInput === false && event.shiftKey===false && event.ctrlKey===false)){
+			me.isMouseDown==false;
+			me.nowMouseDown==false ;
+			me.selectTopRow.css("visibility","hidden");
+			me.selectMiddleRow.css("visibility","hidden");
+			me.selectBottomRow.css("visibility","hidden");
+			me.isMouseDown=false;
+			me.isNowSelecting=false;
+			console.log("☆☆☆★★☆★★");
+		}
+		
+		
 		if(me.isMouseDown===false && me.nowMouseDown===false 
 		|| me.isMouseDown===false && 
 			(me.nowKeyInput === false || event.shiftKey===false && event.ctrlKey===false || me.isPeast===true||me.isCut===true||me.isBk===true)
 		|| me.isMouseDownNew===false && (me.nowKeyInput === false && event.shiftKey===false && event.ctrlKey===false)
-		||me.isPreShortCuts===true){
-			//me.selectStartRows=-1;
-			//me.selectStartChars=-1;
+		||me.isPreShortCuts===true
+		|| me.lastInputedArray.length>0 && me.isEndNowSelecting===true && me.isNowSelecting===false
+		){
+			var asddText = "";
+			
+			var lf="";
+			for(var i=0;i<me.lastInputedArray.length && (me.isCut === false || me.isBk === false) ;i++){
+				if(rows[i]!==undefined ){
+					asddText+=lf+me.lastInputedArray[i];
+				}
+				lf= "\n";
+			}
+			console.log("☆☆★☆★☆★"+me.lastInputedArray.join("\n"));
 			var retText="";
 			if(rowNumDiff == 1){
-				if(me.isCut === true || me.isBk === true && me.isEndNowSelecting===true){
-					rows[areaStartRowNo-1]=textSelectStart.substring(0,areaStartCharNo)+textSelectEnd.substring(areaEndCharNo,textSelectEnd.length);;
+				if(me.isCut === true || me.isBk === true && me.isEndNowSelecting===true || me.lastInputedArray.length>0 && me.isEndNowSelecting===true){
+					rows[areaStartRowNo-1]=textSelectStart.substring(0,areaStartCharNo)+asddText+textSelectEnd.substring(areaEndCharNo,textSelectEnd.length);;
 					rows[areaEndRowNo-1]=undefined;
 				}
 			}else if(rowNumDiff  > 1){
-				if(me.isCut === true || me.isBk === true && me.isEndNowSelecting===true){
-					rows[areaStartRowNo-1]=textSelectStart.substring(0,areaStartCharNo)+textSelectEnd.substring(areaEndCharNo,textSelectEnd.length);
+				if(me.isCut === true || me.isBk === true && me.isEndNowSelecting===true || me.lastInputedArray.length>0 && me.isEndNowSelecting===true){
+					rows[areaStartRowNo-1]=textSelectStart.substring(0,areaStartCharNo)+asddText+textSelectEnd.substring(areaEndCharNo,textSelectEnd.length);
 					for(var i = 0;i< rowNumDiff-1 ;i++){
 						rows[areaStartRowNo + i]=undefined;
 					}
 					rows[areaEndRowNo-1]=undefined;
 				}
 			}else{
-				if(me.isCut === true || me.isBk === true && me.isEndNowSelecting===true	){
-					rows[areaStartRowNo-1]=textSelectStart.substring(0,areaStartCharNo)+textSelectStart.substring(areaEndCharNo,textSelectStart.length);
+				if(me.isCut === true || me.isBk === true && me.isEndNowSelecting===true || me.lastInputedArray.length>0 && me.isEndNowSelecting===true){
+					rows[areaStartRowNo-1]=textSelectStart.substring(0,areaStartCharNo)+asddText+textSelectStart.substring(areaEndCharNo,textSelectStart.length);
 		console.log("☆"+rows[areaStartRowNo-1]);
 				}
 			}
@@ -212,7 +241,8 @@ HilightingEditor.prototype={
 				lf= "\n";
 			}
 			me.doc=resultText;
-			console.log("☆★☆☆:me.isBk:"+me.isBk+"/rowNumDiff:"+rowNumDiff+"/charDiff:"+(areaStartCharNo-areaEndCharNo)+"/me.isNowSelecting:"+me.isNowSelecting+"/"+resultText);
+			console.log("☆★☆☆:me.isBk:"+me.isBk+"/rowNumDiff:"+rowNumDiff+"/charDiff:"+(areaStartCharNo-areaEndCharNo)+"/me.isNowSelecting:"+me.isNowSelecting+"/"+resultText+"/"+me.lastInputedArray.length);
+			me.lastInputedArray=[];
 			if(me.isMouseDown===false && (me.nowKeyInput === true && event.shiftKey===false  || me.isPeast===true||me.isCut===true||me.isBk===true)){
 				me.selectTopRow.css("visibility","hidden");
 				me.selectMiddleRow.css("visibility","hidden");
@@ -428,7 +458,7 @@ HilightingEditor.prototype={
 			text="";
 			me.textField.val("");
 		}
-		if(event.shiftKey===false && event.ctrlKey===false){//SHIFT押し以外
+		if(event.shiftKey===false && event.ctrlKey===false ){//SHIFT押し以外
 			me.selectTopRow.css("visibility","hidden");
 			me.selectMiddleRow.css("visibility","hidden");
 			me.selectBottomRow.css("visibility","hidden");
@@ -469,7 +499,17 @@ HilightingEditor.prototype={
 			me.textField.val("");
 			console.log("CCCCCCC1 me.rowNum:"+me.rowNum+"/me.offsetOnRow:"+me.offsetOnRow+"/text:"+text+"/event.shiftKey:"+event.shiftKey+"/"+me.isMouseDown);
 			//console.log("retCount:"+me.retCount+"/me.dellCount:"+me.dellCount+"/offsetOnRow:"+me.offsetOnRow);
-			var addRowCount = text.split("\n").length-1;
+			
+			var addTextArray=[];
+			var addRowCount = 0;
+			var lastAddRowText= "";
+			
+			if(text!==undefined){
+				addTextArray=text.split("\n");
+				addRowCount = text.split("\n").length-1;
+				lastAddRowText= addTextArray[addTextArray.length -1 ];
+			}
+			me.lastInputedArray = addTextArray;
 			me.rowNum +=addRowCount;
 			var rows = me.doc.split("\n");
 			var rowUpOffset = 0;
@@ -551,7 +591,7 @@ HilightingEditor.prototype={
 			me.textField.val("");
 			console.log("BBBBBBBBBBB offsetOnRow:"+offsetOnRow+"/testOnRow:"+testOnRow+"/me.offsetOnRow:"+me.offsetOnRow+"/preCaret:"+preCaret+"/testOnRow.length:"+testOnRow.length+"/rows[me.rowNum-1]:"+rows[me.rowNum-1]+"/preText:"+preText+"/"+text+"/"+me.dellCountrowUpOffset+"#"+me.isSwithMouseDown+"#"+addRowCount);
 			}
-			
+			me.offsetOnRow+=lastAddRowText.length;
 			var resultText = "";
 			var lf = "";
 			

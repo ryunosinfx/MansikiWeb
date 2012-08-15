@@ -30,6 +30,7 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.rowNum = 0;
 	this.timeInterval=100;//ms
 	this.nowTime = new Date().getTime();
+	this.nowTimeFind = new Date().getTime();
 	this.doc="";//
 	this.mansikiTextWidthArray={};
 	this.mansikiTextareaWidthArray={};
@@ -45,9 +46,9 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.selectStartRows=-1;
 	this.selectStartChars=-1;
 	this.SyntaxHilighter = new SyntaxHilighter();
-	this.selectedRowTopOffset=this.height+this.lineHeight*3+2;
-	this.selectedRowBottomOffset=this.height+this.lineHeight*5+4;
-	this.selectedRowMiddleOffset=this.height+this.lineHeight*2+4;
+	this.selectedRowTopOffset=this.height*1+this.lineHeight*3+2;
+	this.selectedRowBottomOffset=this.height*1+this.lineHeight*5+4;
+	this.selectedRowMiddleOffset=this.height*1+this.lineHeight*2+4;
 	this.keyUpCount = 0;
 	this.nowOffsetCharNo = 0;
 	this.nowSelectedText = "";
@@ -78,6 +79,7 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.presetHeight = height;
 	this.TolgeAdjustSizeIsFull = false;
 	this.isReflesh = false;
+	this.textbox;
 }
 
 HilightingEditor.prototype={
@@ -108,6 +110,8 @@ HilightingEditor.prototype={
 			.css("opacity",0.5).css("width",this.currentWidth).css("height",this.lineHeight).css("position","relative").css("z-index","150");
 		var viewField = this.setStanderdCSSops($("<div id='"+this.prefix+"View'></div>")
 			.css("overflow","hidden").css("position","relative").css("z-index","100").css("cursor","text"));
+		var findView = this.setStanderdCSSops($("<div id='"+this.prefix+"findView'></div>")
+			.css("overflow","hidden").css("position","relative").css("z-index","80").css("cursor","text")).css("background-color","#B2FFD2").css("color","red");
 		var viewArea = $("<div id='"+this.prefix+"viewArea'></div>")
 			.css("border-width","1px").css("border-style","solid").css("border-coloer","blue").css("background-color","#0095FF")
 			.css("opacity",0.5).css("width",this.currentWidth).css("height",this.lineHeight).css("position","relative").css("z-index","550");
@@ -116,7 +120,7 @@ HilightingEditor.prototype={
 			.css("opacity",0.5).css("height",this.lineHeight).css("position","relative").css("z-index","550").css("position","relative");
 		var textRowHilight = $("<div id='"+this.prefix+"textRowHilight'></div>")
 			.css("border-width","1px").css("border-style","solid").css("border-coloer","blue").css("background-color","#0095FF")
-			.css("opacity",0.5).css("height",this.lineHeight).css("position","relative").css("z-index","80").css("position","relative");
+			.css("opacity",0.5).css("height",this.lineHeight).css("position","relative").css("z-index","90").css("position","relative");
 			
 			
 		var leftColumnFiled =this.setStanderdCSSops($("<div id='"+this.prefix+"leftColumn'></div>").css("background-color","green").css("float","left").css("overflow","hidden"));
@@ -149,6 +153,7 @@ HilightingEditor.prototype={
 		this.textRowHilightDomObj = textRowHilight.get(0);
 		field.append(middleField);
 		middleField.append(viewField);
+		middleField.append(findView);
 		middleField.append(this.compositionupdateBox);
 		middleField.append(textRowHilight);
 		middleField.append(selectTopRow);
@@ -161,6 +166,8 @@ HilightingEditor.prototype={
 		this.compositionupdateBoxDomObj = document.getElementById(this.prefix+"charBoxTextarea");
 		this.viewField = viewField;
 		this.viewFieldDomObj = viewField.get(0);
+		this.findView = findView;
+		this.findViewDomObj = findView.get(0);
 		this.selectTopRow = selectTopRow;
 		this.selectMiddleRow = selectMiddleRow;
 		this.selectBottomRow = selectBottomRow;
@@ -173,6 +180,7 @@ HilightingEditor.prototype={
 		this.currentHeight =this.height;
 		this.adjustSize(this);
 		
+		this.rule = new HilightingSyntaxRule("find","findHilight","",undefined,"STRING","LINE");
 		HilightingEditorGrobalSelfPointer = this;
 		
 	},
@@ -198,6 +206,7 @@ HilightingEditor.prototype={
 		me.selectTopRow.css("width",me.currentWidth).css("top",0-me.height);
 		me.selectBottomRow.css("width",me.currentWidth).css("top",0-this.height);
 		me.viewField.css("width",me.currentWidth).css("height",me.currentHeight).css("top",0-me.lineHeight*2);
+		me.findView.css("width",me.currentWidth).css("height",me.currentHeight).css("top",0-me.lineHeight*4);
 		me.textRowHilight.css("width",me.currentWidth);
 		me.leftColumnFiled.css("width",leftColumnFiledWidth).css("height",me.currentHeight);
 		me.numberFiled.css("width",me.LeftBarAWidth).css("height",me.currentHeight);
@@ -224,7 +233,7 @@ HilightingEditor.prototype={
 			me.textFieldDomObj.addEventListener('compositionupdate',this.onCompositionX,false);
 			me.textFieldDomObj.addEventListener('compositionend',this.onCompositionX,false);
 			me.textField.css("display",'block').css("border-style","solid").css("border-width","1px").css("border-color","blue").css("opacity",0.0)
-			.css("z-index","200").css("width",me.width).css("line-Height",this.lineHeight+"px").css("font-size",this.fontSize+"px").css("font-family",me.fontFamily)
+			.css("z-index","250").css("width",me.width).css("line-Height",this.lineHeight+"px").css("font-size",this.fontSize+"px").css("font-family",me.fontFamily)
 			.css("word-spacing",this.wordSpacing).css("letter-spacing",this.letterSpacing).css("top",me.textareaOffsetTop).css("left",me.textareaOffsetLeft);
 			me.viewArea.bind('click',{"self":me},me.onClickCodeMap);
 			//me.viewArea.bind('mousedown',{"self":me},me.onMouseDownCodeMap);
@@ -237,6 +246,10 @@ HilightingEditor.prototype={
 	},
 	setLisnorOnButton:function(me,button,key){
 		button.bind('click',{"self":me},me[key]);
+	},
+	setLisnorOnFindTextbox:function(me,textbox){
+		textbox.bind('change',{"self":me,"textbox":textbox},me.find);
+		me.textbox = textbox;
 	},
 	TolgeAdjustSizeAsFullScreen:function(event){
 		var me = event.data.self;
@@ -253,12 +266,6 @@ HilightingEditor.prototype={
 		me.isReflesh = true;
 		me.adjustSize(me,height,width);
 		me.onInput(event);
-	},
-	adjustSizeOnAction:function(event){
-		var me = event.data.self;
-		var width = event.data.width;
-		var height = event.data.height;
-		me.adjustSize(me,height,width);
 	},
 	onBlur:function(event){
 		var me = event.data.self;
@@ -299,7 +306,7 @@ HilightingEditor.prototype={
 		me.isDorgableCodeMap = true;
 		me.tartClickYCodeMap = event.clientY;
 		me.viewArea.css("background-color","red");
-		me.startTopCodeMap = me.viewArea.position().top;
+		me.startTopCodeMap = me.viewArea.position().top-me.viewArea.height();;
 		me.viewArea.css("cursor","move");
 	},
 	onMouseUpCodeMap:function(event){//mousemove
@@ -408,7 +415,7 @@ HilightingEditor.prototype={
 		
 		me.CurrentRowNum = areaStartRowNo;
 		me.rowNumRowHilight.css("top",(me.CurrentRowNum-1) * me.lineHeight);
-		var testTop =(me.CurrentRowNum+2+rowAdjust)*me.lineHeight+me.topRowOffset-me.selectedRowTopOffset+scrollY+2;
+		var testTop =(me.CurrentRowNum+2 + rowAdjust) * me.lineHeight + me.topRowOffset - me.selectedRowTopOffset + scrollY + 2;
 		me.textRowHilight.css("top",testTop).css("visibility","visible");
 		if(rowsStart.length*me.lineHeight >= (me.height+me.fieldDomObj.scrollTop)-me.lineHeight && me.nowKeyInput === true){
 			me.fieldDomObj.scrollTop += me.lineHeight*2;
@@ -652,6 +659,7 @@ HilightingEditor.prototype={
 				//me.currentHeight = height;
 				me.viewField.css("height",height);
 				me.textField.css("height",height);
+				me.findView.css("height",height);
 				var editorHeight = height+me.lineHeight*3;
 				me.middleField.css("height",editorHeight);
 				var startLineNum = 10000+lineNum;
@@ -666,12 +674,14 @@ HilightingEditor.prototype={
 				
 				me.showViewArea(me,true);
 				var height2 =height>200?(lineNum)*me.lineHeight*2-200:200;
-				me.CurrentOffsetTop= -(height2-200)*1;
+				me.CurrentOffsetTop= -(height2-200)*1- height;
 				me.viewField.css("top", - height*1);
+				me.findView.css("top", - height*2);
 				me.isReflesh=false;
 			}else{
 				me.showViewArea(me);
 			}
+			me.find(event);
 			//console.log("☆★★★★☆★☆★☆★☆★☆"+me.fieldDomObj.scrollTop+"/"+me.leftColumnFiledDomObj.scrollTop);
 			me.nowKeyInput = true;
 			me.onSelect(event);
@@ -684,8 +694,10 @@ HilightingEditor.prototype={
 			if(me.width < newWidthTextarea){
 				me.textField.css("width",newWidthTextarea);
 			}
-			me.viewField.css("width",me.currentWidth<=newWidthTextarea ?newWidthTextarea :me.currentWidth);
-			me.middleField.css("width",me.currentWidth<=newWidthTextarea ?newWidthTextarea :me.currentWidth);
+			var nowWidth = me.currentWidth<=newWidthTextarea ?newWidthTextarea :me.currentWidth;
+			me.viewField.css("width",nowWidth);
+			me.middleField.css("width",nowWidth);
+			me.findView.css("width",nowWidth);
 			//me.textRowHilight.css("width",me.currentWidth<=newWidthTextarea ?newWidthTextarea :me.currentWidth);
 		}
 		else{
@@ -756,21 +768,61 @@ HilightingEditor.prototype={
 			//console.log("☆★★★★☆★☆★☆★☆★☆"+heightView+"/"+viewAreaRecio);
 		}
 		if(me.isHandScroll===false){
+			var cssTop = me.viewArea.css("top");
 			me.viewArea.css("top",me.viewAreaRecio*scrollTop);
+		console.log("☆★☆☆☆★★☆★★★ top :"+me.viewAreaRecio*scrollTop+"/cssTop:"+cssTop+"/me.viewAreaRecio:"+me.viewAreaRecio+"/scrollTop:"+scrollTop);
 		}
 		me.isHandScroll=false;
 		//
 	},
 	adjustViewArea:function(me,moveY){
-		var top = moveY-me.startTopCodeMap;
-		console.log("☆★☆☆☆☆☆★★★ top :"+top+"/j:"+me.viewArea.height()+"/me.startClickYCodeMap:"+me.startClickYCodeMap);
+		var top = moveY-me.startTopCodeMap-me.viewArea.height()/2;
+		var currentTop = (me.viewArea.css("top").match(/([0-9]+)[a-zA-Z]*/)||[])[1];
 		
+		console.log("☆★☆☆☆☆☆★★★ top :"+top+"/moveY:"+moveY+"/me.startTopCodeMap:"+me.startTopCodeMap+"/currentTop:"+currentTop+"/j:"+me.viewArea.height()+"/me.startClickYCodeMap:"+me.startClickYCodeMap);
+		top +=currentTop*1;
 		top = top < 0 ? 0 :top;
 		top = top-100> me.fieldDomObj.clientHeight ? me.fieldDomObj.clientHeight-100:top;
 		me.viewArea.css("top",top );
-		console.log("☆★☆★★★ top :"+top+"/j:"+me.viewArea.height()+"/me.fieldDomObj.clientHeight :"+me.fieldDomObj.clientHeight +"/me.startTopCodeMap:"+me.startTopCodeMap);
+		console.log("☆★☆★★★ top :"+top+"/jx	:"+me.viewArea.height()+"/me.fieldDomObj.clientHeight :"+me.fieldDomObj.clientHeight +"/me.startTopCodeMap:"+me.startTopCodeMap);
 		me.fieldDomObj.scrollTop = top /me.viewAreaRecio;
+			var cssTop = me.viewArea.css("top");
+		console.log("☆★☆☆☆★★☆★★★ cssTop:"+cssTop+"/me.viewAreaRecio:"+me.viewAreaRecio);
+		me.startTopCodeMap = (me.viewArea.css("top").match(/([0-9]+)[a-zA-Z]*/)||[])[1]*1;
 		me.isHandScroll=true;
+	},
+	getFormatedTextCRLF:function(text){
+		return text.replace(/(\r|\n|\r\n)/g, "\n");
+	},
+	find:function(event){
+		var nowTime=new Date().getTime();
+		console.log("☆★☆☆☆★★☆★★★ find start!:"+nowTime);
+		var me = event.data.self;
+		if(me===undefined){
+			//alert(event.toSource());
+			return ;
+		}
+    	if(nowTime-me.nowTimeFind<600){//指定時間内はスキップ
+    		if(me.isFinedReserved===false){
+				me.timerFind = setTimeout(function(){me.findInTheArea(event);},10);
+				me.isFinedReserved=true;
+    		}
+			return;
+		}
+    	me.rule.regix=me.textbox.val();
+    	var textList = me.getFormatedTextCRLF(me.doc).split("\n");
+    	var viewHTML = "";
+    	var hsRule = new HilightingSyntax();
+    	hsRule.addRule(me.rule);
+    	for(var rowIndex in textList){
+    		//console.log("textList[rowIndex]:"+textList[rowIndex]);
+    		viewHTML += me.SyntaxHilighter.comvertStringToHTMLHilight(me.SyntaxHilighter,textList[rowIndex],hsRule).html+"<br />";
+    	}
+		me.isFinedReserved=false;
+		
+    	me.findView.html(viewHTML);
+		console.log("☆★☆☆☆★★☆★★★ find end!:"+(new Date().getTime()-nowTime));
+        //$("span").css("line-height",me.lineHeight);
 	}
 	
 }
