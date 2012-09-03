@@ -1,0 +1,55 @@
+
+<html>
+<header>
+<title></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+	<link rel="stylesheet" type="text/css" href="mansikiEdit.css" media="all" />
+	<link rel="stylesheet" type="text/css" href="mansikiEditSVG.css" media="all" />
+	<script src="jquery.js" type="text/javascript"></script>
+	<script src="mansikiManage.js" type="text/javascript"></script>
+	<script src="mansikiMangaManager.js" type="text/javascript"></script>
+	<script src="mansikiEditObjects.js" type="text/javascript"></script>
+	<script src="mansikiEdit4.js" type="text/javascript"></script>
+	<script src="mansikiSVGManupirator.js" type="text/javascript"></script>
+	
+	<script type="text/javascript">
+		$(document).ready(function(){
+			var he = new HilightingEditor("test",800,400,$("#ancer"));
+			//he.attatchMainTre($("#ancer"));
+			he.setLisnorOnButton(he,$("#fullscreen"),"TolgeAdjustSizeAsFullScreen");
+			he.setLisnorOnFindTextbox(he,$("#findOnEditor"));
+		});
+	</script>
+
+</header>
+
+<body>
+	<div id="wrapper">
+		<article>
+			<from>
+			<h1>タイトル！</h1>
+			<div class="menu">
+				<input id="findOnEditor" type="text" />
+				<input type="file" id="loadFile" />
+				<input type="button" value="next" id='next' class="mansiki_menu_botton"/>
+				<input type="button" value="prev" id='prev' class="mansiki_menu_botton" />
+				<input type="button" value="load" id='load' class="mansiki_menu_botton" />
+				<input type="button" value="save" id='save' class="mansiki_menu_botton" />
+				<input type="button" value="fullscreen" id='fullscreen' class="mansiki_menu_botton" />
+			</div>
+			<!--svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <circle cx="100" cy="100" r="100" fill="red" />
+  <rect x="130" y="130" width="300" height="200" fill="blue" />
+</svg-->
+			<div id="ancer"></div>
+			</from>
+			
+		</article>
+		<footer>
+
+		</footer>
+	</div>
+</body>
+</html>

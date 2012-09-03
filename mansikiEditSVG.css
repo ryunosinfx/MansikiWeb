@@ -1,0 +1,51 @@
+.mansikiPageBackA,.mansikiKomaBackA{
+	fill:yellow;
+	stroke-width:0;
+	rx:10;
+	ry:10;
+	z-index:50;
+}
+.mansikiPageBackTitleA,.mansikiKomaBackTitleA{
+	fill:green;
+	fill-opacity:0.2;
+	stroke-width:0;
+	stroke:white;
+	z-index:100;
+}
+.mansikiPageBackB,.mansikiKomaBackB{
+	fill:red;
+	stroke-width:0;
+	rx:10;
+	ry:10;
+	z-index:50;
+}
+.mansikiPageBackTitleB,.mansikiKomaBackTitleB{
+	fill:blue;
+	fill-opacity:0.2;
+	stroke-width:0;
+	stroke:white;
+	z-index:100;
+}
+.mansikiKomaBackTitleA{
+	fill:green;
+	fill-opacity:0.1;
+}
+.mansikiKomaBackA{
+	fill:green;
+	fill-opacity:0.1;
+}
+.mansikiKomaBackTitleB{
+	fill:blue;
+	fill-opacity:0.1;
+}
+.mansikiKomaBackB{
+	fill:blue;
+	fill-opacity:0.1;
+}
+svg {
+	position:relative;
+	width:100px;
+	height:100px;
+	background-color:#FFBED7;
+	border:solid 0px blue;
+}

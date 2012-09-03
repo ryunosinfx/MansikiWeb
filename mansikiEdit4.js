@@ -80,6 +80,8 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.TolgeAdjustSizeIsFull = false;
 	this.isReflesh = false;
 	this.textbox;
+	MansikiInit();//ページ管理Obj呼びだし。
+	this.MansikiMangaManager = new MansikiMangaManager();
 }
 
 HilightingEditor.prototype={
@@ -97,7 +99,7 @@ HilightingEditor.prototype={
 			.css("border-width","0px").css("border-style","solid").css("border-coloer","green").css("overflow","scroll").css("text-wrap","none")
 			.css("cursor","text").css("line-Height",this.lineHeight+"px").css("float","left").css("background-color","none").css("padding","0px").css("margin","0px");
 		var middleField = $("<div id='"+this.prefix+"middleField'></div>")
-			.css("border-width","1px").css("border-style","solid").css("border-coloer","red").css("background-color","red").css("overflow","hidden").css("text-wrap","none")
+			.css("border-width","1px").css("border-style","solid").css("border-coloer","red").css("background-color","none").css("overflow","hidden").css("text-wrap","none")
 			.css("line-Height",this.lineHeight+"px").css("z-index","50");
 		var selectTopRow = $("<div id='"+this.prefix+"selectTopRow'></div>")
 			.css("border-width","1px").css("border-style","solid").css("border-coloer","blue").css("overflow","hidden").css("background-color","blue")
@@ -111,10 +113,17 @@ HilightingEditor.prototype={
 		var viewField = this.setStanderdCSSops($("<div id='"+this.prefix+"View'></div>")
 			.css("overflow","hidden").css("position","relative").css("z-index","100").css("cursor","text"));
 		var findView = this.setStanderdCSSops($("<div id='"+this.prefix+"findView'></div>")
-			.css("overflow","hidden").css("position","relative").css("z-index","80").css("cursor","text")).css("background-color","#B2FFD2").css("color","red");
+			.css("overflow","hidden").css("position","relative").css("z-index","80").css("cursor","text")).css("background-color","none").css("color","red");//#B2FFD2
+			
+		this.MansikiSVGManipurator = new MansikiSVGManipurator(this.prefix+"SVG",this);
+		var svgViewDomObj = this.MansikiSVGManipurator.buildBaseField(200,300);
+		
 		var viewArea = $("<div id='"+this.prefix+"viewArea'></div>")
 			.css("border-width","1px").css("border-style","solid").css("border-coloer","blue").css("background-color","#0095FF")
 			.css("opacity",0.5).css("width",this.currentWidth).css("height",this.lineHeight).css("position","relative").css("z-index","550");
+		var codeMapCanvas = $("<canvas id='"+this.prefix+"codeMapCanvas'></canvas>")
+			.css("border-width","1px").css("border-style","solid").css("border-coloer","blue").css("background-color","#0095FF")
+			.css("opacity",0.5).css("width",this.currentWidth).css("height",this.lineHeight).css("position","relative").css("z-index","500");
 		var rowNumRowHilight = $("<div id='"+this.prefix+"rowNumRowHilight'></div>")
 			.css("border-width","1px").css("border-style","solid").css("border-coloer","blue").css("background-color","#0095FF")
 			.css("opacity",0.5).css("height",this.lineHeight).css("position","relative").css("z-index","550").css("position","relative");
@@ -133,6 +142,7 @@ HilightingEditor.prototype={
 		backPanel.append(rightColumnFiled);
 		leftColumnFiled.append(rowNumRowHilight);
 		leftColumnFiled.append(numberFiled);
+		rightColumnFiled.append(codeMapCanvas);
 		rightColumnFiled.append(viewArea);
 		this.backPanel = backPanel;
 		this.leftColumnFiled = leftColumnFiled;
@@ -147,6 +157,8 @@ HilightingEditor.prototype={
 		this.rightColumnFiledDomObj = rightColumnFiled.get(0);
 		this.viewArea = viewArea;
 		this.viewAreaDomObj = viewArea.get(0);
+		this.codeMapCanvas = codeMapCanvas;
+		this.codeMapCanvasDomObj = codeMapCanvas.get(0);
 		this.middleField = middleField;
 		this.middleFieldDomObj = middleField.get(0);
 		this.textRowHilight = textRowHilight;
@@ -154,6 +166,7 @@ HilightingEditor.prototype={
 		field.append(middleField);
 		middleField.append(viewField);
 		middleField.append(findView);
+		this.middleFieldDomObj.appendChild(svgViewDomObj);
 		middleField.append(this.compositionupdateBox);
 		middleField.append(textRowHilight);
 		middleField.append(selectTopRow);
@@ -168,6 +181,8 @@ HilightingEditor.prototype={
 		this.viewFieldDomObj = viewField.get(0);
 		this.findView = findView;
 		this.findViewDomObj = findView.get(0);
+		this.svgView = $("#"+svgViewDomObj.getAttribute("id"));
+		this.svgViewDomObj = svgViewDomObj;
 		this.selectTopRow = selectTopRow;
 		this.selectMiddleRow = selectMiddleRow;
 		this.selectBottomRow = selectBottomRow;
@@ -207,13 +222,15 @@ HilightingEditor.prototype={
 		me.selectBottomRow.css("width",me.currentWidth).css("top",0-this.height);
 		me.viewField.css("width",me.currentWidth).css("height",me.currentHeight).css("top",0-me.lineHeight*2);
 		me.findView.css("width",me.currentWidth).css("height",me.currentHeight).css("top",0-me.lineHeight*4);
+		me.MansikiSVGManipurator.adujstSVGField(me.currentWidth,me.currentHeight,0-me.lineHeight*5);
 		me.textRowHilight.css("width",me.currentWidth);
 		me.leftColumnFiled.css("width",leftColumnFiledWidth).css("height",me.currentHeight);
-		me.numberFiled.css("width",me.LeftBarAWidth).css("height",me.currentHeight);
+		me.numberFiled.css("width",me.LeftBarAWidth).css("height",me.middleFieldDomObj.clientHeight);
 		me.rowNumRowHilight.css("width",me.LeftBarAWidth);
 		me.rightColumnFiled.css("width",rightColumnFiledWidth).css("height",me.currentHeight);
-		//me.viewArea.
-		//alert("aaa"+me.scrollBarHeight);
+		me.codeMapCanvas.css("width",rightColumnFiledWidth).css("height",me.currentHeight);
+		me.viewArea.css("top",-me.currentHeight);
+		me.isReflesh=true;
 	},
 	setStanderdCSSops:function(jQobj){
 		return jQobj.css("line-Height",this.lineHeight+"px").css("font-size",this.fontSize+"px").css("font-family",this.fontFamily).css("word-spacing",this.wordSpacing).css("overflow","hidden").css("text-wrap","none").css("padding","0px").css("margin","0px");
@@ -225,7 +242,7 @@ HilightingEditor.prototype={
 			me.textField.bind('keyup',{"self":me},me.onInput);
 			me.textField.bind('click',{"self":me},me.focusOnTextArea);
 			me.middleField.bind('mousemove',{"self":me},me.onMouseMove);
-			me.textField.bind('keyup',{"self":me},me.onInput);
+			me.textField.bind('keydown',{"self":me},me.onInputTab);
 			me.field.bind('scroll',{"self":me},me.onScroll);
 			me.textField.bind('blur',{"self":me},me.onBlur);
 			me.textFieldDomObj = me.textField.get(0);//;
@@ -239,7 +256,8 @@ HilightingEditor.prototype={
 			//me.viewArea.bind('mousedown',{"self":me},me.onMouseDownCodeMap);
 			//me.viewArea.bind('mouseup',{"self":me},me.onMouseUpCodeMap);
 			//me.viewArea.bind('mouseout',{"self":me},me.onMouseOutCodeMap);
-			me.viewArea.bind('mousemove',{"self":me},me.onDragCodeMap);
+			//me.viewArea.bind('mousemove',{"self":me},me.onDragCodeMap);
+			me.rightColumnFiled.bind('mousemove',{"self":me},me.onDragCodeMap);
 			me.rightColumnFiled.bind('dblclick',{"self":me},me.onClickRightColumn);
 			
 		}
@@ -255,13 +273,13 @@ HilightingEditor.prototype={
 		var me = event.data.self;
 		var width = me.presetWidth ;
 		var height = me.presetHeight ;
-		if(me.TolgeAdjustSizeIsFull ){
+		if(me.TolgeAdjustSizeIsFull===false ){
 			var windowObj = $(window);
 			width = windowObj.width()-me.leftSpacePx;
 			height = windowObj.height()-me.topSpacePx;
-			me.TolgeAdjustSizeIsFull =false;
+			me.TolgeAdjustSizeIsFull =true;
 		}else{
-			me.TolgeAdjustSizeIsFull = true;
+			me.TolgeAdjustSizeIsFull = false;
 		}
 		me.isReflesh = true;
 		me.adjustSize(me,height,width);
@@ -279,17 +297,18 @@ HilightingEditor.prototype={
 	},
 	onClickRightColumn:function(event){
 		var me = event.data.self;
-		var y =event.clientY-me.field.position().top;
+		var offset = me.rightColumnFiled.position().top;
+		var y =event.clientY-offset;
 		var rowNum = me.lastLineNum*y/me.fieldDomObj.clientHeight;
 		var charCount = 0;
 		for(var i = 0; i < me.lastLineNum && i < rowNum ;i++){
 			charCount+=me.rows[i].length+1;
 		}
-		me.fieldDomObj.scrollTop = (y-10)*1.2;
+		me.fieldDomObj.scrollTop = me.fieldDomObj.clientHeight*(me.lineHeight*rowNum*1/me.rightColumnFiled.height());
 		me.textField.get(0).selectionStart = charCount;
 		me.textField.get(0).selectionEnd = charCount;
 		me.onSelect(event);
-		//console.log("☆★☆☆☆☆ charCount"+charCount+"/me.fieldDomObj.scrollTop:"+me.fieldDomObj.scrollTop);
+		//console.log("☆★☆☆☆☆☆☆☆☆☆ charCount"+charCount+"/me.fieldDomObj.scrollTop:"+me.fieldDomObj.scrollTop);
 	},
 	onClickCodeMap:function(event){
 		var me = event.data.self;	
@@ -304,9 +323,10 @@ HilightingEditor.prototype={
 	onMouseDownCodeMap:function(event){//mousemove
 		var me = event.data.self;	
 		me.isDorgableCodeMap = true;
-		me.tartClickYCodeMap = event.clientY;
+		//me.startClickYCodeMap = -event.clientY;
+		//me.startClickYCodeMap = me.viewArea.height()/2;
 		me.viewArea.css("background-color","red");
-		me.startTopCodeMap = me.viewArea.position().top-me.viewArea.height();;
+		me.startTopCodeMap = me.viewArea.position().top-me.viewArea.height()-me.currentHeight;;
 		me.viewArea.css("cursor","move");
 	},
 	onMouseUpCodeMap:function(event){//mousemove
@@ -323,14 +343,13 @@ HilightingEditor.prototype={
 	},
 	onDragCodeMap:function(event){//mousemove
 		var me = event.data.self;	
-			var moveY = event.clientY - me.startClickYCodeMap -me.field.position().top;
-		console.log("☆★☆☆★★★ moveY :"+moveY+"/jme.isDorgableCodeMap:"+me.isDorgableCodeMap+"/me.startClickYCodeMap:"+me.startClickYCodeMap);
-		
+			//var moveY = event.clientY - me.startClickYCodeMap -me.field.position().top;
 		if(me.isDorgableCodeMap === true){
 			var moveY = event.clientY - me.startClickYCodeMap -me.field.position().top;
 			me.viewArea.css("cursor","move");
 			me.adjustViewArea(me,moveY);
 		}
+		//console.log("☆★☆☆★★★ moveY :"+moveY+"/jme.isDorgableCodeMap:"+me.isDorgableCodeMap+"/me.startClickYCodeMap:"+me.startClickYCodeMap);
 	},
 	onClick:function(event){
 		var me = event.data.self;
@@ -339,7 +358,7 @@ HilightingEditor.prototype={
 	onCompositionX:function(event){
 		var me = HilightingEditorGrobalSelfPointer;
 		me.compositionupdateData = event.type ==="compositionstart" || event.type ==="compositionupdate" || event.type ==="compositionend" ?event.data:undefined;
-		console.log("☆★★★★"+me.compositionupdateData+"/me:"+" / me.isCompositionupdate:"+me.isCompositionupdate);
+		//console.log("☆★★★★"+me.compositionupdateData+"/me:"+" / me.isCompositionupdate:"+me.isCompositionupdate);
 		me.isCompositionupdate = true;
 		me.onInput(event);
 	},
@@ -420,7 +439,7 @@ HilightingEditor.prototype={
 		if(rowsStart.length*me.lineHeight >= (me.height+me.fieldDomObj.scrollTop)-me.lineHeight && me.nowKeyInput === true){
 			me.fieldDomObj.scrollTop += me.lineHeight*2;
 		}
-		console.log("☆★★★★☆ me.fieldDomObj.scrollTop:"+me.fieldDomObj.scrollTop+"/rowsStart:"+rowsStart.length+"/rows.length:"+rows.length+"/top:"+testTop);
+		//console.log("☆★★★★☆ me.fieldDomObj.scrollTop:"+me.fieldDomObj.scrollTop+"/rowsStart:"+rowsStart.length+"/rows.length:"+rows.length+"/top:"+testTop);
 		//--------------------------------------------------------
 		var offsetLeft= (startPreCaret===""?0:(me.culcTextWidth(me,startPreCaret)-me.culcTextWidth(me,startPreCaret,"textarea"))*1)+1;
 		//--------------------------------------------------------
@@ -460,7 +479,7 @@ HilightingEditor.prototype={
 			me.selectTopRow.css("width",0).css("visibility","visible").css("left",textOffsetStart-0+scrollX);
 		}
 		me.selectTopRow.css("top",caretTop);
-		console.log("☆☆☆★★☆ areaStartCharNo:"+areaStartCharNo+"/areaEndCharNo:"+areaEndCharNo+"/areaEndRowNo:"+areaEndRowNo+"/caretTop:"+caretTop+"/scrollY:"+scrollY);
+		//console.log("☆☆☆★★☆ areaStartCharNo:"+areaStartCharNo+"/areaEndCharNo:"+areaEndCharNo+"/areaEndRowNo:"+areaEndRowNo+"/caretTop:"+caretTop+"/scrollY:"+scrollY);
 		
 		if(me.nowMouseDown===true){
 			me.culcTextWidth(me,rows[me.rowNum-1],x);
@@ -471,7 +490,7 @@ HilightingEditor.prototype={
 			me.isNowSelecting = false;
 			me.isEndNowSelecting=false;
 			me.nowSelectedText="";
-			console.log("☆☆☆★★☆★☆");
+			//console.log("☆☆☆★★☆★☆");
 		}else{
 			me.isNowSelecting = true;
 			me.isEndNowSelecting=true;
@@ -488,7 +507,7 @@ HilightingEditor.prototype={
 				me.nowSelectedText = textSelectStart.substring(areaStartCharNo,textSelectStart.length);
 								+ "\n"
 								+ me.culcTextWidth(me,textSelectEnd.substring(0,areaEndCharNo));
-				console.log("★★★☆☆");
+				//console.log("★★★☆☆");
 			}else if(rowNumDiff  > 1){
 				me.selectTopRow.css("width",me.maxWidth-textOffsetStart);
 				me.selectBottomRow.css("visibility","visible");
@@ -502,7 +521,7 @@ HilightingEditor.prototype={
 					me.nowSelectedText +=rows[areaStartRowNo + i]+ "\n";
 				}
 				me.nowSelectedText+= textSelectEnd.substring(0,areaEndCharNo);
-				console.log("☆★★★☆");
+				//console.log("☆★★★☆");
 			}else{
 				me.selectMiddleRow.css("visibility","hidden");
 				me.selectBottomRow.css("visibility","hidden");
@@ -514,7 +533,7 @@ HilightingEditor.prototype={
 					me.selectTopRow.css("left",textOffsetStart-textWidthStart+scrollX);
 				}
 				me.selectTopRow.css("width",textWidthStart);
-				console.log("☆☆★☆☆");
+				//console.log("☆☆★☆☆");
 			}
 			//console.log("☆☆☆☆☆");
 		}
@@ -547,12 +566,29 @@ HilightingEditor.prototype={
 		if(me.keyUpCount >0){
 			me.keyUpCount =0;
 		}else{
-			if(k=="8" || k=="37" || k=="38" || k=="39" || k=="40"  || k=="13" ){//連打
+			if(k=="8" || k=="37" || k=="38" || k=="39" || k=="40"  || k=="13" || k=="9" ){//連打
 				me.onInput(event);
 			}
 		}
 	},
+	onInputTab:function(event){
+		event.returnValue=false;//伝播は防御
+		var me = event.data.self;
+		if(event.keyCode===9 ){//Tab
+			event.preventDefault();//伝播は防御
+			event.stopPropagation();//伝播は防御
+			//alert("keyCode:"+keyCode);
+			var tempText = me.textFieldDomObj.value;
+			var tenpStart = me.textFieldDomObj.selectionStart;
+			console.log("tempText.substring(0,tenpStart):"+tempText.substring(0,tenpStart));
+			console.log("tempText.substring(me.textFieldDomObj.selectionEnd):"+tempText.substring(me.textFieldDomObj.selectionEnd));
+			var tempTextAll = tempText.substring(0,tenpStart)+'\t'+tempText.substring(me.textFieldDomObj.selectionEnd);
+			me.textField.val(tempTextAll);
+			me.textFieldDomObj.setSelectionRange(tenpStart+1,tenpStart+1);
+		}
+	},
 	onInput:function(event){
+		event.returnValue=false;//伝播は防御
 		var nowTime = new Date().getTime();
 		var me = event.data.self;
 		me = me===undefined ? HilightingEditorGrobalSelfPointer:me;
@@ -560,6 +596,10 @@ HilightingEditor.prototype={
 		me.viewField.css("cursor","wait");//  
 		me.keyUpCount ++;
 		var keyCode = event.keyCode;
+		if(keyCode===9 ){//Tab
+			event.preventDefault();//伝播は防御
+			event.stopPropagation();//伝播は防御
+		}
 		var wicth=event.which;
 		var modifiers=event.modifiers;
 		var x =event.clientX;
@@ -637,7 +677,7 @@ HilightingEditor.prototype={
 			me.isMouseDown=false;
 			me.nowMouseDown=false;
 		}
-		if(nowTime - me.nowTime > me.timeInterval){
+		if(nowTime - me.nowTime > me.timeInterval && me.doc !== me.textField.val()){
 			me.doc = me.textField.val();
 			var rows = me.doc.split("\n");
 			me.rows=rows;
@@ -660,6 +700,9 @@ HilightingEditor.prototype={
 				me.viewField.css("height",height);
 				me.textField.css("height",height);
 				me.findView.css("height",height);
+				
+				//me.svgViewDomObj.setAttribute("height" , height);
+				me.svgView.css("height", height);
 				var editorHeight = height+me.lineHeight*3;
 				me.middleField.css("height",editorHeight);
 				var startLineNum = 10000+lineNum;
@@ -670,22 +713,26 @@ HilightingEditor.prototype={
 				}
 				me.numberFiled.html(numberFiledValue);
 				me.lastLineNum = lineNum;
-				me.numberFiled.css("height",editorHeight-me.scrollBarHeight);
+				me.numberFiled.css("height",editorHeight);
 				
 				me.showViewArea(me,true);
 				var height2 =height>200?(lineNum)*me.lineHeight*2-200:200;
-				me.CurrentOffsetTop= -(height2-200)*1- height;
+				me.CurrentOffsetTop= -(height2-200)*1- height*2;
 				me.viewField.css("top", - height*1);
 				me.findView.css("top", - height*2);
+				//me.svgViewDomObj.setAttribute("style" , "top:"+- height*3);
+				me.svgView.css("top", - height*3);
 				me.isReflesh=false;
 			}else{
 				me.showViewArea(me);
 			}
 			me.find(event);
+			me.buildCodeMap(me);
 			//console.log("☆★★★★☆★☆★☆★☆★☆"+me.fieldDomObj.scrollTop+"/"+me.leftColumnFiledDomObj.scrollTop);
 			me.nowKeyInput = true;
 			me.onSelect(event);
 			me.nowKeyInput = false;
+			me.MansikiMangaManager.refresh(me.MansikiMangaManager,me.doc);
 			me.textField.focus();
 			me.leftColumnFiledDomObj.scrollTop=me.fieldDomObj.scrollTop;
 			
@@ -698,14 +745,25 @@ HilightingEditor.prototype={
 			me.viewField.css("width",nowWidth);
 			me.middleField.css("width",nowWidth);
 			me.findView.css("width",nowWidth);
+			me.selectTopRow.css("width",nowWidth);
+			me.selectMiddleRow.css("width",nowWidth);
+			me.selectBottomRow.css("width",nowWidth);
+			me.textRowHilight.css("width",nowWidth);
+			//me.svgViewDomObj.setAttribute("width" , nowWidth+"px");
+			me.svgView.css("width", nowWidth+"px");
+			me.MansikiSVGManipurator.buildView(me.MansikiMangaManager.states,me.lineHeight,nowWidth,0,0);
 			//me.textRowHilight.css("width",me.currentWidth<=newWidthTextarea ?newWidthTextarea :me.currentWidth);
 		}
-		else{
+		else if(nowTime - me.nowTime > me.timeInterval ){
+			me.nowKeyInput = true;
+			me.onSelect(event);
+			me.nowKeyInput = false;
 			//me.timer = setTimeout(function(){me.onInput(event);},me.timeInterval+10);
 		}
 		me.isCompositionupdate =false;
 		me.textField.focus();
 		me.viewField.css("cursor","text");
+		
 	},
 	culcTextWidth:function(me,text,target,flag ){
 		var chars = text===undefined ?[]:text.split("");
@@ -768,27 +826,27 @@ HilightingEditor.prototype={
 			//console.log("☆★★★★☆★☆★☆★☆★☆"+heightView+"/"+viewAreaRecio);
 		}
 		if(me.isHandScroll===false){
-			var cssTop = me.viewArea.css("top");
-			me.viewArea.css("top",me.viewAreaRecio*scrollTop);
-		console.log("☆★☆☆☆★★☆★★★ top :"+me.viewAreaRecio*scrollTop+"/cssTop:"+cssTop+"/me.viewAreaRecio:"+me.viewAreaRecio+"/scrollTop:"+scrollTop);
+			var cssTop = (me.viewArea.css("top").match(/([0-9]+)[a-zA-Z]*/)||[])[1]*1-me.codeMapCanvas.height() - me.currentHeight;
+			me.viewArea.css("top",me.viewAreaRecio*scrollTop - me.currentHeight);
+		//console.log("☆★☆☆☆★★☆★★★ top :"+me.viewAreaRecio*scrollTop+"/cssTop:"+cssTop+"/me.viewAreaRecio:"+me.viewAreaRecio+"/scrollTop:"+scrollTop);
 		}
 		me.isHandScroll=false;
 		//
 	},
 	adjustViewArea:function(me,moveY){
-		var top = moveY-me.startTopCodeMap-me.viewArea.height()/2;
+		var top = moveY-me.startTopCodeMap-me.viewArea.height()/2 - me.currentHeight;
 		var currentTop = (me.viewArea.css("top").match(/([0-9]+)[a-zA-Z]*/)||[])[1];
 		
-		console.log("☆★☆☆☆☆☆★★★ top :"+top+"/moveY:"+moveY+"/me.startTopCodeMap:"+me.startTopCodeMap+"/currentTop:"+currentTop+"/j:"+me.viewArea.height()+"/me.startClickYCodeMap:"+me.startClickYCodeMap);
+		//console.log("☆★☆☆☆☆☆★★★ top :"+top+"/moveY:"+moveY+"/me.startTopCodeMap:"+me.startTopCodeMap+"/currentTop:"+currentTop+"/j:"+me.viewArea.height()+"/me.startClickYCodeMap:"+me.startClickYCodeMap);
 		top +=currentTop*1;
-		top = top < 0 ? 0 :top;
-		top = top-100> me.fieldDomObj.clientHeight ? me.fieldDomObj.clientHeight-100:top;
-		me.viewArea.css("top",top );
-		console.log("☆★☆★★★ top :"+top+"/jx	:"+me.viewArea.height()+"/me.fieldDomObj.clientHeight :"+me.fieldDomObj.clientHeight +"/me.startTopCodeMap:"+me.startTopCodeMap);
+		top = top + me.currentHeight < 0 ?  - me.currentHeight :top;
+		top = top+me.viewArea.height()/2 - me.currentHeight> me.fieldDomObj.clientHeight ? me.fieldDomObj.clientHeight - me.currentHeight:top;
+		me.viewArea.css("top",top - me.currentHeight);
+		//console.log("☆★☆★★★ top :"+top+"/jx	:"+me.viewArea.height()+"/me.fieldDomObj.clientHeight :"+me.fieldDomObj.clientHeight +"/me.startTopCodeMap:"+me.startTopCodeMap);
 		me.fieldDomObj.scrollTop = top /me.viewAreaRecio;
 			var cssTop = me.viewArea.css("top");
-		console.log("☆★☆☆☆★★☆★★★ cssTop:"+cssTop+"/me.viewAreaRecio:"+me.viewAreaRecio);
-		me.startTopCodeMap = (me.viewArea.css("top").match(/([0-9]+)[a-zA-Z]*/)||[])[1]*1;
+		//console.log("☆★☆☆☆★★☆★★★ cssTop:"+cssTop+"/me.viewAreaRecio:"+me.viewAreaRecio);
+		me.startTopCodeMap = (me.viewArea.css("top").match(/([0-9]+)[a-zA-Z]*/)||[])[1]*1 - me.currentHeight;
 		me.isHandScroll=true;
 	},
 	getFormatedTextCRLF:function(text){
@@ -796,7 +854,7 @@ HilightingEditor.prototype={
 	},
 	find:function(event){
 		var nowTime=new Date().getTime();
-		console.log("☆★☆☆☆★★☆★★★ find start!:"+nowTime);
+		//console.log("☆★☆☆☆★★☆★★★ find start!:"+nowTime);
 		var me = event.data.self;
 		if(me===undefined){
 			//alert(event.toSource());
@@ -821,8 +879,17 @@ HilightingEditor.prototype={
 		me.isFinedReserved=false;
 		
     	me.findView.html(viewHTML);
-		console.log("☆★☆☆☆★★☆★★★ find end!:"+(new Date().getTime()-nowTime));
+		//console.log("☆★☆☆☆★★☆★★★ find end!:"+(new Date().getTime()-nowTime));
         //$("span").css("line-height",me.lineHeight);
+	},
+	buildCodeMap:function(me){
+		me.doc;
+		
+		//var codeMapContext = me.rightColumnFiled.get(0).getContext('2d');
+		var codeMapContext =document.getElementById(me.codeMapCanvas.attr("id")).getContext('2d');;
+		codeMapContext.clearRect(0, 0, 300, 300);
+		codeMapContext.strokeText(me.doc,0,0,me.rightColumnFiledWidth);
 	}
 	
 }
+
