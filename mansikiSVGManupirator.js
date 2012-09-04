@@ -72,6 +72,8 @@ MansikiSVGManipurator.prototype={
 		var stateKomaTopRow ;
 		var offsetXKoma = offsetX + this.komaOffset*1;
 		var widthKoma = width-this.komaOffset*1;
+		var lastState;
+		var lastStateKoma;
 		for(var index in rowStates){
 			var state = rowStates[index];
 			//console.log("state:"+state.toSource());
@@ -80,15 +82,12 @@ MansikiSVGManipurator.prototype={
 				statePageTopRow = state;
 				height = lineCount*lineHeight;
 				if(isRectExist===true){
-					switchCounter++;
-					this.queueBuildCmds(PAGE,switchCounter,topOffsetCurrent,offsetX,width,height,lineHeight,state.rowText);
-					
+					this.queueBuildCmds(PAGE,lastState,topOffsetCurrent,offsetX,width,height,lineHeight,state.rowText);
 					
 					if(isKomaRectExist){
 						//console.log("SVGKKK test lineCount"+lineCount+"/height:"+height+"/topOffset:"+topOffsetCurrent);
 						var komaHeight = lineCountKoma*lineHeight;
-						switchCounterKoma++;
-						this.queueBuildCmds(KOMA,switchCounterKoma+(1+switchCounter)*100,topOffsetCurrentKoma,offsetXKoma,widthKoma,komaHeight,lineHeight,stateKomaTopRow.rowText);
+						this.queueBuildCmds(KOMA,lastStateKoma,topOffsetCurrentKoma,offsetXKoma,widthKoma,komaHeight,lineHeight,stateKomaTopRow.rowText);
 					}
 					switchCounterKoma = 0;
 					isKomaRectExist=false;
@@ -96,6 +95,7 @@ MansikiSVGManipurator.prototype={
 				topOffsetCurrent+=height;
 				lineCount=1;
 				isRectExist = true;
+				lastState = state;
 			}else{
 				lineCount++;
 			}
@@ -105,12 +105,12 @@ MansikiSVGManipurator.prototype={
 				stateKomaTopRow = state;
 				komaHeight = lineCountKoma*lineHeight;
 				if(isKomaRectExist===true){
-					switchCounterKoma++;
-					this.queueBuildCmds(KOMA,switchCounterKoma+(1+switchCounter)*100,topOffsetCurrentKoma,offsetXKoma,widthKoma,komaHeight,lineHeight,state.rowText);
+					this.queueBuildCmds(KOMA,lastStateKoma,topOffsetCurrentKoma,offsetXKoma,widthKoma,komaHeight,lineHeight,state.rowText);
 				}
 				topOffsetCurrentKoma+=komaHeight;
 				lineCountKoma=1;
 				isKomaRectExist = true;
+				lastStateKoma = state;
 			}else{
 				lineCountKoma++;
 			}
@@ -118,22 +118,19 @@ MansikiSVGManipurator.prototype={
 		if(isKomaRectExist){
 			//console.log("SVGKK test lineCount"+lineCount+"/height:"+height+"/topOffset:"+topOffsetCurrent);
 			var komaHeight = lineCountKoma*lineHeight;
-			switchCounterKoma++;
-			this.queueBuildCmds(KOMA,switchCounterKoma+(1+switchCounter)*100,topOffsetCurrentKoma,offsetXKoma,widthKoma,komaHeight,lineHeight,stateKomaTopRow.rowText);
+			this.queueBuildCmds(KOMA,lastStateKoma,topOffsetCurrentKoma,offsetXKoma,widthKoma,komaHeight,lineHeight,stateKomaTopRow.rowText);
 		}
 		if(isRectExist){
 			//console.log("SVG test lineCount"+lineCount+"/height:"+height+"/topOffset:"+topOffsetCurrent);
 			var height = lineCount*lineHeight;
-			switchCounter++;
-			this.queueBuildCmds(PAGE,switchCounter,topOffsetCurrent,offsetX,width,height,lineHeight,statePageTopRow.rowText);
+			this.queueBuildCmds(PAGE,lastState,topOffsetCurrent,offsetX,width,height,lineHeight,statePageTopRow.rowText);
 		}
 		this.buildViewByQueue();//Last
 	},
-	queueBuildCmds:function(key,switchCounter,topOffset,offsetX,width,height,lineHeight,line){
-		switchCounter = switchCounter===undefined?0:switchCounter;
-		//console.log("queueBuildCmds SVG switchCounter:"+switchCounter+" /key:"+key);
+	queueBuildCmds:function(key,state,topOffset,offsetX,width,height,lineHeight,line){
+		console.log("queueBuildCmds SVG switchCounter:"+state.toSource()+" /key:"+key);
 		this.buildCmdsQueue[key]=this.buildCmdsQueue[key]===undefined?[]:this.buildCmdsQueue[key];
-		this.buildCmdsQueue[key].push({switchCounter:switchCounter,topOffset:topOffset,offsetX:offsetX,width:width,height:height,lineHeight:lineHeight,line:line});
+		this.buildCmdsQueue[key].push({key:key,state:state,topOffset:topOffset,offsetX:offsetX,width:width,height:height,lineHeight:lineHeight,line:line});
 	},
 	buildViewByQueue:function(){
 		for(var cmdIndex in this.buildCmdFuncsIndexs){
@@ -142,26 +139,30 @@ MansikiSVGManipurator.prototype={
 			var cmdQueue = this.buildCmdsQueue[cmdKey];
 			for(var index = 0 ;cmdQueue!==undefined && index < cmdQueue.length;index++){
 				var m = cmdQueue[index];
-				console.log("buildViewByQueue SVG cmdKey:"+cmdKey+"/m:"+m.toSource()+"/cmdQueue:"+cmdQueue.toSource());
-				this.buildCmdFuncs[cmdKey](this,m.switchCounter,m.topOffset,m.offsetX,m.width,m.height,m.lineHeight,m.line);
+				//console.log("buildViewByQueue SVG cmdKey:"+cmdKey+"/m:"+m.toSource()+"/cmdQueue:"+cmdQueue.toSource());
+				this.buildCmdFuncs[cmdKey](this,m.key,m.state,m.topOffset,m.offsetX,m.width,m.height,m.lineHeight,m.line);
 			}
 		}
 	},
-	buildKomaRect:function(me,switchCounter,topOffsetCurrent,offsetX,width,height,lineHeight,line){
+	buildKomaRect:function(me,key,state,topOffsetCurrent,offsetX,width,height,lineHeight,line){
+		//console.log("★★★★line:"+line);
 		me.buildRect(me,"Koma","コマ目"
-			,switchCounter,topOffsetCurrent,offsetX,width,height,lineHeight,line
+			,state.stateMap[KOMA],state.stateMap[PAGE]*100,state.stateMapAdd[SUPERCOUNT]
+			,topOffsetCurrent,offsetX,width,height,lineHeight,line
 			,me.leftKomaClass,me.rightKomaClass,me.leftKomaTitleClass,me.rightKomaTitleClass);
 	},
-	buildFukidashiRect:function(me,switchCounter,topOffsetCurrent,offsetX,width,height,lineHeight,line){
+	buildFukidashiRect:function(me,key,state,topOffsetCurrent,offsetX,width,height,lineHeight,line){
 	
 	},
-	buildPageRect:function(me,switchCounter,topOffsetCurrent,offsetX,width,height,lineHeight,line){
+	buildPageRect:function(me,key,state,topOffsetCurrent,offsetX,width,height,lineHeight,line){
+		console.log("★★★state:"+state.stateMapAdd.toSource());
 		me.buildRect(me,"Page","ページ"
-			,switchCounter,topOffsetCurrent,offsetX,width,height,lineHeight,line
+			,state.stateMap[PAGE],0,state.stateMapAdd[SUPERCOUNT]
+			,topOffsetCurrent,offsetX,width,height,lineHeight,line
 			,me.leftPageClass,me.rightPageClass,me.leftPageTitleClass,me.rightPageTitleClass);
 	},
-	buildRect:function(me,prefix,unit,switchCounter,topOffsetCurrent,offsetX,width,height,lineHeight,line,classFill1,classFill2,classTitle1,classTitle2){
-		var id = me.prefix+"rect"+prefix+switchCounter;
+	buildRect:function(me,prefix,unit,switchCounter,idPrefixNo,summaryCounter,topOffsetCurrent,offsetX,width,height,lineHeight,line,classFill1,classFill2,classTitle1,classTitle2){
+		var id = me.prefix+"rect"+prefix+(idPrefixNo+switchCounter);
 		//console.log(prefix+" SVG id:"+id+"/width:"+width+"/height:"+height+"/topOffset:"+topOffsetCurrent+"/document.getElementById(id):"+document.getElementById(id));
 		if(switchCounter%2 === 1){
 			me.overrideRect(me,id,topOffsetCurrent,offsetX,width,height,classFill1);
@@ -170,7 +171,7 @@ MansikiSVGManipurator.prototype={
 			me.overrideRect(me,id,topOffsetCurrent,offsetX,width,height,classFill2);
 			me.overrideRect(me,id+"title",topOffsetCurrent,offsetX,width,lineHeight,classTitle2);
 		}
-		var targetText = switchCounter + unit;
+		var targetText = switchCounter +"/"+summaryCounter+unit;
 		me.setTextToObj(me,id,targetText,me.he.culcTextWidth(me.he,line),topOffsetCurrent+lineHeight-2,lineHeight);
 		//console.log(prefix+" SVG2 id:"+id+"/width:"+width+"/height:"+height+"/topOffset:"+topOffsetCurrent+"/document.getElementById(id):"+document.getElementById(id));
 	},
