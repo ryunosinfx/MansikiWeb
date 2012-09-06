@@ -80,6 +80,7 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.TolgeAdjustSizeIsFull = false;
 	this.isReflesh = false;
 	this.textbox;
+	this.smartIndentRe = new RegExp(/^([\t\s]+)/);
 	MansikiInit();//ページ管理Obj呼びだし。
 	this.MansikiMangaManager = new MansikiMangaManager();
 }
@@ -587,6 +588,40 @@ HilightingEditor.prototype={
 			me.textFieldDomObj.setSelectionRange(tenpStart+1,tenpStart+1);
 		}
 	},
+	onSmartIndent:function(event){
+		var me = event.data.self;
+		if(event.keyCode===13 ){//Enter
+			var rows = me.textFieldDomObj.value.split("\n");
+			var length = 0;
+			var tenpStart = me.textFieldDomObj.selectionStart;
+			var preRowIndent = "";
+			var preRow ="";
+			var rowCount=0;
+			var rowlength = 0;
+			for(var i =0;i<rows.length;i++){
+				if(length >= tenpStart){
+					rowCount = i-1;
+					rowlength = tenpStart-length;
+					preRow = rows[rowCount];
+					preRowIndent=(preRow.match(me.smartIndentRe)||[""])[0];
+					break;
+				}
+				length+=rows[i].length+1;
+			}
+			console.log("C"+rows.toSource()+"/"+rows[rowCount]);
+			var after=[];
+			for(var i =0;i<rows.length;i++){
+				var crow="";
+				if(preRowIndent.length>0 && rowCount+1===i){
+					crow=preRowIndent.replace(/(\r|\n)/,"");
+				}
+				crow=crow+rows[i];
+				after.push(crow);
+			}
+			me.textField.val(after.join("\n"));
+			me.textFieldDomObj.setSelectionRange(tenpStart+preRowIndent.length+1,tenpStart+preRowIndent.length+1);
+		}
+	},
 	onInput:function(event){
 		event.returnValue=false;//伝播は防御
 		var nowTime = new Date().getTime();
@@ -677,6 +712,7 @@ HilightingEditor.prototype={
 			me.isMouseDown=false;
 			me.nowMouseDown=false;
 		}
+		me.onSmartIndent(event);
 		if(nowTime - me.nowTime > me.timeInterval && me.doc !== me.textField.val()){
 			me.doc = me.textField.val();
 			var rows = me.doc.split("\n");
