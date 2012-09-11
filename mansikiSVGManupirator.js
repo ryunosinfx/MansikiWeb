@@ -128,7 +128,7 @@ MansikiSVGManipurator.prototype={
 		this.buildViewByQueue();//Last
 	},
 	queueBuildCmds:function(key,state,topOffset,offsetX,width,height,lineHeight,line){
-		console.log("queueBuildCmds SVG switchCounter:"+state.toSource()+" /key:"+key);
+		//console.log("queueBuildCmds SVG switchCounter:"+state.toSource()+" /key:"+key);
 		this.buildCmdsQueue[key]=this.buildCmdsQueue[key]===undefined?[]:this.buildCmdsQueue[key];
 		this.buildCmdsQueue[key].push({key:key,state:state,topOffset:topOffset,offsetX:offsetX,width:width,height:height,lineHeight:lineHeight,line:line});
 	},
@@ -155,7 +155,7 @@ MansikiSVGManipurator.prototype={
 	
 	},
 	buildPageRect:function(me,key,state,topOffsetCurrent,offsetX,width,height,lineHeight,line){
-		console.log("★★★state:"+state.stateMapAdd.toSource());
+		//console.log("★★★state:"+state.stateMapAdd.toSource());
 		me.buildRect(me,"Page","ページ"
 			,state.stateMap[PAGE],0,state.stateMapAdd[SUPERCOUNT]
 			,topOffsetCurrent,offsetX,width,height,lineHeight,line

@@ -1,7 +1,7 @@
 //ここをWorkerに投げる。
 
 var shBackup ;
-var SyntaxHilighter = function(){
+var SyntaxHilighter = function(lineHeight){
 	this.maskStringA1="000A"+new Date().getTime()+"D888";
 	this.maskStringA2="000B"+new Date().getTime()+"E999";
 	this.maskStringB1="111C"+new Date().getTime()+"F888";
@@ -9,11 +9,13 @@ var SyntaxHilighter = function(){
 	this.maskReA2 = new RegExp(this.maskStringA2, "g");
 	this.maskReB1 = new RegExp(this.maskStringB1, "g");
 	this.maskReA12 = new RegExp(this.maskStringA1+"(.+)"+this.maskStringA2, "g");
+	this.lineHeightStyle = lineHeight===undefined?"":"line-height:"+(lineHeight-0.01)+"px;";
 }
 SyntaxHilighter.prototype={
-	comvertStringToHTML:function(str){//ここの処理はWorkerに投げたい。
+	comvertStringToHTML:function(str,me){//ここの処理はWorkerに投げたい。
+		var lineHeightStyle = me===undefined ?"":me.lineHeightStyle;
 		str = str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/[　]{1}/g,"<span&nbsp;class='space2'>ぽ</span>")
-		.replace(/\t/g,"<pre&nbsp;style='display:inline;border:0px;margin:0px;padding:0px;'>&_#_0_9_;</pre>")
+		.replace(/\t/g,"<pre&nbsp;style='display:inline;border:0px;margin:0px;padding:0px;"+lineHeightStyle+"'>&_#_0_9_;</pre>")
 		.replace(/\s/g,"&nbsp;").replace(/&_#_0_9_;/g,"&nbsp;&nbsp;&nbsp;&nbsp;")
 		.replace(/pre&nbsp;style/g,"pre style").replace(/span&nbsp;class/g,"span class");
 		return str.replace(/[　]{1}/g,"<span class='space2'>&emsp;</span>1");
@@ -76,7 +78,7 @@ SyntaxHilighter.prototype={
 		el.rowIndex = rowIndex;
 		el.text = el.text.replace(me.maskReA12,"").replace(me.maskReB1,"");
 		el.overrideOffset = el.text.length-str.length;
-		el.html=me.comvertStringToHTML(retText).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>");
+		el.html=me.comvertStringToHTML(retText,me).replace(me.maskReA1,"<span class='").replace(me.maskReA2,"'>").replace(me.maskReB1,"</span>");
 
 		return el;
 	},

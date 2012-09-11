@@ -26,6 +26,7 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.textareaOffsetTop=-1;
 	this.textareaOffsetLeft=-1;
 	this.textField = undefined;
+	this.MansikiMangaManager = new MansikiMangaManager();
 	this.init();
 	this.rowNum = 0;
 	this.timeInterval=100;//ms
@@ -45,7 +46,7 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.nowKeyInput=false;
 	this.selectStartRows=-1;
 	this.selectStartChars=-1;
-	this.SyntaxHilighter = new SyntaxHilighter();
+	this.SyntaxHilighter = new SyntaxHilighter(this.lineHeight);
 	this.selectedRowTopOffset=this.height*1+this.lineHeight*3+2;
 	this.selectedRowBottomOffset=this.height*1+this.lineHeight*5+4;
 	this.selectedRowMiddleOffset=this.height*1+this.lineHeight*2+4;
@@ -81,8 +82,8 @@ var HilightingEditor= function(id, width,height,ancer){
 	this.isReflesh = false;
 	this.textbox;
 	this.smartIndentRe = new RegExp(/^([\t\s]+)/);
+	this.timerOnSelect;
 	MansikiInit();//ページ管理Obj呼びだし。
-	this.MansikiMangaManager = new MansikiMangaManager();
 }
 
 HilightingEditor.prototype={
@@ -93,6 +94,11 @@ HilightingEditor.prototype={
 		.css("overflow","hidden").css("font-size",this.fontSize+"px").css("font-family",this.fontFamily).css("word-spacing",this.wordSpacing)
 		.css("letter-spacing",this.letterSpacing).css("overflow","hidden");
 		this.compositionupdateBox = this.setStanderdCSSops($("<div id='"+this.prefix+"compositionupdateBox'></div>").css("width","0px").css("opacity",0).css("overflow","hidden").css("position","relative").css("height",this.lineHeight).css("border-bottom-style","dotted").css("border-bottom-width","1px").css("border-bottom-color","red").css("background-color","none"));
+		//----------------------------------------------Buttons
+		this.initFunctionButtons(this.ancer);
+		//----------------------------------------------
+		//----------------------------------------------
+		//----------------------------------------------
 		//----------------------------------------------
 		var backPanel = $("<div id='"+this.prefix+"backPanel'></div>")
 			.css("border-width","1px").css("border-style","solid").css("border-coloer","green").css("overflow","hidden");
@@ -114,7 +120,7 @@ HilightingEditor.prototype={
 		var viewField = this.setStanderdCSSops($("<div id='"+this.prefix+"View'></div>")
 			.css("overflow","hidden").css("position","relative").css("z-index","100").css("cursor","text"));
 		var findView = this.setStanderdCSSops($("<div id='"+this.prefix+"findView'></div>")
-			.css("overflow","hidden").css("position","relative").css("z-index","80").css("cursor","text")).css("background-color","none").css("color","red");//#B2FFD2
+			.css("overflow","hidden").css("position","relative").css("z-index","80").css("cursor","text")).css("background-color","none").css("opacity","0.5").css("color","red");//#B2FFD2
 			
 		this.MansikiSVGManipurator = new MansikiSVGManipurator(this.prefix+"SVG",this);
 		var svgViewDomObj = this.MansikiSVGManipurator.buildBaseField(200,300);
@@ -199,6 +205,20 @@ HilightingEditor.prototype={
 		this.rule = new HilightingSyntaxRule("find","findHilight","",undefined,"STRING","LINE");
 		HilightingEditorGrobalSelfPointer = this;
 		
+	},
+	initFunctionButtons:function(ancer){//ボタン:Page,Koma,Fukidashi
+		var buttonsBar = $("<div id='"+this.prefix+"ButtonsBar' class='MansikiButtonsBar'></div>");
+		var PageButton = $("<div id='"+this.prefix+"PageButton' class='MansikiFuncButton'>頁</div>");
+		var KomaButton = $("<div id='"+this.prefix+"KomaButton' class='MansikiFuncButton'>駒</div>");
+		var FukidashiButton = $("<div id='"+this.prefix+"FukidashiButton' class='MansikiFuncButton'>噴</div>");
+		var syntaxs= this.MansikiMangaManager.MansikiSyntax;
+		PageButton.bind("click",{self:this,insert:syntaxs.syntaxMap[PAGE].defaultTargetStr,addRow:"\t"},this.insertLine);
+		KomaButton.bind("click",{self:this,insert:syntaxs.syntaxMap[KOMA].defaultTargetStr,addRow:"\t\t"},this.insertLine);
+		FukidashiButton.bind("click",{self:this,insert:syntaxs.syntaxMap[FUKIDASHI].defaultTargetStr,addRow:"\t\t\t"},this.insertLine);
+		buttonsBar.append(PageButton);
+		buttonsBar.append(KomaButton);
+		buttonsBar.append(FukidashiButton);
+		ancer.append(buttonsBar);
 	},
 	adjustSize:function(me,height,width){
 		if(height!==undefined){
@@ -397,6 +417,7 @@ HilightingEditor.prototype={
 		var me = event.data.self;
 		me = me===undefined ? HilightingEditorGrobalSelfPointer:me;
 		me.viewField.css("cursor","wait");
+		
 		var selection = window.getSelection();
 		var keyCode = event.keyCode;
 		var wicth=event.which;
@@ -581,8 +602,8 @@ HilightingEditor.prototype={
 			//alert("keyCode:"+keyCode);
 			var tempText = me.textFieldDomObj.value;
 			var tenpStart = me.textFieldDomObj.selectionStart;
-			console.log("tempText.substring(0,tenpStart):"+tempText.substring(0,tenpStart));
-			console.log("tempText.substring(me.textFieldDomObj.selectionEnd):"+tempText.substring(me.textFieldDomObj.selectionEnd));
+			//console.log("tempText.substring(0,tenpStart):"+tempText.substring(0,tenpStart));
+			//console.log("tempText.substring(me.textFieldDomObj.selectionEnd):"+tempText.substring(me.textFieldDomObj.selectionEnd));
 			var tempTextAll = tempText.substring(0,tenpStart)+'\t'+tempText.substring(me.textFieldDomObj.selectionEnd);
 			me.textField.val(tempTextAll);
 			me.textFieldDomObj.setSelectionRange(tenpStart+1,tenpStart+1);
@@ -590,25 +611,27 @@ HilightingEditor.prototype={
 	},
 	onSmartIndent:function(event){
 		var me = event.data.self;
-		if(event.keyCode===13 ){//Enter
-			var rows = me.textFieldDomObj.value.split("\n");
+		if(me===undefined){
+			return ;
+		}
+		var rows = me.textFieldDomObj.value.split("\n");
+		if(event.keyCode===13 && rows.length !== me.lastLineNum){//Enter
+			//var rows = me.textFieldDomObj.value.split("\n");
 			var length = 0;
 			var tenpStart = me.textFieldDomObj.selectionStart;
 			var preRowIndent = "";
 			var preRow ="";
 			var rowCount=0;
-			var rowlength = 0;
 			for(var i =0;i<rows.length;i++){
 				if(length >= tenpStart){
 					rowCount = i-1;
-					rowlength = tenpStart-length;
 					preRow = rows[rowCount];
 					preRowIndent=(preRow.match(me.smartIndentRe)||[""])[0];
 					break;
 				}
 				length+=rows[i].length+1;
 			}
-			console.log("C"+rows.toSource()+"/"+rows[rowCount]);
+			//console.log("C"+rows.toSource()+"/"+rows[rowCount]);
 			var after=[];
 			for(var i =0;i<rows.length;i++){
 				var crow="";
@@ -619,7 +642,7 @@ HilightingEditor.prototype={
 				after.push(crow);
 			}
 			me.textField.val(after.join("\n"));
-			me.textFieldDomObj.setSelectionRange(tenpStart+preRowIndent.length+1,tenpStart+preRowIndent.length+1);
+			me.textFieldDomObj.setSelectionRange(tenpStart+preRowIndent.length,tenpStart+preRowIndent.length);
 		}
 	},
 	onInput:function(event){
@@ -714,92 +737,103 @@ HilightingEditor.prototype={
 		}
 		me.onSmartIndent(event);
 		if(nowTime - me.nowTime > me.timeInterval && me.doc !== me.textField.val()){
-			me.doc = me.textField.val();
-			var rows = me.doc.split("\n");
-			me.rows=rows;
-			var lineNum = rows.length;
-			me.rowNum = rows.length;
-			var doc = ""//me.doc;
-			//decolate
-			var br = "";
-			var numberFiledValue ="";
-			for(var i = 0; i<lineNum;i++ ){
-				doc += br+ me.SyntaxHilighter.comvertStringToHTML(rows[i]);
-				br = "<br />";
-			}
-			me.viewField.html(doc);//me.doc.replace(/\n/g,"<br />"));
-			me.viewField.css("width",me.maxWidth+me.lineHeight);
-			me.dellCount =0;
-			if(lineNum !== me.lastLineNum || me.isReflesh===true){
-				var height =lineNum*me.lineHeight>200?lineNum*me.lineHeight:200;
-				//me.currentHeight = height;
-				me.viewField.css("height",height);
-				me.textField.css("height",height);
-				me.findView.css("height",height);
-				
-				//me.svgViewDomObj.setAttribute("height" , height);
-				me.svgView.css("height", height);
-				var editorHeight = height+me.lineHeight*3;
-				me.middleField.css("height",editorHeight);
-				var startLineNum = 10000+lineNum;
-				br = "";
-				for(var j = 10001; j<=startLineNum;j++ ){
-					numberFiledValue+=br+(j+"").substring(1,5);
-					br = "<br />";
-				}
-				me.numberFiled.html(numberFiledValue);
-				me.lastLineNum = lineNum;
-				me.numberFiled.css("height",editorHeight);
-				
-				me.showViewArea(me,true);
-				var height2 =height>200?(lineNum)*me.lineHeight*2-200:200;
-				me.CurrentOffsetTop= -(height2-200)*1- height*2;
-				me.viewField.css("top", - height*1);
-				me.findView.css("top", - height*2);
-				//me.svgViewDomObj.setAttribute("style" , "top:"+- height*3);
-				me.svgView.css("top", - height*3);
-				me.isReflesh=false;
-			}else{
-				me.showViewArea(me);
-			}
-			me.find(event);
-			me.buildCodeMap(me);
-			//console.log("☆★★★★☆★☆★☆★☆★☆"+me.fieldDomObj.scrollTop+"/"+me.leftColumnFiledDomObj.scrollTop);
-			me.nowKeyInput = true;
-			me.onSelect(event);
-			me.nowKeyInput = false;
-			me.MansikiMangaManager.refresh(me.MansikiMangaManager,me.doc);
-			me.textField.focus();
-			me.leftColumnFiledDomObj.scrollTop=me.fieldDomObj.scrollTop;
-			
-			me.textField.css("width",me.width );
-			var newWidthTextarea = me.textFieldDomObj.scrollWidth+100;
-			if(me.width < newWidthTextarea){
-				me.textField.css("width",newWidthTextarea);
-			}
-			var nowWidth = me.currentWidth<=newWidthTextarea ?newWidthTextarea :me.currentWidth;
-			me.viewField.css("width",nowWidth);
-			me.middleField.css("width",nowWidth);
-			me.findView.css("width",nowWidth);
-			me.selectTopRow.css("width",nowWidth);
-			me.selectMiddleRow.css("width",nowWidth);
-			me.selectBottomRow.css("width",nowWidth);
-			me.textRowHilight.css("width",nowWidth);
-			//me.svgViewDomObj.setAttribute("width" , nowWidth+"px");
-			me.svgView.css("width", nowWidth+"px");
-			me.MansikiSVGManipurator.buildView(me.MansikiMangaManager.states,me.lineHeight,nowWidth,0,0);
-			//me.textRowHilight.css("width",me.currentWidth<=newWidthTextarea ?newWidthTextarea :me.currentWidth);
+			clearTimeout(me.timer);	
+			me.timer = setTimeout(function(){me.edit(me,event);},110);
 		}
 		else if(nowTime - me.nowTime > me.timeInterval ){
-			me.nowKeyInput = true;
-			me.onSelect(event);
-			me.nowKeyInput = false;
+			clearTimeout(me.timerOnSelect);	
+			me.timerOnSelect = setTimeout(function(){
+				me.nowKeyInput = true;
+				me.onSelect(event);
+				me.nowKeyInput = false;
+			},1110);
+			
 			//me.timer = setTimeout(function(){me.onInput(event);},me.timeInterval+10);
 		}
 		me.isCompositionupdate =false;
 		me.textField.focus();
 		me.viewField.css("cursor","text");
 		
+	},
+	edit:function(me,event){
+		me.doc = me.textField.val();
+		var rows = me.doc.split("\n");
+		me.rows=rows;
+		var lineNum = rows.length;
+		me.rowNum = rows.length;
+		var doc = ""//me.doc;
+		//decolate
+		var br = "";
+		var numberFiledValue ="";
+		for(var i = 0; i<lineNum;i++ ){
+			doc += br+ me.SyntaxHilighter.comvertStringToHTML(rows[i],me.SyntaxHilighter);
+			br = "<br />";
+		}
+		me.viewField.html(doc);//me.doc.replace(/\n/g,"<br />"));
+		me.viewField.css("width",me.maxWidth+me.lineHeight);
+		me.dellCount =0;
+		if(lineNum !== me.lastLineNum || me.isReflesh===true){
+			var height =lineNum*me.lineHeight>200?lineNum*me.lineHeight:200;
+			//me.currentHeight = height;
+			me.viewField.css("height",height);
+			me.textField.css("height",height);
+			me.findView.css("height",height);
+			
+			//me.svgViewDomObj.setAttribute("height" , height);
+			me.svgView.css("height", height);
+			var editorHeight = height+me.lineHeight*3;
+			me.middleField.css("height",editorHeight);
+			var startLineNum = 10000+lineNum;
+			br = "";
+			for(var j = 10001; j<=startLineNum;j++ ){
+				numberFiledValue+=br+(j+"").substring(1,5);
+				br = "<br />";
+			}
+			me.numberFiled.html(numberFiledValue);
+			me.lastLineNum = lineNum;
+			me.numberFiled.css("height",editorHeight);
+			
+			me.showViewArea(me,true);
+			var height2 =height>200?(lineNum)*me.lineHeight*2-200:200;
+			me.CurrentOffsetTop= -(height2-200)*1- height*2;
+			me.viewField.css("top", - height*1);
+			me.findView.css("top", - height*2);
+			//me.svgViewDomObj.setAttribute("style" , "top:"+- height*3);
+			me.svgView.css("top", - height*3);
+			me.isReflesh=false;
+		}else{
+			me.showViewArea(me);
+		}
+		me.find(event);
+		me.buildCodeMap(me);
+		//console.log("☆★★★★☆★☆★☆★☆★☆"+me.fieldDomObj.scrollTop+"/"+me.leftColumnFiledDomObj.scrollTop);
+		clearTimeout(me.timerOnSelect);	
+		me.timerOnSelect = setTimeout(function(){
+			me.nowKeyInput = true;
+			me.onSelect(event);
+			me.nowKeyInput = false;
+		},1110);
+		me.MansikiMangaManager.refresh(me.MansikiMangaManager,me.doc);
+		me.textField.focus();
+		me.leftColumnFiledDomObj.scrollTop=me.fieldDomObj.scrollTop;
+		
+		me.textField.css("width",me.width );
+		var newWidthTextarea = me.textFieldDomObj.scrollWidth+100;
+		if(me.width < newWidthTextarea){
+			me.textField.css("width",newWidthTextarea);
+		}
+		var nowWidth = me.currentWidth<=newWidthTextarea ?newWidthTextarea :me.currentWidth;
+		me.viewField.css("width",nowWidth);
+		me.middleField.css("width",nowWidth);
+		me.findView.css("width",nowWidth);
+		me.selectTopRow.css("width",nowWidth);
+		me.selectMiddleRow.css("width",nowWidth);
+		me.selectBottomRow.css("width",nowWidth);
+		me.textRowHilight.css("width",nowWidth);
+		//me.svgViewDomObj.setAttribute("width" , nowWidth+"px");
+		me.svgView.css("width", nowWidth+"px");
+		me.MansikiSVGManipurator.buildView(me.MansikiMangaManager.states,me.lineHeight,nowWidth,0,0);
+		//me.textRowHilight.css("width",me.currentWidth<=newWidthTextarea ?newWidthTextarea :me.currentWidth);
 	},
 	culcTextWidth:function(me,text,target,flag ){
 		var chars = text===undefined ?[]:text.split("");
@@ -896,8 +930,9 @@ HilightingEditor.prototype={
 			//alert(event.toSource());
 			return ;
 		}
-    	if(nowTime-me.nowTimeFind<600){//指定時間内はスキップ
+    	if(nowTime-me.nowTimeFind<1000){//指定時間内はスキップ
     		if(me.isFinedReserved===false){
+    			clearTimeout(me.timerFind);
 				me.timerFind = setTimeout(function(){me.findInTheArea(event);},10);
 				me.isFinedReserved=true;
     		}
@@ -925,7 +960,42 @@ HilightingEditor.prototype={
 		var codeMapContext =document.getElementById(me.codeMapCanvas.attr("id")).getContext('2d');;
 		codeMapContext.clearRect(0, 0, 300, 300);
 		codeMapContext.strokeText(me.doc,0,0,me.rightColumnFiledWidth);
+	},
+	insertLine:function(event){
+		var me = event.data.self;
+		var insert = event.data.insert;
+		var addRow = event.data.addRow;
+		addRow=addRow===undefined?"":addRow;
+		var rows = me.textFieldDomObj.value.split("\n");
+		var length = 0;
+		var tenpStart = me.textFieldDomObj.selectionStart;
+		var rowCount=0;
+		var addRowLength = 0;
+		for(var i =0;i<rows.length;i++){
+			if(length >= tenpStart){
+				rowCount = i-1;
+				break;
+			}
+			length+=rows[i].length+1;
+		}
+		var after=[];
+		for(var i =0;i<rows.length;i++){
+			var crow="";
+			if(rowCount+1===i){
+				after.push(insert);
+				if(addRow.length > 0){
+					after.push(addRow);
+					addRowLength=addRow.length+1;
+				}
+			}
+			crow=crow+rows[i];
+			after.push(crow);
+		}
+		me.textField.val(after.join("\n"));
+		me.textFieldDomObj.setSelectionRange(tenpStart+insert.length+1+addRowLength ,tenpStart+insert.length+1+addRowLength);
+		me.onInput(event);
 	}
+	
 	
 }
 
