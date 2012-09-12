@@ -211,13 +211,44 @@ HilightingEditor.prototype={
 		var PageButton = $("<div id='"+this.prefix+"PageButton' class='MansikiFuncButton'>頁</div>");
 		var KomaButton = $("<div id='"+this.prefix+"KomaButton' class='MansikiFuncButton'>駒</div>");
 		var FukidashiButton = $("<div id='"+this.prefix+"FukidashiButton' class='MansikiFuncButton'>噴</div>");
+		//ナレーション、欄外、注釈、シーン（場所）、登場オブジェクト、状況、指示、設定、効果音、効果、伏線
+		//DeclareButton,ObjectButton,BackgroundButton,SoundButton,EffectButton,NalationButton,QuoteButton,SeanButton
+		var SettingButton 	= $("<div id='"+this.prefix+"SettingButton' class='MansikiFuncButton'>設</div>");
+		var ObjectButton 	= $("<div id='"+this.prefix+"ObjectButton' class='MansikiFuncButton'>者</div>");
+		var BackgroundButton = $("<div id='"+this.prefix+"BackgroundButton' class='MansikiFuncButton'>背</div>");
+		var SoundButton 	= $("<div id='"+this.prefix+"SoundButton' class='MansikiFuncButton'>音</div>");
+		var EffectButton 	= $("<div id='"+this.prefix+"EffectButton' class='MansikiFuncButton'>効</div>");
+		var NalationButton 	= $("<div id='"+this.prefix+"NalationButton' class='MansikiFuncButton'>説</div>");
+		var QuoteButton 	= $("<div id='"+this.prefix+"QuoteButton' class='MansikiFuncButton'>注</div>");
+		var SeanButton 		= $("<div id='"+this.prefix+"SeanButton' class='MansikiFuncButton'>場</div>");
+		var FukusenButton 		= $("<div id='"+this.prefix+"FukusenButton' class='MansikiFuncButton'>伏</div>");
 		var syntaxs= this.MansikiMangaManager.MansikiSyntax;
+		
 		PageButton.bind("click",{self:this,insert:syntaxs.syntaxMap[PAGE].defaultTargetStr,addRow:"\t"},this.insertLine);
 		KomaButton.bind("click",{self:this,insert:syntaxs.syntaxMap[KOMA].defaultTargetStr,addRow:"\t\t"},this.insertLine);
 		FukidashiButton.bind("click",{self:this,insert:syntaxs.syntaxMap[FUKIDASHI].defaultTargetStr,addRow:"\t\t\t"},this.insertLine);
+		SettingButton.bind("click",{self:this,insert:syntaxs.syntaxMap[SETTING].defaultTargetStr,addRow:"\t\t\t"},this.insertLine);
+		ObjectButton.bind("click",{self:this,insert:syntaxs.syntaxMap[OBJECT].defaultTargetStr,addRow:"\t\t\t"},this.insertLine);
+		BackgroundButton.bind("click",{self:this,insert:syntaxs.syntaxMap[BACKGROUND].defaultTargetStr,addRow:"\t\t\t"},this.insertLine);
+		SoundButton.bind("click",{self:this,insert:syntaxs.syntaxMap[SOUND].defaultTargetStr,addRow:"\t\t\t"},this.insertLine);
+		EffectButton.bind("click",{self:this,insert:syntaxs.syntaxMap[EFFECT].defaultTargetStr,addRow:"\t\t\t"},this.insertLine);
+		NalationButton.bind("click",{self:this,insert:syntaxs.syntaxMap[NALATION].defaultTargetStr,addRow:"\t\t\t"},this.insertLine);
+		QuoteButton.bind("click",{self:this,insert:syntaxs.syntaxMap[QUOTE].defaultTargetStr,addRow:"\t\t\t"},this.insertLine);
+		SeanButton.bind("click",{self:this,insert:syntaxs.syntaxMap[SEAN].defaultTargetStr,addRow:"\t\t\t"},this.insertLine);
+		FukusenButton.bind("click",{self:this,insert:syntaxs.syntaxMap[FUKUSEN].defaultTargetStr,addRow:"\t\t\t"},this.insertLine);
+		
 		buttonsBar.append(PageButton);
 		buttonsBar.append(KomaButton);
 		buttonsBar.append(FukidashiButton);
+		buttonsBar.append(SettingButton);
+		buttonsBar.append(ObjectButton);
+		buttonsBar.append(BackgroundButton);
+		buttonsBar.append(SoundButton);
+		buttonsBar.append(EffectButton);
+		buttonsBar.append(NalationButton);
+		buttonsBar.append(QuoteButton);
+		buttonsBar.append(SeanButton);
+		buttonsBar.append(FukusenButton);
 		ancer.append(buttonsBar);
 	},
 	adjustSize:function(me,height,width){
@@ -812,7 +843,7 @@ HilightingEditor.prototype={
 			me.nowKeyInput = true;
 			me.onSelect(event);
 			me.nowKeyInput = false;
-		},1110);
+		},110);
 		me.MansikiMangaManager.refresh(me.MansikiMangaManager,me.doc);
 		me.textField.focus();
 		me.leftColumnFiledDomObj.scrollTop=me.fieldDomObj.scrollTop;

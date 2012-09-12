@@ -42,6 +42,7 @@ span.findHilight{
 	opacity:1;
 	background-color:#FF8800;
 	color:red;
+	
 }
 div.nums{
 	border:solid red 0px;
@@ -87,7 +88,7 @@ span.page_prefix{
 	background-color:white;
 	font-weight:bold;
 	letter-spacing: -1px;
-}
+}MansikiFuncButton
 /*---------------------------*/
 
 span.koma{
@@ -111,5 +112,36 @@ input.mansiki_menu_botton{
 	cursor:pointer;
 	
 }
+/*---------------------------*/
+div.MansikiButtonsBar{
+	width:600;
+	height:40;
+	padding:0px;
+	
+}
+div.MansikiFuncButton{
+	width:30;
+	height:26;
+	font-size:20px;
+	font-weight:bold;
+	text-align:center;
+	border:solid 2px gray;
+	border-radius: 8px; 
+	float:left;
+	padding:4px 2px 0px 2px;
+	margin:2px 2px 2px 2px;
+	cursor:pointer;
+	vertical-align:middle;
+	color:#643EFF;
+	background-color:#E1D2FF;
+backg round: -moz-linear-gradient(white, gray);
+}
+div.MansikiFuncButton:active{
+	color:#7767A3;
 
+}
+div.MansikiFuncButton:hover{
+	color:#936AC4;
+	background-color:#BF8AFF;
+}
 
