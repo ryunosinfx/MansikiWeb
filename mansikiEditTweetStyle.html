@@ -1,0 +1,106 @@
+<html>
+<header>
+<title></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+	<link rel="stylesheet" type="text/css" href="mansikiEditTweetStyle.css" media="all" />
+	<script src="js/jquery.js" type="text/javascript"></script>
+	<script src="mansikiEditTweetStyle.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		$(document).ready(function(){
+			var mtse = new MansikiTweetStyleEditor();
+			mtse.init();
+		});
+		
+	</script>
+
+</header>
+
+<body>
+	<form>
+		<div class="conteiner">
+			<div class="header">
+				<div class="menu">
+					ログイン
+					ログアウト
+					アカウント
+					アカウント設定
+					ヘルプ
+				</div>
+			</div>
+			<div class="TMtitle">
+				<div class="TMtitleText">タイトル：</div>
+				<div class="TMtitleCommands">
+					<div>保存</div>
+					<div>開く</div>
+				</div>
+			</div>
+			<div class="tweetBody">
+				<div class="tweetTab">
+					<div class="tweetSide">
+						<div class="tabsHead">
+							<div class="currentTab">
+								ツイートモード
+							</div>
+							<div class="otherTab">
+								テキスト
+							</div>
+							<div class="otherTab">
+								コンテ
+							</div>
+							<div class="otherTab">
+								漫画
+							</div>
+							<div class="otherTab">
+								紙芝居
+							</div>
+						</div>
+						<div class="status">
+							<div class="TweetCount">
+							</div>
+							<div class="Object">
+							</div>
+							<div class="pages">
+								X頁
+							</div>
+						</div>
+						<div class="commands">
+							<div class="MansikiCmdIcon" id="addPageIcon">頁</div>
+							<div class="MansikiCmdIcon" id="addKomaIcon">駒</div>
+							<div class="MansikiCmdIcon" id="addFukidashiIcon">噴</div>
+							<div class="MansikiCmdIcon" id="addSettingIcon">設</div>
+							<div class="MansikiCmdIcon" id="addManIcon">者</div>
+							<div class="MansikiCmdIcon" id="addObjectIcon">物</div>
+							<div class="MansikiCmdIcon" id="addBackgroundIcon">背</div>
+							<div class="MansikiCmdIcon" id="addSoundIcon">音</div>
+							<div class="MansikiCmdIcon" id="addEffectIcon">効</div>
+							<div class="MansikiCmdIcon" id="addNalationIcon">説</div>
+							<div class="MansikiCmdIcon" id="addQuoteIcon">注</div>
+							<div class="MansikiCmdIcon" id="addSeanIcon">場</div>
+							<div class="MansikiCmdIcon" id="addFukusenIcon">伏</div>
+						</div>
+						<div class="inputArea">
+							<textarea class="input" id="TMtweetTextarea"></textarea>
+							<div class="TMinputInfo">文字</div>
+						</div>
+						<div class="deside">
+							<div class="commandWindows">
+								コマンド<input type="text" id="mansikiCmd"/>
+							</div>
+							<div class="buttons">
+								<div class="tweet" id="TMclear">クリア</div>
+								<div class="tweet" id="TMadd">追加</div>
+							</div>
+						</div>
+					</div>
+					<div class="tweetList" id="TMtweetList">
+					</div>
+				</div>
+			</div>
+			<div class="footer">
+				<span>Powerd By Mansiki</span>
+			</div>
+		</div>
+	</form>
+</body>
+</html>
