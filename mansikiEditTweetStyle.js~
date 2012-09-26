@@ -1,3 +1,11 @@
+var MansikiModeConst={
+	page:{color:"#3C3C50"}
+	,koma:{color:"#3C3C50"}
+
+}
+
+
+
 var MansikiTweetStyleEditor= function(id, width,height,ancer){
 	this.doc;
 	this.tweets={};
@@ -9,7 +17,10 @@ var MansikiTweetStyleEditor= function(id, width,height,ancer){
 	this.constMap={
 		tweetIdPrefix:"TMid"
 		,tweetAreaHeight:72
+		,modAdd:"追加"
+		,modUpdate:"更新"
 	}
+	
 }
 MansikiTweetStyleEditor.prototype={
 	init:function(){
@@ -35,6 +46,7 @@ MansikiTweetStyleEditor.prototype={
 				me.insertTweet(event);
 				me.tweetIdMap[me.cursor]=me.tweetIdCount;
 				me.cursor++;
+				me.tweetArea.val("").focus();
 			}else{//update
 				event.data.idIndex=me.state.selected;
 				var cursor = me.getCursorByTweetId(event);
@@ -80,10 +92,17 @@ MansikiTweetStyleEditor.prototype={
 	loadTweet:function(event){
 		var me= event.data.self;
 		var idIndex = event.data.idIndex;
+		var id=me.constMap.tweetIdPrefix+idIndex;
+		var tweetBox=$("#"+id);
+		for(var cursor in me.tweetIdMap){
+			var tmpId = me.constMap.tweetIdPrefix+me.tweetIdMap[cursor];
+			$("#"+tmpId).css("border-left-width","20px");
+		}
+		tweetBox.css("border-left-width","20px");
 		var text= me.tweets[idIndex];
 		me.tweetArea.val(text);
 		me.state.selected = idIndex;
-		autoResize(event);
+		me.autoResize(event);
 	},
 	updateTweet:function(event){
 		var me = event.data.self;
@@ -112,6 +131,10 @@ MansikiTweetStyleEditor.prototype={
 	clearTweet:function(event){
 		var me= event.data.self;
 		me.state.selected = undefined;
+		for(var cursor in me.tweetIdMap){
+			var tmpId = me.constMap.tweetIdPrefix+me.tweetIdMap[cursor];
+			$("#"+tmpId).css("border-left-width","20px");
+		}
 		me.tweetArea.val("");
 	},
 	changeObject:function(event){
@@ -137,7 +160,10 @@ MansikiTweetStyleEditor.prototype={
 	
 	},
 }
+var ManikiFunctions={
+	
 
+}
 
 
 
