@@ -55,7 +55,6 @@ html,body,form ,.conteiner,.tweetBody{
 	border-radius: 0.3em ; 
 	margin:1px;
 	border:solid 1px black;
-	border-width:0px 0px 5px 0px;
 	cursor:pointer;
 }
 .tweetSide{
@@ -64,12 +63,6 @@ html,body,form ,.conteiner,.tweetBody{
 	width:300px;
 	
 	background-color:gray;
-	
-}
-.MansikiCmdIcon{
-	float:left;
-	width:20px;
-	height:20px;
 	
 }
 .tabsHead{
@@ -95,6 +88,8 @@ div.currentTab{
 }
 .tweetTab{
 	width:100%;
+	display: -moz-box; 
+	display: -webkit-box; 
 }
 .tweetSideArea{
 	margin-left:0px;
@@ -118,7 +113,7 @@ div.currentTab{
 	margin-left:0px;
 	height:100%;
 	width:80px;
-	background-color:#9D9DD0;
+	background-color:#565672;
 	min-height:600px;
 	padding:0px;
 	float:left;
@@ -158,35 +153,126 @@ div.tweetTab p{
 	background-color:black;
 	height:20px;
 	padding:3px 2px 1px 2px;
+	height:170px;
+	background-color:gray;
+	border-radius: 0.5em 0.5em 0em 0em;
+	border:solid 1px #C0C0FF;
+	border-bottom-width:0px;
+	margin:2 2 0 2;
 }
 
 .commands div{
+}
+.MansikiCmdIcon{
+	float:left;
+	width:80px;
+	height:20px;
+	border-radius: 0.5em; 
+	b order:solid 1px #C0C0FF;
 	text-align:center;
 	vertical-align:middle;
-	border:solid 1px #C0C0FF;
-	border-width:1px 1px 0px 1px;
-	border-radius: 0.2em 0.2em 0em 0em; 
 	
 	color:white;
 	cursor:pointer;
+	background-color:#9C9C9C;
+	margin :2px 4px;
+	padding:3px;
+	background-image:
+    --moz-linear-gradient(
+      rgba(255, 255, 255, 0.6)   0%,
+      rgba(255, 255, 255, 0.4)  50%,
+      rgba(255, 255, 255, 0.2)  50%,
+      rgba(255, 255, 255,   0) 100%
+    );
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    -border-bottom-width:0px;
+    box-shadow: 
+    	4px inset rgba(0, 0, 0, 0.5),
+    	inset -1px -1pxrgba(255, 255, 255, 0.5)
+    ;
+}
+#addPageIcon{
+	background-color: rgb(51, 204, 255);
+}
+#addKomaIcon{
+	background-color: #35FFDA;
+}
+#addFukidashiIcon{
+	background-color: #33FF7E;
+}
+#addSettingIcon{
+	background-color: #33FF3D;
+}
+#addManIcon{
+	background-color: #7FFF35;
+}
+#addObjectIcon{
+	background-color: #CDFF34;
+}
+#addBackgroundIcon{
+	background-color: #FFEF34;
+}
+#addSoundIcon{
+	background-color: #FFBF34;
+}
+#addEffectIcon{
+	background-color: #FF7E34;
+}
+#addNalationIcon{
+	background-color: #30FF64;
+}
+#addQuoteIcon{
+	background-color: #FF337A;
+}
+#addSeanIcon{
+	background-color: #FF31F5;
+}
+#addFukusenIcon{
+	background-color: #BA2FFF;
 }
 .inputArea{
-	border-radius: 0em 0.5em 0.5em 0.5em;
+	border-radius: 0em 0em 0.5em 0.5em;
 	border:solid 1px #C0C0FF;
+	border-top-width:0px;
 	padding:8px;
 	margin:0 2 2 2;
 	background-color:gray;
+	display: box; 
 }
 .inputArea textarea{
 	width:100%;
 	height:72px;
 	orverflow:hidden;
+	display: box; 
 }
 .TMinputInfo{
 	width:100%;
 	height:20px;
 	text-align:right;
 	padding:2px;
+	display: -moz-box; 
+	display: -webkit-box; 
+}
+span#TMTweetMode{
+	display:block;
+	float:left;
+	width:100px;
+	text-align:left;
+	height:20px;
+}
+span#TMCursor{
+	display:block;
+	float:left;
+	width:70px;
+	text-align:left;
+	height:20px;
+}
+span#TMTweetCount{
+	display:block;
+	float:left;
+	width:100px;
+	text-align:right;
+	height:20px;
 }
 .deside{
 	height:30px;
@@ -197,17 +283,17 @@ div.tweetTab p{
 }
 .commandWindows{
 	float:left;
-	width:216px;
+	width:116px;
 	line-height:22px;
 
 }
 .commandWindows input{
 	float:right;
-	width:156px;
+	width:50px;
 }
 .buttons{
 	float:left;
-	width:80px;
+	width:180px;
 }
 .buttons div{
 	border-radius: 0.5em;
@@ -215,7 +301,7 @@ div.tweetTab p{
 	margin:2 2 2 2;
 	float:left;
 	font-size:12px;
-	padding:3px;
+	padding:5px 15px;
 	background-color:#C0C0FF;
 	cursor:pointer;
 }
@@ -233,7 +319,7 @@ div.tweetTab p{
 
 /*---------TweetBox-----------------*/
 .TMtweetBox{
-	width:600px;
+	width:550px;
 	padding:5px;
 	background-color:white;
 	border:solid 1px #C0C0FF;
@@ -241,7 +327,38 @@ div.tweetTab p{
 	margin :10px;
 }
 
+.tweetBoxCmd{
+	width:300px;
+	margin-left:250px;
+	padding:2px;
+	display: -moz-box; 
+	display: -webkit-box; 
+	background-color:black;
+	color:white;
+	text-align:right;
+	position:relative;
+	top:-5px;
+	display:none;
+}
 
+.tweetBoxCmd div{
+	display:inlinebox;
+	width:45px;
+	margin:0px 2px;
+	border-radius: 0.4em;
+	border:solid 1px #C0C0FF;
+	text-align:center;
+	float:left;
+	padding:1px;
+	cursor:pointer;
+}
+
+
+
+#svgAreaArrow{
+	position:absolute;
+	
+}
 
 
 

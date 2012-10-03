@@ -57,7 +57,7 @@
 					<div class="tweetSideArea">
 						<div class="tweetSide">
 							<div class="status">
-								<div class="TweetCount" id="TMTweetCount">
+								<div class="TweetCount" id="">
 								</div>
 								<div class="Object">
 								</div>
@@ -65,7 +65,7 @@
 									X頁
 								</div>
 							</div>
-							<div class="commands">
+							<div class="commands" id="TWcmdAreaUpper">
 								<div class="MansikiCmdIcon" id="addPageIcon">頁</div>
 								<div class="MansikiCmdIcon" id="addKomaIcon">駒</div>
 								<div class="MansikiCmdIcon" id="addFukidashiIcon">噴</div>
@@ -80,9 +80,12 @@
 								<div class="MansikiCmdIcon" id="addSeanIcon">場</div>
 								<div class="MansikiCmdIcon" id="addFukusenIcon">伏</div>
 							</div>
-							<div class="inputArea">
+							<div class="inputArea" id="TWcmdAreaUnder">
 								<textarea class="input" id="TMtweetTextarea"></textarea>
-								<div class="TMinputInfo">文字</div>
+								<div class="TMinputInfo">
+									<span id="TMTweetMode"></span>
+									<span id="TMTweetCount">文字</span>
+								</div>
 							</div>
 							<div class="deside">
 								<div class="commandWindows">
@@ -101,6 +104,17 @@
 					</div>
 					<p></p>
 				</div>
+			</div>
+			<div id="svgAreaArrow"  >
+				<svg xmlns="http://www.w3.org/2000/svg"  xmlns:xlink="http://www.w3.org/1999/xlink" 
+					style="width:20px;height:50px;">
+					  
+					<path
+					   style="fill:#ff0000;fill-rule:evenodd;stroke:#000000;stroke-width:2px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:0.1"
+					   id="cursorA"
+					   d="m 1,0 -0,50 15,-25 z"
+					    />
+				</svg>
 			</div>
 			<div class="footer">
 				<span>Powerd By Mansiki</span>
