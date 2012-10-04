@@ -23,6 +23,9 @@ var MansikiTweetStyleEditor= function(id, width,height,ancer){
 	this.cmdButtonsState={};
 	this.commands=[{id:"page",data:{}}];
 	this.currentCmd="page";
+	this.tweetBoxParent = $("#TWtweetBoxParent");
+	this.scrollTimer;
+	$(document).bind("scroll",{self:this},this.onScroll);
 }
 MansikiTweetStyleEditor.prototype={
 	init:function(){
@@ -44,9 +47,13 @@ MansikiTweetStyleEditor.prototype={
 	}, 
 	cmdButtonsHilightInit:function(){
 		var bottons = $(".commands div");
+		var firstId;
 		for(var i=0;i<bottons.length;i++){
 			var button = bottons.eq(i);
 			id= button.attr("id");
+			if(firstId===undefined){
+				firstId = id;
+			}
 //alert(button.length+"/i:"+i+"/id:"+id+"/"+button.css("background-color"));
 			var buttonState = {};
 			this.cmdButtonsState[id] = buttonState;
@@ -55,6 +62,8 @@ MansikiTweetStyleEditor.prototype={
 			buttonState["background-color"]=button.css("background-color");
 			button.bind("click",{self:this,id:id},this.cmdButtonsHilight);
 		}
+		//first selected
+		this.cmdButtonsHilight({data:{self:this,id:firstId}});
 	},
 	cmdButtonsHilight:function(event){
 		var me= event.data.self;
@@ -105,7 +114,8 @@ console.log("addTweet idIndex:"+event.data.idIndex+"/me.cursor:"+me.cursor+"/me.
 			var preId=me.constMap.tweetIdPrefix+idIndex;
 			$("#"+preId).after(tweetBox);
 		}
-		me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor]}});
+		me.autoResize(event);
+		me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor],offsetY:999}});
 	},
 	getFormatedTextCRLF:function(text){
 		return text.replace(/(\r|\n|\r\n)/g, "<br />");
@@ -137,7 +147,7 @@ console.log("execBuildTweetBox idIndex:"+idIndex+"/me.tweets:"+me.tweets.toSourc
 		twbButtonMoveUp.bind("click",{self:me,idIndex:idIndex,direct:"up"},me.moveTweet);
 		twbButtonMoveDown.bind("click",{self:me,idIndex:idIndex,direct:"down"},me.moveTweet);
 		twbButtonUnite.bind("click",{self:me,idIndex:idIndex},me.unionTweet);
-		tweetBox.bind("click",{self:me,idIndex:idIndex},me.initViewCursorObj);
+		tweetBox.bind("click",{self:me,idIndex:idIndex,offsetY:20},me.initViewCursorObj);
 		tweetBox.bind("mouseover",{self:me,idIndex:idIndex},me.showCmdBox);
 		tweetBox.bind("mouseout",{self:me,idIndex:idIndex},me.hideCmdBox);
 		return tweetBox;
@@ -157,7 +167,7 @@ console.log("execBuildTweetBox idIndex:"+idIndex+"/me.tweets:"+me.tweets.toSourc
 		me.state.selected = idIndex;
 		me.autoResize(event);
 		$("#TMTweetMode").text(me.constMap.modUpdate);
-		me.showCursor(me);
+		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:165}});
 	},
 	updateTweet:function(event){
 		var me = event.data.self;
@@ -235,21 +245,25 @@ console.log("idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"/cursor:"+
 		var me= event.data.self;
 		var idIndex = event.data.idIndex;
 		var offsetY = event.data.offsetY===undefined?0:event.data.offsetY;;
-		var id = me.constMap.tweetIdPrefix+idIndex;
-		var target = $("#"+id);
-		if(target.length<1){return;}
-console.log("aaaa  /id:"+id+"/target:"+target.length+"/me.cursor:"+me.cursor);
-		var top = target.position().top;
-		var left = target.position().left;
-		var height = $("#"+id).css("height").replace("px","")*1;
-console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/id:"+id);
-		if(me.state.selected === undefined){
-			height+=10+height;
+		if(me.state.selected ===undefined || idIndex===me.state.selected ){
+			var id = me.constMap.tweetIdPrefix+idIndex;
+			var target = $("#"+id);
+			if(target.length<1){return;}
+	//console.log("aaaa  /id:"+id+"/target:"+target.length+"/me.cursor:"+me.cursor);
+			var top = target.position().top;
+			var left = target.position().left;
+			var height = $("#"+id).css("height").replace("px","")*1;
+			if(offsetY===999){
+				height=height;
+				offsetY=-height;
+			}
+	//console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/id:"+id+"/offsetY:"+offsetY);
+			height+=(-height-offsetY);
+
+			$("#svgAreaArrow").css("top",(top*1+height)).css("left",left);
+			me.cursor=MansikiMapUtil.getKey(me.tweetIdMap,idIndex);
+			me.showCursor(me);
 		}
-		height-=(40+offsetY);
-		$("#svgAreaArrow").css("top",(top*1+height)).css("left",left);
-		me.cursor=MansikiMapUtil.getKey(me.tweetIdMap,idIndex);
-		me.showCursor(me);
 	},
 	clearTweet:function(event){
 		var me= event.data.self;
@@ -259,8 +273,9 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/id:"+id);
 		}
 		me.state.selected = undefined;
 		me.tweetArea.val("");
+		me.autoResize(event);
 		$("#TMTweetMode").text(me.constMap.modAdd);
-		me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor]}});
+		me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor],offsetY:20}});
 	},
 	showCursor:function(me){
 		$("#TMCursor").text(me.cursor*1+1);
@@ -271,7 +286,11 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/id:"+id);
 		var id = me.constMap.tweetIdPrefix+idIndex;
 		var target = $("#"+id).children(".tweetBoxCmd").eq(0);
 		target.css("display","block");
-		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:30}});
+		if(me.state.selected===idIndex){
+			me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
+		}else{
+			me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:20}});
+		}
 	},
 	hideCmdBox:function(event){
 		var me= event.data.self;
@@ -279,7 +298,11 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/id:"+id);
 		var id = me.constMap.tweetIdPrefix+idIndex;
 		var target = $("#"+id).children(".tweetBoxCmd").eq(0);
 		target.css("display","none");
-		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
+		if(me.state.selected===idIndex){
+			me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
+		}else{
+			me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:20}});
+		}
 	},
 	changeObject:function(event){
 		
@@ -301,6 +324,19 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/id:"+id);
 		var key=event.data.toolTipsKey;
 		var toolTip=me.tooleTips[key];
 	},
+	onScroll:function(event){
+		var me= event.data.self;
+		if(me.scrollTimer!==undefined){
+			clearTimeout(me.scrollTimer);	
+		}
+		me.scrollTimer = setTimeout(function(){me.doScroll(me);},10);
+	},
+	doScroll:function(me){
+		var scrolltop = $("body").scrollTop()*1;
+		scrolltop-= 120;
+		scrolltop = scrolltop>0 ?scrolltop:0;
+		me.tweetBoxParent.css("top",scrolltop);
+	}
 }
 var MansikiMapUtil={
 	insert:function(map,index,value){
@@ -380,7 +416,7 @@ console.log("del tmpCursor:"+newIndex+":"+tmpVal+"/targetIndex:"+targetIndex);
 	}
 	,getKey:function(map,value){
 		for(var key in map){ 
-console.log("getKey key:"+key+"/idIndex:"+value);
+//console.log("getKey key:"+key+"/idIndex:"+value);
 			if(map[key]===value){
 				return key;
 			}

@@ -244,6 +244,7 @@ div.tweetTab p{
 	height:72px;
 	orverflow:hidden;
 	display: box; 
+	font-size:12px;
 }
 .TMinputInfo{
 	width:100%;
@@ -318,13 +319,18 @@ span#TMTweetCount{
 
 
 /*---------TweetBox-----------------*/
+.TWtweetBoxParent{
+	position:relative;
+	top:0;
+}
 .TMtweetBox{
 	width:550px;
-	padding:5px;
+	padding:2px;
 	background-color:white;
 	border:solid 1px #C0C0FF;
 	border-radius: 0.5em 0.5em 0.5em 0.5em;
 	margin :10px;
+	font-size:12px;
 }
 
 .tweetBoxCmd{
@@ -338,6 +344,7 @@ span#TMTweetCount{
 	text-align:right;
 	position:relative;
 	top:-5px;
+	height:20px;
 	display:none;
 }
 
