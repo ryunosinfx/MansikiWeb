@@ -65,7 +65,7 @@
 									X頁
 								</div>
 							</div>
-							<div class="TWtweetBoxParent">
+							<div class="TWtweetBoxParent" id="TWtweetBoxParent">
 								<div class="commands" id="TWcmdAreaUpper">
 									<div class="MansikiCmdIcon" id="addPageIcon">頁</div>
 									<div class="MansikiCmdIcon" id="addKomaIcon">駒</div>
@@ -82,11 +82,14 @@
 									<div class="MansikiCmdIcon" id="addFukusenIcon">伏</div>
 								</div>
 								<div class="inputArea" id="TWcmdAreaUnder">
-									<textarea class="input" id="TMtweetTextarea"></textarea>
+									<div id="TMinputArea">
+										<textarea class="input" id="TMtweetTextarea"></textarea>
+									</div>
 									<div class="TMinputInfo">
 										<span id="TMTweetMode"></span>
 										<span id="TMCursor"></span>
 										<span id="TMTweetCount">文字</span>
+										<input tyep="hidden" id="TMtweetInput" />
 									</div>
 								</div>
 								<div class="deside">

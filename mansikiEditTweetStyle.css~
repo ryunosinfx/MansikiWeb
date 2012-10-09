@@ -329,8 +329,9 @@ span#TMTweetCount{
 	background-color:white;
 	border:solid 1px #C0C0FF;
 	border-radius: 0.5em 0.5em 0.5em 0.5em;
-	margin :10px;
+	margin :2px;
 	font-size:12px;
+	border-left-width:20px;
 }
 
 .tweetBoxCmd{
@@ -345,7 +346,7 @@ span#TMTweetCount{
 	position:relative;
 	top:-5px;
 	height:20px;
-	display:none;
+	display:block;
 }
 
 .tweetBoxCmd div{
@@ -360,7 +361,22 @@ span#TMTweetCount{
 	cursor:pointer;
 }
 
-
+.indent1{
+	width:550px;
+	margin-left :2px;
+}
+.indent2{
+	width:530px;
+	margin-left :22px;
+}
+.indent3{
+	width:510px;
+	margin-left :42px;
+}
+.indent4{
+	width:490px;
+	margin-left :62px;
+}
 
 #svgAreaArrow{
 	position:absolute;
