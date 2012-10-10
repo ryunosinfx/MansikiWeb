@@ -1,3 +1,38 @@
+const LF = "\n";
+const FLAG_ON = 1;
+const FLAG_OFF= 0;
+//---------------------------------------------
+const SUBTITEL = "subtitle";
+const NONBLE = "Nonble";
+const PAGE = "Page";
+const KOMA = "Koma";
+const FUKIDASHI = "Fukidashi";
+const SETTING = "Setting";
+const NALATION = "Nalation";
+const OBJECT = "Object";
+const BACKGROUND = "Background";
+const SOUND = "Sound";
+const EFFECT = "Effect";
+const QUOTE = "Quote";
+const SEAN = "Sean";
+const ACTOR = "Actor";
+const FUKUSEN = "Fukusen";
+//---------------------------------------------
+//ナレーション、欄外、注釈、シーン（場所）、登場オブジェクト、状況、指示、設定、効果音、効果、伏線
+//DeclareButton,ObjectButton,BackgroundButton,SoundButton,EffectButton,NalationButton,QuoteButton,SeanButton
+const DEL = "delete";
+const UPD = "update";
+const INS = "insert";
+const SUFFIX = "p1";
+const ADD = "add";
+const KEY = "key";
+const SUPER = "super";
+const SUPERCOUNT = "superCount";
+const BY_SUPER_SUM = "bySuperSum";
+const PRIMARY = "primary";
+const UNDERBAR = "_";
+
+
 var MansikiModeConst={
 	page:{color:"#3C3C50"}
 	,koma:{color:"#3C3C50"}
@@ -8,11 +43,11 @@ var MansikiTweetStyleEditor= function(id, width,height,ancer){
 	this.doc;
 	this.tweets={};
 	this.tweetsFuncs={};
+	this.tweetIdMap ={};
 	this.tweetsSort=[];
 	this.state={selected:undefined};
 	this.cursor=0;
 	this.tweetIdCount=0;;
-	this.tweetIdMap ={};
 	this.constMap={
 		tweetIdPrefix:"TMid"
 		,tweetAreaHeight:72
@@ -41,6 +76,7 @@ var MansikiTweetStyleEditor= function(id, width,height,ancer){
 	this.funcs.add2Funcs(new ManikiFuncFukusen(this,0));
 	this.funcs.makeInputArea();
 	this.currentFuncId="";
+	this.analizer= new MansikiTweetStateAnaliser(this);
 }
 MansikiTweetStyleEditor.prototype={
 	init:function(){
@@ -98,7 +134,7 @@ MansikiTweetStyleEditor.prototype={
 	},
 	//--------------------------------------------------------------------
 	buildFuncs:function(me,idIndex){
-		var func = me.funcs.getFunc(me.currentFuncId);
+		var func = me.funcs.getFunc(me.currentFuncId).create(idIndex);
 		func.text=me.tweets[idIndex];
 		me.tweetsFuncs[idIndex]=func;
 	},
@@ -132,6 +168,7 @@ console.log("addTweet idIndex:"+event.data.idIndex+"/me.cursor:"+me.cursor+"/me.
 				event.data.idIndex=me.state.selected;
 				me.updateTweet(event);
 			}
+			me.rebuildAll(me);
 		}
 	},
 	insertTweet:function(event){
@@ -153,51 +190,10 @@ console.log("addTweet idIndex:"+event.data.idIndex+"/me.cursor:"+me.cursor+"/me.
 			$("#"+preId).after(tweetBox);
 		}
 	},
-	buildTweetBox:function(event){
-		var me= event.data.self;
-		var text= event.data.text;
-		var idIndex= event.data.idIndex;
-		me.tweetIdMap = MansikiMapUtil.after(me.tweetIdMap,me.cursor,idIndex);
-		me.tweets[idIndex]=text;
-		me.buildFuncs(me,idIndex);
-		return me.execBuildTweetBox(me,idIndex);
-	},
-	execBuildTweetBox:function(me,idIndex){
-console.log("execBuildTweetBox idIndex:"+idIndex+"/me.tweets:"+me.tweets.toSource()+"/me.tweetIdMap:"+me.tweetIdMap.toSource()+"/text:"+me.tweets[idIndex]);
-		var text = me.tweets[idIndex];
-		var id=me.constMap.tweetIdPrefix+idIndex;
-		var tweetBox=$("<div id='"+id+"'class='TMtweetBox' index='"+idIndex+"'>"+"</div>");
-		var tweetBoxButtons = $("<div class='tweetBoxCmd'></div>");
-		var twbButtonDel= $("<div class='tweetBoxCmdButton'>☓</div>");
-		var twbButtonMoveUp= $("<div class='tweetBoxCmdButton'>▲</div>");
-		var twbButtonMoveDown= $("<div class='tweetBoxCmdButton'>▼</div>");
-		var twbButtonUnite= $("<div class='tweetBoxCmdButton'>＋</div>");
-		var tweetBoxtext = $("<div class='tweetBoxText'>"+MansikiMapUtil.getFormatedTextCRLF(text)+"</div>");
-		var tweetBoxSlot= $("<div class='tweetSlot'></div>");
-		tweetBox.append(tweetBoxButtons);
-		tweetBox.append(tweetBoxtext);
-		tweetBox.append(tweetBoxSlot);
-		tweetBoxButtons.append(twbButtonMoveDown).append(twbButtonMoveUp).append(twbButtonDel).append(twbButtonUnite);
-		tweetBoxtext.bind("click",{self:me,idIndex:idIndex},me.loadTweet);
-		twbButtonDel.bind("click",{self:me,idIndex:idIndex},me.deleteTweet);
-		twbButtonMoveUp.bind("click",{self:me,idIndex:idIndex,direct:"up"},me.moveTweet);
-		twbButtonMoveDown.bind("click",{self:me,idIndex:idIndex,direct:"down"},me.moveTweet);
-		twbButtonUnite.bind("click",{self:me,idIndex:idIndex},me.unionTweet);
-		tweetBox.bind("click",{self:me,idIndex:idIndex,offsetY:20},me.initViewCursorObj);
-		tweetBox.bind("mouseover",{self:me,idIndex:idIndex},me.showCmdBox);
-		tweetBox.bind("mouseout",{self:me,idIndex:idIndex},me.hideCmdBox);
-		var func = me.tweetsFuncs[idIndex];
-		if(func!==undefined){
-			tweetBox.css("background-color",func.color);
-		}
-		func.addIndentClass(tweetBox);
-		return tweetBox;
-	},
 	loadTweet:function(event){
 		var me= event.data.self;
 		var idIndex = event.data.idIndex;
-		var id=me.constMap.tweetIdPrefix+idIndex;
-		var tweetBox=$("#"+id);
+		var tweetBox=me.getTweetBoxObj(me,idIndex);
 		for(var cursor in me.tweetIdMap){
 			var tmpId = me.constMap.tweetIdPrefix+me.tweetIdMap[cursor];
 			$("#"+tmpId).css("box-shadow","0px");
@@ -218,8 +214,7 @@ console.log("execBuildTweetBox idIndex:"+idIndex+"/me.tweets:"+me.tweets.toSourc
 		var idIndex = event.data.idIndex;
 		me.tweets[idIndex] =text;
 		var isTweetBoxUpdated = me.updateFuncs(me,idIndex);
-		var id=me.constMap.tweetIdPrefix+idIndex;
-		var tweetBox=$("#"+id);
+		var tweetBox=me.getTweetBoxObj(me,idIndex);
 		if(isTweetBoxUpdated === false){
 			tweetBox.children(".tweetBoxText").eq(0).html(MansikiMapUtil.getFormatedTextCRLF(text));
 		}else{
@@ -239,14 +234,14 @@ console.log("AAA idIndex:"+idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.
 		}
 		me.tweetIdMap=MansikiMapUtil.del(me.tweetIdMap,idIndex);
 		me.cursor=MansikiMapUtil.getMaxIndex(me.tweetIdMap);
-		var id=me.constMap.tweetIdPrefix+idIndex;
-		$("#"+id).parent().children("#"+id).eq(0).remove();
+		me.getTweetBoxObj(me,idIndex).parent().children("#"+id).eq(0).remove();
 		me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor]}});
 console.log("idIndex:"+idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.tweetIdMap.toSource());
+		me.rebuildAll(me);
 	},
 	unionTweet:function(event){
 		var me= event.data.self;
-		
+		me.rebuildAll(me);
 	},
 	moveTweet:function(event){
 		var me= event.data.self;
@@ -288,22 +283,26 @@ console.log("idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"/cursor:"+
 			}
 		}
 		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
+		me.rebuildAll(me);
 	},
-	rebuildAll:function(){
-	
+	rebuildAll:function(me){
+		me.analizer.fullAnalize();
+		for(var idIndex in me.tweetsFuncs){
+			var func = me.tweetsFuncs[idIndex];
+			func.showState();
+		}
 	},
 	initViewCursorObj:function(event){
 		var me= event.data.self;
 		var idIndex = event.data.idIndex;
 		var offsetY = event.data.offsetY===undefined?0:event.data.offsetY;;
 		if(me.state.selected ===undefined || idIndex===me.state.selected ){
-			var id = me.constMap.tweetIdPrefix+idIndex;
-			var target = $("#"+id);
+			var target = me.getTweetBoxObj(me,idIndex);
 			if(target.length<1){return;}
 	//console.log("aaaa  /id:"+id+"/target:"+target.length+"/me.cursor:"+me.cursor);
 			var top = target.position().top;
 			var left = target.position().left;
-			var height = $("#"+id).css("height").replace("px","")*1;
+			var height = target.css("height").replace("px","")*1;
 			if(offsetY===999){
 				height=height;
 				offsetY=-height;
@@ -319,8 +318,7 @@ console.log("idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"/cursor:"+
 	clearTweet:function(event){
 		var me= event.data.self;
 		for(var cursor in me.tweetIdMap){
-			var tmpId = me.constMap.tweetIdPrefix+me.tweetIdMap[cursor];
-			$("#"+tmpId).css("box-shadow","0px");
+			me.getTweetBoxObj(me,me.tweetIdMap[cursor]).css("box-shadow","0px");
 		}
 		me.state.selected = undefined;
 		me.bredgeArea.val("");
@@ -335,8 +333,8 @@ console.log("idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"/cursor:"+
 		var me= event.data.self;
 		var idIndex = event.data.idIndex;
 		var id = me.constMap.tweetIdPrefix+idIndex;
-		var target = $("#"+id).children(".tweetBoxCmd").eq(0);
-		target.css("display","block");
+		var target = me.getTweetBoxObj(me,idIndex).children(".tweetBoxCmdFrame").eq(0).children(".tweetBoxCmd").eq(0);
+		target.css("visibility","visible");
 		if(me.state.selected===idIndex){
 			me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
 		}else{
@@ -347,16 +345,13 @@ console.log("idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"/cursor:"+
 		var me= event.data.self;
 		var idIndex = event.data.idIndex;
 		var id = me.constMap.tweetIdPrefix+idIndex;
-		var target = $("#"+id).children(".tweetBoxCmd").eq(0);
-		target.css("display","none");
+		var target = me.getTweetBoxObj(me,idIndex).children(".tweetBoxCmdFrame").eq(0).children(".tweetBoxCmd").eq(0);
+		target.css("visibility","hidden");
 		if(me.state.selected===idIndex){
 			me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
 		}else{
 			me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:20}});
 		}
-	},
-	changeObject:function(event){
-		
 	},
 	calcStringLength:function(event){
 		var me= event.data.self;
@@ -378,6 +373,62 @@ console.log("idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"/cursor:"+
 		scrolltop-= 120;
 		scrolltop = scrolltop>0 ?scrolltop:0;
 		me.tweetBoxParent.css("top",scrolltop);
+	},
+	buildTweetBox:function(event){
+		var me= event.data.self;
+		var text= event.data.text;
+		var idIndex= event.data.idIndex;
+		me.tweetIdMap = MansikiMapUtil.after(me.tweetIdMap,me.cursor,idIndex);
+		me.tweets[idIndex]=text;
+		me.buildFuncs(me,idIndex);
+		return me.execBuildTweetBox(me,idIndex);
+	},
+	execBuildTweetBox:function(me,idIndex){
+console.log("execBuildTweetBox idIndex:"+idIndex+"/me.tweets:"+me.tweets.toSource()+"/me.tweetIdMap:"+me.tweetIdMap.toSource()+"/text:"+me.tweets[idIndex]);
+		var text = me.tweets[idIndex];
+		var id=me.constMap.tweetIdPrefix+idIndex;
+		var tweetBox=$("<div id='"+id+"'class='TMtweetBox' index='"+idIndex+"'>"+"</div>");
+		var tweetBoxButtonsFrame = $("<div class='tweetBoxCmdFrame'></div>");
+		var tweetBoxButtons = $("<div class='tweetBoxCmd'></div>");
+		var twbButtonDel= $("<div class='tweetBoxCmdButton'>☓</div>");
+		var twbButtonMoveUp= $("<div class='tweetBoxCmdButton'>▲</div>");
+		var twbButtonMoveDown= $("<div class='tweetBoxCmdButton'>▼</div>");
+		var twbButtonUnite= $("<div class='tweetBoxCmdButton'>＋</div>");
+		var twbConteiner= $("<div class='tweetBoxConteiner'></div>");
+		var tweetBoxInfo = $("<div class='tweetBoxInfo'>infoinfo</div>");
+		var tweetBoxtext = $("<div class='tweetBoxText'>"+MansikiMapUtil.getFormatedTextCRLF(text)+"</div>");
+		var tweetBoxSlot= $("<div class='tweetSlot'></div>");
+		tweetBoxButtonsFrame.append(tweetBoxButtons);
+		tweetBox.append(tweetBoxButtonsFrame);
+		twbConteiner.append(tweetBoxInfo);
+		twbConteiner.append(tweetBoxtext);
+		twbConteiner.append(tweetBoxSlot);
+		tweetBox.append(twbConteiner);
+		tweetBoxButtons.append(twbButtonMoveDown).append(twbButtonMoveUp).append(twbButtonDel).append(twbButtonUnite);
+		tweetBoxtext.bind("click",{self:me,idIndex:idIndex},me.loadTweet);
+		twbButtonDel.bind("click",{self:me,idIndex:idIndex},me.deleteTweet);
+		twbButtonMoveUp.bind("click",{self:me,idIndex:idIndex,direct:"up"},me.moveTweet);
+		twbButtonMoveDown.bind("click",{self:me,idIndex:idIndex,direct:"down"},me.moveTweet);
+		twbButtonUnite.bind("click",{self:me,idIndex:idIndex},me.unionTweet);
+		tweetBox.bind("click",{self:me,idIndex:idIndex,offsetY:20},me.initViewCursorObj);
+		tweetBox.bind("mouseover",{self:me,idIndex:idIndex},me.showCmdBox);
+		tweetBox.bind("mouseout",{self:me,idIndex:idIndex},me.hideCmdBox);
+		var func = me.tweetsFuncs[idIndex];
+		if(func!==undefined){
+			tweetBox.css("background-color",func.color);
+		}
+		func.addIndentClass(tweetBox);
+		return tweetBox;
+	},
+	setInfo:function(me,idIndex,info){
+		var tweetBox = me.getTweetBoxObj(me,idIndex);
+//alert("AAAAAAAAAAa"+tweetBox.length+"/"+idIndex.toSource());
+		tweetBox.children("div.tweetBoxConteiner").eq(0).children("div.tweetBoxInfo").eq(0).html(info);
+	},
+	getTweetBoxObj:function(me,idIndex){
+		var id=me.constMap.tweetIdPrefix+idIndex;
+//alert("id:"+id+"/"+$("#"+id).length);
+		return $("#"+id);
 	}
 }
 var MansikiMapUtil={
@@ -466,10 +517,16 @@ console.log("del tmpCursor:"+newIndex+":"+tmpVal+"/targetIndex:"+targetIndex);
 	},
 	getFormatedTextCRLF:function(text){
 		return text.replace(/(\r|\n|\r\n)/g, "<br />");
+	},
+	deepCopyMap:function(originMap){
+		var copyMap ={};
+		var json = JSON.stringify(originMap);
+		copyMap = JSON.parse(json);
+		return copyMap;
 	}
 }
 
-var ManikiFunctions=function(editor,idIndex){
+var ManikiFunctions=function(editor,idIndex,alfa){
 	this.editor = editor;
 	this.frame="";
 	this.nameLc="日本語名";
@@ -501,7 +558,7 @@ ManikiFunctions.prototype={
 	
 	},
 	create:function(idIndex){
-		return new ManikiFunctions(idIndex);
+		return new ManikiFunctions(this.editor,idIndex);
 	},
 	autoResize:function(event){
 		var me= event.data.self;
@@ -543,6 +600,10 @@ ManikiFunctions.prototype={
 	},
 	getFullId:function(){
 		return this.idPrefix+this.Id+this.idSufix;
+	},
+	showState:function(){
+		var state=this.editor.analizer.state;
+		this.editor.setInfo(this.editor, this.idIndex,this.nameLc);
 	}
 }
 
@@ -551,13 +612,14 @@ var ManikiFuncPage=function(editor,idIndex){
 	this.nameLc="頁";
 	this.nameEn="Page";
 	this.color="#35FFDA";
-	this.Id ="Page";
+	this.Id =PAGE;
 	this.level =1;
+	this.parentId="Title";
 }
 ManikiFuncPage.prototype = new ManikiFunctions();
 //ManikiFuncPage.prototype.
 ManikiFuncPage.prototype.create=function(idIndex){
-	return new ManikiFuncPage(idIndex);
+	return new ManikiFuncPage(this.editor,idIndex);
 }
 
 var ManikiFuncKoma=function(editor,idIndex){
@@ -565,14 +627,15 @@ var ManikiFuncKoma=function(editor,idIndex){
 	this.nameLc="コマ";
 	this.nameEn="koma";
 	this.color="#33FF7E";
-	this.Id ="Koma";
+	this.Id =KOMA;
 	this.level =2;
+	this.parentId=PAGE;
 
 }
 ManikiFuncKoma.prototype = new ManikiFunctions();
 //ManikiFuncPage.prototype.
 ManikiFuncKoma.prototype.create=function(idIndex){
-	return new ManikiFuncKoma(idIndex);
+	return new ManikiFuncKoma(this.editor,idIndex);
 }
 
 
@@ -581,13 +644,14 @@ var ManikiFuncFukidashi=function(editor,idIndex){
 	this.nameLc="噴き出し";
 	this.nameEn="Baloon";
 	this.color="#33FF3D";
-	this.Id ="Fukidashi";
+	this.Id =FUKIDASHI;
 	this.level =3;
+	this.parentId=KOMA;
 }
 ManikiFuncFukidashi.prototype = new ManikiFunctions();
 //ManikiFuncPage.prototype.
 ManikiFuncFukidashi.prototype.create=function(idIndex){
-	return new ManikiFuncFukidashi(idIndex);
+	return new ManikiFuncFukidashi(this.editor,idIndex);
 }
 
 
@@ -596,13 +660,14 @@ var ManikiFuncSetting=function(editor,idIndex){
 	this.nameLc="設定";
 	this.nameEn="Settings";
 	this.color="#7FFF35";
-	this.Id ="Setting";
+	this.Id =SETTING;
 	this.level =3;
+	this.parentId=KOMA;
 }
 ManikiFuncSetting.prototype = new ManikiFunctions();
 //ManikiFuncSetting.prototype.
 ManikiFuncSetting.prototype.create=function(idIndex){
-	return new ManikiFuncSetting(idIndex);
+	return new ManikiFuncSetting(this.editor,idIndex);
 }
 
 
@@ -611,13 +676,14 @@ var ManikiFuncActor=function(editor,idIndex){
 	this.nameLc="役者";
 	this.nameEn="Actor";
 	this.color="#CDFF34";
-	this.Id ="Man";
+	this.Id =ACTOR;
 	this.level =3;
+	this.parentId=KOMA;
 }
 ManikiFuncActor.prototype = new ManikiFunctions();
 //ManikiFuncActor.prototype.
 ManikiFuncActor.prototype.create=function(idIndex){
-	return new ManikiFuncActor(idIndex);
+	return new ManikiFuncActor(this.editor,idIndex);
 }
 
 
@@ -626,13 +692,14 @@ var ManikiFuncObject=function(editor,idIndex){
 	this.nameLc="小道具";
 	this.nameEn="Object";
 	this.color="#FFEF34";
-	this.Id ="Object";
+	this.Id =OBJECT;
 	this.level =3;
+	this.parentId=KOMA;
 }
 ManikiFuncObject.prototype = new ManikiFunctions();
 //ManikiFuncObject.prototype.
 ManikiFuncObject.prototype.create=function(idIndex){
-	return new ManikiFuncObject(idIndex);
+	return new ManikiFuncObject(this.editor,idIndex);
 }
 
 
@@ -641,13 +708,14 @@ var ManikiFuncBackground=function(editor,idIndex){
 	this.nameLc="背景";
 	this.nameEn="Background";
 	this.color="#FFBF34";
-	this.Id ="Background";
+	this.Id =BACKGROUND;
 	this.level =3;
+	this.parentId=KOMA;
 }
 ManikiFuncBackground.prototype = new ManikiFunctions();
 //ManikiFuncBackground.prototype.
 ManikiFuncBackground.prototype.create=function(idIndex){
-	return new ManikiFuncBackground(idIndex);
+	return new ManikiFuncBackground(this.editor,idIndex);
 }
 
 
@@ -656,13 +724,14 @@ var ManikiFuncSound=function(editor,idIndex){
 	this.nameLc="擬音";
 	this.nameEn="Sound";
 	this.color="#FFBF34";
-	this.Id ="Sound";
+	this.Id =SOUND;
 	this.level =3;
+	this.parentId=KOMA;
 }
 ManikiFuncSound.prototype = new ManikiFunctions();
 //ManikiFuncSound.prototype.
 ManikiFuncSound.prototype.create=function(idIndex){
-	return new ManikiFuncSound(idIndex);
+	return new ManikiFuncSound(this.editor,idIndex);
 }
 
 
@@ -671,12 +740,13 @@ var ManikiFuncEffect=function(editor,idIndex){
 	this.nameLc="効果";
 	this.nameEn="Effect";
 	this.color="#FF7E34";
-	this.Id ="Effect";
+	this.Id =EFFECT;
+	this.parentId=KOMA;
 }
 ManikiFuncEffect.prototype = new ManikiFunctions();
 //ManikiFuncEffect.prototype.
 ManikiFuncEffect.prototype.create=function(idIndex){
-	return new ManikiFuncEffect(idIndex);
+	return new ManikiFuncEffect(this.editor,idIndex);
 }
 
 
@@ -685,13 +755,14 @@ var ManikiFuncNalation=function(editor,idIndex){
 	this.nameLc="説明";
 	this.nameEn="Settings";
 	this.color="#30FF64";
-	this.Id ="Nalation";
+	this.Id =NALATION;
 	this.level =3;
+	this.parentId=KOMA;
 }
 ManikiFuncNalation.prototype = new ManikiFunctions();
 //ManikiFuncNalation.prototype.
 ManikiFuncNalation.prototype.create=function(idIndex){
-	return new ManikiFuncNalation(idIndex);
+	return new ManikiFuncNalation(this.editor,idIndex);
 }
 
 
@@ -700,13 +771,14 @@ var ManikiFuncQuote=function(editor,idIndex){
 	this.nameLc="注釈";
 	this.nameEn="Quote";
 	this.color="#FF337A";
-	this.Id ="Quote";
+	this.Id =QUOTE;
 	this.level =3;
+	this.parentId=KOMA;
 }
 ManikiFuncQuote.prototype = new ManikiFunctions();
 //ManikiFuncQuote.prototype.
 ManikiFuncQuote.prototype.create=function(idIndex){
-	return new ManikiFuncQuote(idIndex);
+	return new ManikiFuncQuote(this.editor,idIndex);
 }
 
 
@@ -715,13 +787,14 @@ var ManikiFuncSean=function(editor,idIndex){
 	this.nameLc="場所";
 	this.nameEn="Sean";
 	this.color="#FF31F5";
-	this.Id ="Sean";
+	this.Id =SEAN;
 	this.level =3;
+	this.parentId=KOMA;
 }
 ManikiFuncSean.prototype = new ManikiFunctions();
 //ManikiFuncSean.prototype.
 ManikiFuncSean.prototype.create=function(idIndex){
-	return new ManikiFuncSean(idIndex);
+	return new ManikiFuncSean(this.editor,idIndex);
 }
 
 
@@ -730,14 +803,106 @@ var ManikiFuncFukusen=function(editor,idIndex){
 	this.nameLc="伏線";
 	this.nameEn="Settings";
 	this.color="#BA2FFF";
-	this.Id ="Fukusen";
+	this.Id =FUKUSEN;
 	this.level =3;
+	this.parentId=SUBTITEL;
 }
 ManikiFuncFukusen.prototype = new ManikiFunctions();
 //ManikiFuncFukusen.prototype.
 ManikiFuncFukusen.prototype.create=function(idIndex){
-	return new ManikiFuncFukusen(idIndex);
+	return new ManikiFuncFukusen(this.editor,idIndex);
 }
+
+
+
+MansikiTweetStateAnaliser=function(editor){
+	this.state ={};
+	this.editor=editor;	
+	this.margeStateRule={};//DEL,UPD,INS
+	this.margeStateRule[OBJECT]={};
+	this.margeStateRule[FUKUSEN]={};
+	this.margeStateRule[SETTING]={};
+	this.margeStateRule[SUBTITEL]={};
+	this.margeStateRule[SUBTITEL][DEL]=[KOMA,FUKIDASHI,NALATION,BACKGROUND,SOUND,EFFECT,QUOTE,SEAN];
+	this.margeStateRule[SUBTITEL][UPD]=[NONBLE];
+	this.margeStateRule[SUBTITEL][INS]=[SUBTITEL,PAGE];
+	this.margeStateRule[NONBLE]={};
+	this.margeStateRule[NONBLE][UPD]=[NONBLE,PAGE];
+	this.margeStateRule[PAGE]={};
+	this.margeStateRule[PAGE][DEL]=[KOMA,FUKIDASHI,NALATION,BACKGROUND,SOUND,EFFECT,QUOTE,SEAN];
+	this.margeStateRule[PAGE][UPD]=[PAGE,NONBLE];
+	this.margeStateRule[KOMA]={};
+	this.margeStateRule[KOMA][UPD]=[KOMA];
+	this.margeStateRule[FUKIDASHI]={};
+	this.margeStateRule[FUKIDASHI][UPD]=[FUKIDASHI];
+	this.margeStateRule[ACTOR]={};
+	this.margeStateRule[ACTOR][UPD]=[ACTOR];
+	this.margeStateRule[NALATION]={};
+	this.margeStateRule[NALATION][UPD]=[NALATION];
+	this.margeStateRule[BACKGROUND]={};
+	this.margeStateRule[BACKGROUND][UPD]=[BACKGROUND];
+	this.margeStateRule[SOUND]={};
+	this.margeStateRule[SOUND][UPD]=[SOUND];
+	this.margeStateRule[EFFECT]={};
+	this.margeStateRule[EFFECT][UPD]=[EFFECT];
+	this.margeStateRule[QUOTE]={};
+	this.margeStateRule[QUOTE][UPD]=[QUOTE];
+	this.margeStateRule[SEAN]={};
+	this.margeStateRule[SEAN][UPD]=[SEAN];
+}
+MansikiTweetStateAnaliser.prototype ={
+	fullAnalize:function(){
+		this.state = {};
+		var tweets = this.editor.tweets;
+		var tweetsFuncs = this.editor.tweetsFuncs;
+		var tweetIdMap = this.editor.tweetIdMap;
+		var maxCursor = MansikiMapUtil.getMaxIndex(tweetIdMap);
+		var preRowStat = {};
+		for(var i=0;i<=maxCursor;i++){
+			var idIndex = tweetIdMap[i];
+			if(idIndex===undefined){
+				continue;
+			}
+			var rowStat = {};
+			var func = tweetsFuncs[idIndex];
+			var id = func.Id;
+			var addMap ={id:id};
+			rowStat = this.margeMap(addMap,preRowStat);
+			this.state[i]={addMap:addMap,rowStat:rowStat};
+			preRowStat = rowStat;
+		}
+		preRowStat["isLastMap"]={last:true};
+	},
+	margeMap:function(addMap,preRowStat){
+		var rowState = MansikiMapUtil.deepCopyMap(preRowStat);
+		var	isLastMap = {};
+		preRowStat["isLastMap"] = isLastMap;
+		for(var key in addMap){
+			if(this.margeStateRule[key]===undefined){
+				continue;
+			}
+			var rule = this.margeStateRule[key];
+			for(var index in rule[DEL]){
+				isLastMap[rule[DEL][index]]=true;
+				rowState[rule[DEL][index]] = FLAG_OFF;
+			}
+			for(var index in rule[UPD]){
+				if(rowState[rule[UPD][index]]===undefined){
+					rowState[rule[UPD][index]]=FLAG_OFF;
+				}
+				rowState[rule[UPD][index]]++;
+			}
+			for(var index in rule[INS]){
+				rowState[rule[INS][index]] = FLAG_ON;
+			}
+		}
+		return rowState;
+	}
+
+}
+
+
+
 
 
 

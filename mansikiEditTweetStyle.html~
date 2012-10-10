@@ -89,7 +89,7 @@
 										<span id="TMTweetMode"></span>
 										<span id="TMCursor"></span>
 										<span id="TMTweetCount">文字</span>
-										<input tyep="hidden" id="TMtweetInput" />
+										<input tyep="hidden" id="TMtweetInput" style="display:none"/>
 									</div>
 								</div>
 								<div class="deside">
