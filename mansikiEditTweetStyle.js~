@@ -40,9 +40,11 @@ var MansikiModeConst={
 }
 
 var MansikiTweetStyleEditor= function(id, width,height,ancer){
+	this.keyMain="MansikiTweetStyleEditor_keyMain_"+id;
 	this.doc;
 	this.tweets={};
 	this.tweetsFuncs={};
+	this.tweetsFuncsIds={};
 	this.tweetIdMap ={};
 	this.tweetsSort=[];
 	this.state={selected:undefined};
@@ -80,6 +82,7 @@ var MansikiTweetStyleEditor= function(id, width,height,ancer){
 }
 MansikiTweetStyleEditor.prototype={
 	init:function(){
+		$("#LSclear").bind('click',MansikiMapUtil.clearLS);
 		this.viewList = $("#TMtweetList");
 		this.bredgeArea= $("#TMtweetInput");
 		this.addButton= $("#TMadd");
@@ -88,6 +91,22 @@ MansikiTweetStyleEditor.prototype={
 		this.twCmdAreaUnder = $("#TWcmdAreaUnder");
 		this.initBinds(this);
 		this.showCursor(this);
+		this.initAndLoadLS();
+	},
+	initAndLoadLS:function(){
+		var loadedData = MansikiMapUtil.loadFromLS(this.keyMain);
+		if(loadedData !== null){
+			this.tweetsFuncsIds = loadedData.tweetsFuncsIds;
+			this.tweetIdMap = loadedData.tweetIdMap;
+			this.tweets = loadedData.tweets;
+			this.tweetIdCount = loadedData.tweetIdCount*1;
+			for(var idIndex in this.tweetsFuncsIds){
+				var funcId = this.tweetsFuncsIds[idIndex];
+				this.buildFuncs(this,idIndex,funcId);
+			}
+			this.reloadAllTweets();
+			this.rebuildAll(this);
+		}
 	},
 	initBinds:function(me){
 		me.addButton.bind("click",{self:me},me.addTweet);
@@ -133,8 +152,10 @@ MansikiTweetStyleEditor.prototype={
 		me.currentFuncId =id;
 	},
 	//--------------------------------------------------------------------
-	buildFuncs:function(me,idIndex){
-		var func = me.funcs.getFunc(me.currentFuncId).create(idIndex);
+	buildFuncs:function(me,idIndex,funcId){
+		var funcId =funcId===undefined?me.currentFuncId:funcId;
+//alert("funcId:"+funcId+"/"+me.funcs.getFunc(funcId));
+		var func = me.funcs.getFunc(funcId).create(idIndex);
 		func.text=me.tweets[idIndex];
 		me.tweetsFuncs[idIndex]=func;
 	},
@@ -287,9 +308,32 @@ console.log("idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"/cursor:"+
 	},
 	rebuildAll:function(me){
 		me.analizer.fullAnalize();
+		var saveData = {};
+		me.tweetsFuncsIds={};
 		for(var idIndex in me.tweetsFuncs){
 			var func = me.tweetsFuncs[idIndex];
 			func.showState();
+			me.tweetsFuncsIds[idIndex]=func.getFullId();
+		}
+		saveData.tweetIdCount = me.tweetIdCount;
+		saveData.tweets = me.tweets;
+		saveData.tweetIdMap = me.tweetIdMap;
+		saveData.tweetsFuncsIds = me.tweetsFuncsIds;
+		MansikiMapUtil.saveToLS(me.keyMain,saveData);
+		
+	},
+	reloadAllTweets:function(){
+		var max=MansikiMapUtil.getMaxIndex(this.tweetIdMap)*1;
+		this.cursor=0;
+		for(var i = 0;i<= max;i++){
+			var idIndex = this.tweetIdMap[i];
+			if(idIndex===undefined){
+				continue;
+			}
+			var tweetBox = this.execBuildTweetBox(this,idIndex);
+			this.doInsertTweet(this,tweetBox);
+			this.cursor++;
+			this.initViewCursorObj({data:{self:this,idIndex:this.tweetIdMap[this.cursor],offsetY:999}});
 		}
 	},
 	initViewCursorObj:function(event){
@@ -427,7 +471,7 @@ console.log("execBuildTweetBox idIndex:"+idIndex+"/me.tweets:"+me.tweets.toSourc
 	},
 	getTweetBoxObj:function(me,idIndex){
 		var id=me.constMap.tweetIdPrefix+idIndex;
-alert("id:"+id+"/"+$("#"+id).length);
+//alert("id:"+id+"/"+$("#"+id).length);
 		return $("#"+id);
 	}
 }
@@ -496,7 +540,7 @@ console.log("del tmpCursor:"+newIndex+":"+tmpVal+"/targetIndex:"+targetIndex);
 	,getMaxIndex:function(map){
 		var max =0;
 		for(var i in map){
-			max=max<i?i:max;
+			max=max<i*1?i*1:max;
 		}
 		return max;
 	}
@@ -516,13 +560,27 @@ console.log("del tmpCursor:"+newIndex+":"+tmpVal+"/targetIndex:"+targetIndex);
 		}
 	},
 	getFormatedTextCRLF:function(text){
-		return text.replace(/(\r|\n|\r\n)/g, "<br />");
+		return text===undefined ?"":text.replace(/(\r|\n|\r\n)/g, "<br />");
 	},
 	deepCopyMap:function(originMap){
 		var copyMap ={};
 		var json = JSON.stringify(originMap);
 		copyMap = JSON.parse(json);
 		return copyMap;
+	},
+	saveToLS:function(key ,target){
+		var value = JSON.stringify(target);
+		localStorage.setItem(key,value);
+	},
+	loadFromLS:function(key){
+		var joinStr = localStorage.getItem(key);
+		return JSON.parse(joinStr);
+	},
+	removeFromLS:function(key){
+		localStorage.removeItem(key);
+	},
+	clearLS:function(){
+		localStorage.clear();
 	}
 }
 
