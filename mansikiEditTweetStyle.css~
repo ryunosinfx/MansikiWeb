@@ -19,7 +19,6 @@ html,body,form ,.conteiner,.tweetBody{
 	width:100%;
 	height:120px;
 }
-
 .header{
 	width:100%;
 	height:20px;
@@ -28,7 +27,15 @@ html,body,form ,.conteiner,.tweetBody{
 .TMtitle{
 	width:100%;
 	padding:5px;
-	height:75px;
+	height:123px;
+}
+.TMconteiner{
+	width:1030px;
+	height:160%;
+}
+,.tweetBody{
+	width:900px;
+	margin-top:80px;
 }
 .TMtitleText{
 	font-size:24px;
@@ -306,6 +313,8 @@ span#TMTweetCount{
 	cursor:pointer;
 }
 .footer{
+	display: -moz-box; 
+	display: -webkit-box; 
 	width:980px;
 	background-color:#47475E;
 	padding:5px 15px 5px 5px;
@@ -381,7 +390,7 @@ div.tweetList {
 	position:relative;
 	top:-2px;
 	left:-40px;
-	margin-left:-20px;
+	margin-left:-40px;
 	width:40px;
 	padding:2px 2px;
 	min-height:24px;
@@ -404,6 +413,8 @@ div.tweetList {
 .tweetSlot{
 	left:-2px;
 	width:100%;
+	display: -moz-box; 
+	display: -webkit-box; 
 	min-height:1px;
 	padding:0px;
 	margin:0px 0px 0px -1px ;

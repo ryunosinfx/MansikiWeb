@@ -55,6 +55,8 @@ var MansikiTweetStyleEditor= function(id, width,height,ancer){
 		,tweetAreaHeight:72
 		,modAdd:"追加"
 		,modUpdate:"更新"
+		,selectColor:"#AA9ED9"
+		,unselectColor:"#C0C0FF"
 	};
 	this.cmdButtonsState={};
 	this.commands=[{id:"page",data:{}}];
@@ -269,7 +271,7 @@ console.log("idIndex:"+idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.twee
 		var direct= event.data.direct;
 		var idIndex = event.data.idIndex;
 		var id = me.constMap.tweetIdPrefix+idIndex;
-		var cursor = MansikiMapUtil.getKey(me.tweetIdMap,idIndex)*1;
+		var cursor = MansikiMapUtil.getKey(me.tweetIdMap,idIndex*1)*1;
 		var oldMap = me.tweetIdMap;
 		var newMap = {};
 		var subject ;
@@ -481,12 +483,15 @@ console.log("execBuildTweetBox idIndex:"+idIndex+"/me.tweets:"+me.tweets.toSourc
 		var tweetBox = me.getTweetBoxObj(me,idIndex);
 //alert("AAAAAAAAAAa"+tweetBox.length+"/"+idIndex.toSource());
 		var textBox = tweetBox.children("div.tweetBoxConteiner").eq(0).children("div.tweetBoxText").eq(0);
-		textBox.html(me.tweets[idIndex]+addtionalText);
+		textBox.html(MansikiMapUtil.getFormatedTextCRLF(me.tweets[idIndex])+addtionalText);
 	},
 	getTweetBoxObj:function(me,idIndex){
 		var id=me.constMap.tweetIdPrefix+idIndex;
 //alert("id:"+id+"/"+$("#"+id).length);
 		return $("#"+id);
+	},
+	getViewList:function(){
+		return this.viewList;
 	}
 }
 var MansikiMapUtil={
@@ -683,7 +688,7 @@ ManikiFunctions.prototype={
 			info+="<div>"+count+"</div>";
 		}
 		this.editor.setInfo(this.editor, this.idIndex,info);
-		this.editor.addText(this.editor, this.idIndex,state[this.idIndex].toSource());
+		this.editor.addText(this.editor, this.idIndex,"");//state[this.idIndex].toSource());
 //console.log("state.toSource():"+state[this.idIndex].toSource()+"/this.Id:"+this.Id);
 	},
 	initBindEventToTweetBox:function(tweetBox){
@@ -696,30 +701,40 @@ ManikiFunctions.prototype={
 		var me=event.data.self;
 		var tweetBox=event.data.tweetBox;
 		var infoBoxCover = me.editor.getTweetBoxInfoCover(tweetBox);
+		var viewList = me.editor.getViewList();
 		var infoBox = me.editor.getTweetBoxInfo(tweetBox);
 		infoBoxCover.css("height",infoBox.css("height"));
 		var y =event.clientY;
 		var top= tweetBox.position().top;
 		var height= tweetBox.get(0).height;
+		tweetBox.css("border-left-color",me.editor.constMap.selectColor);
 		infoBoxCover.unbind("mouseup");
-		infoBoxCover.unbind("mousemove");
-		infoBoxCover.unbind("mouseout");
-		infoBoxCover.bind("mouseup",{self:me,infoBoxCover:infoBoxCover},me.onMouseUp);
-		infoBoxCover.bind("mouseout",{self:me,infoBoxCover:infoBoxCover},me.onMouseUp);
-		infoBoxCover.bind("mousemove",{self:me,tweetBox:tweetBox,start:y,height:height},me.doDrag);
+		viewList.unbind("mousemove");
+		viewList.unbind("mouseout");
+		infoBoxCover.bind("mouseup",{self:me,infoBoxCover:infoBoxCover,tweetBox:tweetBox},me.onMouseUp);
+		viewList.bind("mouseout",{self:me,infoBoxCover:infoBoxCover,tweetBox:tweetBox},me.onMouseUp);
+		viewList.bind("mousemove",{self:me,tweetBox:tweetBox,start:y,height:height},me.onDrag);
 		infoBoxCover.css("cursor","move");
 	},
-	doDrag:function(event){
-		var me=event.data.self;
+	onDrag:function(event){
+		var me= event.data.self;
 		var tweetBox=event.data.tweetBox;
 		var start=event.data.start;
-		var height=event.data.height;
+		var height= tweetBox.css("height").replace("px","");
 		var y = event.clientY;
+		if(me.dragTimer!==undefined){
+			clearTimeout(me.dragTimer);	
+		}
+		me.dragTimer = setTimeout(function(){me.doDrag(me,tweetBox,start,height,y);},10);
+	},
+	doDrag:function(me,tweetBox,start,height,y){
 		var top = tweetBox.position().top;
 		var diff = y-start;
-console.log("doDrag top:"+top+"/y:"+y+"/start:"+start+"/diff:"+diff);
+console.log("doDrag top:"+top+"/y:"+y+"/start:"+start+"/diff:"+diff+"/height:"+height);
 		tweetBox.css("top",y-start);
-		if(diff!==0){
+		window.getSelection().removeAllRanges();
+		
+		if(Math.abs(diff)>height/4){
 			if(diff< 0){
 				me.editor.moveTweet({data:{self:me.editor,direct:"up",idIndex:me.idIndex}});
 			}else{
@@ -728,18 +743,25 @@ console.log("doDrag top:"+top+"/y:"+y+"/start:"+start+"/diff:"+diff);
 			var tweetBox = me.editor.getTweetBoxObj(me.editor,me.idIndex);
 			var infoBoxCover = me.editor.getTweetBoxInfoCover(tweetBox);
 			var infoBox = me.editor.getTweetBoxInfo(tweetBox);
+			var viewList = me.editor.getViewList();
 			infoBoxCover.css("height",infoBox.css("height"));
 			infoBoxCover.bind("mousedown",{self:me,tweetBox:tweetBox},me.onMouseDown);
-			infoBoxCover.bind("mousemove",{self:me,tweetBox:tweetBox,start:y,height:height},me.doDrag);
-			infoBoxCover.bind("mouseup",{self:me,infoBoxCover:infoBoxCover},me.onMouseUp);
+			//viewList.bind("mouseout",{self:me,infoBoxCover:infoBoxCover},me.onMouseUp);
+			//viewList.bind("mousemove",{self:me,tweetBox:tweetBox,start:y,height:height},me.doDrag);
+			infoBoxCover.bind("mouseup",{self:me,tweetBox:tweetBox,infoBoxCover:infoBoxCover},me.onMouseUp);
 		}
 	},
 	onMouseUp:function(event){
 		var me=event.data.self;
 		var infoBoxCover=event.data.infoBoxCover;
+		var tweetBox=event.data.tweetBox;
+		var viewList = me.editor.getViewList();
+		viewList.unbind("mousemove");
+		viewList.unbind("mouseout");
+		if(tweetBox!==undefined){
+			tweetBox.css("border-left-color",me.editor.constMap.unselectColor);
+		}
 		infoBoxCover.unbind("mouseup");
-		infoBoxCover.unbind("mousemove");
-		infoBoxCover.unbind("mouseout");
 		infoBoxCover.css("cursor","pointer");
 	}
 }
@@ -1038,6 +1060,7 @@ MansikiTweetStateAnaliser.prototype ={
 			var id = func.Id;
 			var addMap ={id:id,parent:func.parentId};
 			rowStat = this.margeMap(addMap,preRowStat);
+//console.log("fullAnalize:"+rowStat.toSource()+" / "+preRowStat.toSource());
 			this.state[idIndex]={addMap:addMap,rowStat:rowStat};
 			preRowStat = MansikiMapUtil.deepCopyMap(rowStat);
 		}
@@ -1050,12 +1073,12 @@ MansikiTweetStateAnaliser.prototype ={
 		preRowStat["isLastMap"] = isLastMap;
 		for(var key in addMap){
 			var Id= addMap[key];
-//console.log("key:"+key+"/"+this.margeStateRule[Id]);
-			if(this.margeStateRule[Id]===undefined){
+//console.log("margeMap key:"+key+"/"+this.margeStateRule[Id]+"/Id:"+Id);
+			if(this.margeStateRule[Id]===undefined || key==="parent"){
 				continue;
 			}
 			var rule = this.margeStateRule[Id];
-//console.log("rule:"+rule.toSource());
+//console.log("margeMap rule:"+rule.toSource());
 			for(var index in rule[DEL]){
 				isLastMap[rule[DEL][index]]=true;
 				rowState[rule[DEL][index]] = FLAG_OFF;
@@ -1077,11 +1100,37 @@ MansikiTweetStateAnaliser.prototype ={
 
 
 
+MansikiTweetStyleKeyBind=function(edtior){
+	this.editor=edtior;
+}
 
 
-
-
-
+MansikiTweetStyleKeyBind.prototype ={
+	cursorUp:function(){
+	
+	}
+	,cursorDown:function(){
+	
+	}
+	,cursorDelete:function(){
+	
+	}
+	,cursorSelect:function(){
+	
+	}
+	,clear:function(){
+	
+	}
+	,moveUp:function(){
+	
+	}
+	,moveDown:function(){
+	
+	}
+	,update:function(){
+	
+	}
+}
 
 
 
