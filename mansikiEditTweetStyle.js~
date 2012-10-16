@@ -79,12 +79,15 @@ var MansikiTweetStyleEditor= function(id, width,height,ancer){
 	this.funcs.add2Funcs(new ManikiFuncSean(this,0));
 	this.funcs.add2Funcs(new ManikiFuncFukusen(this,0));
 	this.funcs.makeInputArea();
+	this.MansikiTweetStyleKeyBind= new MansikiTweetStyleKeyBind(this);
 	this.currentFuncId="";
 	this.analizer= new MansikiTweetStateAnaliser(this);
 }
 MansikiTweetStyleEditor.prototype={
 	init:function(){
 		$("#LSclear").bind('click',MansikiMapUtil.clearLS);
+		this.tweetHideTextarea = $("#TWtweetHideTextarea");
+		this.field = $("form").eq(0);
 		this.viewList = $("#TMtweetList");
 		this.bredgeArea= $("#TMtweetInput");
 		this.addButton= $("#TMadd");
@@ -114,6 +117,8 @@ MansikiTweetStyleEditor.prototype={
 		me.addButton.bind("click",{self:me},me.addTweet);
 		me.clearButton.bind("click",{self:me},me.clearTweet);
 		$("#TMTweetMode").text(me.constMap.modAdd);
+		me.MansikiTweetStyleKeyBind.setKeyEventField(me.tweetHideTextarea);
+		me.field.bind("mousemove",{self:me},me.onFocusToCmd);
 		me.cmdButtonsHilightInit();
 	}, 
 	cmdButtonsHilightInit:function(){
@@ -153,6 +158,22 @@ MansikiTweetStyleEditor.prototype={
 		me.twCmdAreaUnder.css("background-color",buttonState["background-color"]);
 		me.currentFuncId =id;
 	},
+	//--------------------------------------------------------------------
+	onFocusToCmd:function(event){
+		var me= event.data.self;
+		if(me.focusTimer!==undefined){
+			clearTimeout(me.focusTimer);	
+		}
+		me.focusTimer = setTimeout(function(){me.doFocusToCmd(me);},10);
+	},
+	doFocusToCmd:function(me){
+		var nowFunc = me.funcs.getFunc(me.currentFuncId);
+		if(nowFunc.isFocusOnForm()!==true){
+			me.tweetHideTextarea.focus();
+console.log("focus :"+me.tweetHideTextarea.val());
+		}
+	},
+	//--------------------------------------------------------------------
 	//--------------------------------------------------------------------
 	buildFuncs:function(me,idIndex,funcId){
 		var funcId =funcId===undefined?me.currentFuncId:funcId;
@@ -490,6 +511,12 @@ console.log("execBuildTweetBox idIndex:"+idIndex+"/me.tweets:"+me.tweets.toSourc
 //alert("id:"+id+"/"+$("#"+id).length);
 		return $("#"+id);
 	},
+	getTweetBoxObjByCursor:function(me,cursor){
+		var idIndex = me.tweetIdMap[cursor];
+		var id=me.constMap.tweetIdPrefix+idIndex;
+//alert("id:"+id+"/"+$("#"+id).length);
+		return $("#"+id);
+	},
 	getViewList:function(){
 		return this.viewList;
 	}
@@ -620,6 +647,8 @@ var ManikiFunctions=function(editor,idIndex,alfa){
 	this.level=1;
 	this.indentClassPrefix="indent";
 	this.infoMap={};
+	this.isFormFocusd=false;
+	this.init();
 }
 
 ManikiFunctions.prototype={
@@ -633,7 +662,13 @@ ManikiFunctions.prototype={
 		return this.Funcs[id];
 	},
 	init:function(){
-	
+		this.tweetArea.unbind("focus");
+		this.tweetArea.unbind("blur");
+		this.tweetArea.bind("focus",{self:this},this.onFocus);
+		this.tweetArea.bind("blur",{self:this},this.onBlur);
+	},
+	isFocusOnForm:function(){
+		return this.isFormFocusd;
 	},
 	create:function(idIndex){
 		return new ManikiFunctions(this.editor,idIndex);
@@ -646,6 +681,14 @@ ManikiFunctions.prototype={
 		if(me.editor.constMap.tweetAreaHeight< height){
 		 	me.tweetArea.css("height",height);
 		}
+	},
+	onFocus:function(event){
+		var me= event.data.self;
+		me.isFormFocusd=true;
+	},
+	onBlur:function(event){
+		var me= event.data.self;
+		me.isFormFocusd=false;
 	},
 	makeInputArea:function(){
 		this.inputArea.empty();
@@ -1102,12 +1145,63 @@ MansikiTweetStateAnaliser.prototype ={
 
 MansikiTweetStyleKeyBind=function(edtior){
 	this.editor=edtior;
+	this.eventField ;
+	this.nowTime = new Date().getTime();
 }
 
 
 MansikiTweetStyleKeyBind.prototype ={
-	cursorUp:function(){
+	setKeyEventField:function(eventField){
+		this.eventField  = eventField;
+		this.eventField.unbind('keyup');
+		this.eventField.bind('keyup',{self:this},this.doMainKeyEvent);
+	}
+	,blockBubbleEvent:function(event){
+		event.returnValue=false;//伝播は防御
+		event.preventDefault();//伝播は防御
+		event.stopPropagation();//伝播は防御
 	
+	}
+	,doMainKeyEvent:function(event){
+		var me = event.data.self;
+		var nowTime = new Date().getTime();
+		me.eventField.css("cursor","wait");//  
+		me.keyUpCount ++;
+		var keyCode = event.keyCode;
+		var isShiftKey = event.shiftKey;
+		var isCtrlKey = event.ctrlKey;
+		var wicth= event.which;
+		var modifiers=event.modifiers;
+		var x =event.clientX;
+		var y =event.clientY;
+		if(keyCode===9 ){//Tab
+			me.blockBubbleEvent(event);
+		}
+		
+		console.log("keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modifiers+"/event.ctrlKey:"+event.ctrlKey);
+		/**
+			if(keyCode=="38" ){//up
+			}else if(keyCode=="40" ){//down
+			}else if(keyCode=="37" ){//left
+			}else if(keyCode=="39" ){//right
+			}else if(keyCode=="8" ){//delete
+			} if(keyCode=="13" ){//enter
+			} if(keyCode=="8" ){//delete
+			}else if(keyCode=="8"){
+			}else if(event.shiftKey===true ){
+			}
+			if(event.shiftKey===false && event.ctrlKey===false ){//SHIFT押し以外
+			}else{
+			}
+			if(keyCode=="67" && event.ctrlKey===true){//Copy
+			}else if(keyCode=="86" && event.ctrlKey===true){//peast
+			}else if(keyCode=="88" && event.ctrlKey===true){//Cut
+			}
+		**/
+		me.eventField.css("cursor","text");
+	}
+	,cursorUp:function(){
+		
 	}
 	,cursorDown:function(){
 	
@@ -1119,7 +1213,7 @@ MansikiTweetStyleKeyBind.prototype ={
 	
 	}
 	,clear:function(){
-	
+		this.edtor.clearTweet({data:{self:this.edtor}});
 	}
 	,moveUp:function(){
 	
