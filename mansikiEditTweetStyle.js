@@ -171,12 +171,13 @@ MansikiTweetStyleEditor.prototype={
 		if(nowFunc.isFocusOnForm()!==true){
 			me.tweetHideTextarea.focus();
 console.log("focus :"+me.tweetHideTextarea.val());
+			me.tweetHideTextarea.val("");
 		}
 	},
 	//--------------------------------------------------------------------
 	//--------------------------------------------------------------------
 	buildFuncs:function(me,idIndex,funcId){
-		var funcId =funcId===undefined?me.currentFuncId:funcId;
+		funcId =funcId===undefined?me.currentFuncId:funcId;
 //alert("funcId:"+funcId+"/"+me.funcs.getFunc(funcId));
 		var func = me.funcs.getFunc(funcId).create(idIndex);
 		func.text=me.tweets[idIndex];
@@ -193,6 +194,12 @@ console.log("focus :"+me.tweetHideTextarea.val());
 		return false;
 	},
 	//--------------------------------------------------------------------
+	curosrMoveUp:function(){
+		me.cursor--;
+	},
+	curosrMoveDown:function(){
+		me.cursor++;
+	},
 	addTweet:function(event){
 		var me= event.data.self;
 		me.funcs.addTweet();
@@ -371,7 +378,7 @@ console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"
 			var left = target.position().left;
 			var height = target.css("height").replace("px","")*1;
 			if(offsetY===999){
-				height=height;
+				//height=height;
 				offsetY=-height;
 			}
 	//console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/id:"+id+"/offsetY:"+offsetY);
@@ -411,7 +418,6 @@ console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"
 	hideCmdBox:function(event){
 		var me= event.data.self;
 		var idIndex = event.data.idIndex;
-		var id = me.constMap.tweetIdPrefix+idIndex;
 		var target = me.getTweetBoxObj(me,idIndex).children(".tweetBoxCmdFrame").eq(0).children(".tweetBoxCmd").eq(0);
 		target.css("visibility","hidden");
 		if(me.state.selected===idIndex){
@@ -491,7 +497,6 @@ console.log("execBuildTweetBox idIndex:"+idIndex+"/me.tweets:"+me.tweets.toSourc
 	},
 	setInfo:function(me,idIndex,info){
 		var tweetBox = me.getTweetBoxObj(me,idIndex);
-//alert("AAAAAAAAAAa"+tweetBox.length+"/"+idIndex.toSource());
 		me.getTweetBoxInfo(tweetBox).html(info);
 	},
 	getTweetBoxInfo:function(tweetBox){
@@ -502,19 +507,16 @@ console.log("execBuildTweetBox idIndex:"+idIndex+"/me.tweets:"+me.tweets.toSourc
 	},
 	addText:function(me,idIndex,addtionalText){
 		var tweetBox = me.getTweetBoxObj(me,idIndex);
-//alert("AAAAAAAAAAa"+tweetBox.length+"/"+idIndex.toSource());
 		var textBox = tweetBox.children("div.tweetBoxConteiner").eq(0).children("div.tweetBoxText").eq(0);
 		textBox.html(MansikiMapUtil.getFormatedTextCRLF(me.tweets[idIndex])+addtionalText);
 	},
 	getTweetBoxObj:function(me,idIndex){
 		var id=me.constMap.tweetIdPrefix+idIndex;
-//alert("id:"+id+"/"+$("#"+id).length);
 		return $("#"+id);
 	},
 	getTweetBoxObjByCursor:function(me,cursor){
 		var idIndex = me.tweetIdMap[cursor];
 		var id=me.constMap.tweetIdPrefix+idIndex;
-//alert("id:"+id+"/"+$("#"+id).length);
 		return $("#"+id);
 	},
 	getViewList:function(){
@@ -556,8 +558,7 @@ console.log("after index:"+index+"/tmpCursor:"+tmpCursor);
 	del:function(map,value){
 		var oldMap = map;
 		var newMap ={};
-		var hasProp =false;
-		var targetIndex ;
+		var targetIndex = undefined;
 		for(var tmpCursor in oldMap){
 			var tmpVal = oldMap [tmpCursor];
 			if(value*1===tmpVal*1){
@@ -594,8 +595,9 @@ console.log("del tmpCursor:"+newIndex+":"+tmpVal+"/targetIndex:"+targetIndex);
 		var count =0;
 		for(var i in map){
 			count++;
+			i++;
 		}
-		return count+1;
+		return ++count;
 	}
 	,getKey:function(map,value){
 		for(var key in map){ 
@@ -748,7 +750,7 @@ ManikiFunctions.prototype={
 		var infoBox = me.editor.getTweetBoxInfo(tweetBox);
 		infoBoxCover.css("height",infoBox.css("height"));
 		var y =event.clientY;
-		var top= tweetBox.position().top;
+		//var top= tweetBox.position().top;
 		var height= tweetBox.get(0).height;
 		tweetBox.css("border-left-color",me.editor.constMap.selectColor);
 		infoBoxCover.unbind("mouseup");
@@ -786,11 +788,8 @@ console.log("doDrag top:"+top+"/y:"+y+"/start:"+start+"/diff:"+diff+"/height:"+h
 			var tweetBox = me.editor.getTweetBoxObj(me.editor,me.idIndex);
 			var infoBoxCover = me.editor.getTweetBoxInfoCover(tweetBox);
 			var infoBox = me.editor.getTweetBoxInfo(tweetBox);
-			var viewList = me.editor.getViewList();
 			infoBoxCover.css("height",infoBox.css("height"));
 			infoBoxCover.bind("mousedown",{self:me,tweetBox:tweetBox},me.onMouseDown);
-			//viewList.bind("mouseout",{self:me,infoBoxCover:infoBoxCover},me.onMouseUp);
-			//viewList.bind("mousemove",{self:me,tweetBox:tweetBox,start:y,height:height},me.doDrag);
 			infoBoxCover.bind("mouseup",{self:me,tweetBox:tweetBox,infoBoxCover:infoBoxCover},me.onMouseUp);
 		}
 	},
@@ -1143,13 +1142,11 @@ MansikiTweetStateAnaliser.prototype ={
 
 
 
-MansikiTweetStyleKeyBind=function(edtior){
-	this.editor=edtior;
+MansikiTweetStyleKeyBind=function(editor){
+	this.editor=editor;
 	this.eventField ;
 	this.nowTime = new Date().getTime();
 }
-
-
 MansikiTweetStyleKeyBind.prototype ={
 	setKeyEventField:function(eventField){
 		this.eventField  = eventField;
@@ -1160,7 +1157,6 @@ MansikiTweetStyleKeyBind.prototype ={
 		event.returnValue=false;//伝播は防御
 		event.preventDefault();//伝播は防御
 		event.stopPropagation();//伝播は防御
-	
 	}
 	,doMainKeyEvent:function(event){
 		var me = event.data.self;
@@ -1179,6 +1175,46 @@ MansikiTweetStyleKeyBind.prototype ={
 		}
 		
 		console.log("keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modifiers+"/event.ctrlKey:"+event.ctrlKey);
+		
+
+		if(keyCode=="38" ){//up
+			me.cursorUp();
+		}else if(keyCode=="40" ){//down
+			me.cursorDown();
+		}else if(keyCode=="37" ){//left
+		}else if(keyCode=="39" ){//right
+			
+		}else if(isShiftKey===false && isCtrlKey===true ){
+			if(keyCode=="85" ){//u 
+				me.blockBubbleEvent(event);
+				me.undo();
+			}else if(keyCode=="82" ){//r 
+				me.blockBubbleEvent(event);
+				me.redo();
+			}else if(keyCode=="8" ){//delete 
+				me.blockBubbleEvent(event);
+				me.cursorDelete();
+			}else if(keyCode=="69" ){//e
+				me.blockBubbleEvent(event);
+				me.clear();
+			}else if(keyCode=="38" ){//up
+				me.blockBubbleEvent(event);
+				me.moveUp();
+			}else if(keyCode=="40" ){//down
+				me.blockBubbleEvent(event);
+				me.moveDown();
+			}else if(keyCode=="13" ){//enter
+				me.blockBubbleEvent(event);
+				me.addupdate();
+			}else if(keyCode=="83" ){//s
+				me.blockBubbleEvent(event);
+				me.cursorSelect();
+			}
+		}else if(isShiftKey===true && isCtrlKey===false ){
+			
+		}
+		
+		
 		/**
 			if(keyCode=="38" ){//up
 			}else if(keyCode=="40" ){//down
@@ -1202,28 +1238,35 @@ MansikiTweetStyleKeyBind.prototype ={
 		me.eventField.css("cursor","text");
 	}
 	,cursorUp:function(){
-		
+		console.log("cursorUp");
 	}
 	,cursorDown:function(){
-	
+		console.log("cursorDown");
 	}
 	,cursorDelete:function(){
-	
+		console.log("cursorDelete");
 	}
 	,cursorSelect:function(){
-	
+		console.log("cursorSelect");
 	}
 	,clear:function(){
-		this.edtor.clearTweet({data:{self:this.edtor}});
+		console.log("clear");
+		this.editor.clearTweet({data:{self:this.editor}});
 	}
 	,moveUp:function(){
-	
+		console.log("moveUp");
 	}
 	,moveDown:function(){
-	
+		console.log("moveDown");
 	}
-	,update:function(){
-	
+	,addupdate:function(){
+		console.log("addupdate");
+	}
+	,undo:function(){
+		console.log("undo");
+	}
+	,redo:function(){
+		console.log("redo");
 	}
 }
 
