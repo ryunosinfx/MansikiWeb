@@ -63,23 +63,23 @@ var MansikiTweetStyleEditor= function(id, width,height,ancer){
 	this.currentCmd="page";
 	this.tweetBoxParent = $("#TWtweetBoxParent");
 	this.scrollTimer;
-	$(document).bind("scroll",{self:this},this.onScroll);
-	this.funcs=new ManikiFunctions(this,0);
-	this.funcs.add2Funcs(new ManikiFuncPage(this,0));
-	this.funcs.add2Funcs(new ManikiFuncKoma(this,0));
-	this.funcs.add2Funcs(new ManikiFuncFukidashi(this,0));
-	this.funcs.add2Funcs(new ManikiFuncSetting(this,0));
-	this.funcs.add2Funcs(new ManikiFuncActor(this,0));
-	this.funcs.add2Funcs(new ManikiFuncObject(this,0));
-	this.funcs.add2Funcs(new ManikiFuncBackground(this,0));
-	this.funcs.add2Funcs(new ManikiFuncSound(this,0));
-	this.funcs.add2Funcs(new ManikiFuncEffect(this,0));
-	this.funcs.add2Funcs(new ManikiFuncNalation(this,0));
-	this.funcs.add2Funcs(new ManikiFuncQuote(this,0));
-	this.funcs.add2Funcs(new ManikiFuncSean(this,0));
-	this.funcs.add2Funcs(new ManikiFuncFukusen(this,0));
-	this.funcs.makeInputArea();
 	this.MansikiTweetStyleKeyBind= new MansikiTweetStyleKeyBind(this);
+	$(document).bind("scroll",{self:this},this.onScroll);
+	this.funcs=new ManikiFunctions(this,0,this.MansikiTweetStyleKeyBind);
+	this.funcs.add2Funcs(new ManikiFuncPage(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new ManikiFuncKoma(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new ManikiFuncFukidashi(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new ManikiFuncSetting(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new ManikiFuncActor(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new ManikiFuncObject(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new ManikiFuncBackground(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new ManikiFuncSound(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new ManikiFuncEffect(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new ManikiFuncNalation(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new ManikiFuncQuote(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new ManikiFuncSean(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new ManikiFuncFukusen(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.makeInputArea();
 	this.currentFuncId="";
 	this.analizer= new MansikiTweetStateAnaliser(this);
 }
@@ -118,7 +118,7 @@ MansikiTweetStyleEditor.prototype={
 		me.clearButton.bind("click",{self:me},me.clearTweet);
 		$("#TMTweetMode").text(me.constMap.modAdd);
 		me.MansikiTweetStyleKeyBind.setKeyEventField(me.tweetHideTextarea);
-		me.field.bind("mousemove",{self:me},me.onFocusToCmd);
+		$("body").bind("mousemove",{self:me},me.onFocusToCmd);
 		me.cmdButtonsHilightInit();
 	}, 
 	cmdButtonsHilightInit:function(){
@@ -178,8 +178,8 @@ console.log("focus :"+me.tweetHideTextarea.val());
 	//--------------------------------------------------------------------
 	buildFuncs:function(me,idIndex,funcId){
 		funcId =funcId===undefined?me.currentFuncId:funcId;
-//alert("funcId:"+funcId+"/"+me.funcs.getFunc(funcId));
-		var func = me.funcs.getFunc(funcId).create(idIndex);
+console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.MansikiTweetStyleKeyBind);
+		var func = me.funcs.getFunc(funcId).create(idIndex,me.MansikiTweetStyleKeyBind);
 		func.text=me.tweets[idIndex];
 		me.tweetsFuncs[idIndex]=func;
 	},
@@ -188,18 +188,34 @@ console.log("focus :"+me.tweetHideTextarea.val());
 		var nowFunc = me.funcs.getFunc(me.currentFuncId);
 		if(func===undefined || func.Id!==nowFunc.Id){
 			delete me.tweetsFuncs[idIndex];
-			me.tweetsFuncs[idIndex] = nowFunc;
+			me.tweetsFuncs[idIndex] = nowFunc.create(idIndex,me.MansikiTweetStyleKeyBind);
 			return true;
 		}
 		return false;
 	},
 	//--------------------------------------------------------------------
 	curosrMoveUp:function(){
-		me.cursor--;
+		if(this.state.selected!==undefined){
+			return ;
+		}
+		this.cursor--;
+		if(this.cursor <0){
+			this.cursor=0;
+		}
+		this.initViewCursorObj({data:{self:this,idIndex:this.tweetIdMap[this.cursor],offsetY:0}});
 	},
 	curosrMoveDown:function(){
-		me.cursor++;
+		if(this.state.selected!==undefined){
+			return ;
+		}
+		this.cursor++;
+		var max=MansikiMapUtil.getMaxIndex(this.tweetIdMap);
+		if(this.cursor> max){
+			this.cursor = max;
+		}
+		this.initViewCursorObj({data:{self:this,idIndex:this.tweetIdMap[this.cursor],offsetY:0}});
 	},
+	//--------------------------------------------------------------------
 	addTweet:function(event){
 		var me= event.data.self;
 		me.funcs.addTweet();
@@ -215,6 +231,7 @@ console.log("addTweet idIndex:"+event.data.idIndex+"/me.cursor:"+me.cursor+"/me.
 				me.bredgeArea.val("");
 				me.funcs.clearTweet();
 				me.showCursor(me);
+				me.state.selected = undefined;
 			}else{//update
 				event.data.idIndex=me.state.selected;
 				me.updateTweet(event);
@@ -257,7 +274,7 @@ console.log("addTweet idIndex:"+event.data.idIndex+"/me.cursor:"+me.cursor+"/me.
 		me.cmdButtonsHilight({data:{self:me,id:func.getFullId()}});
 		me.state.selected = idIndex;
 		$("#TMTweetMode").text(me.constMap.modUpdate);
-		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:165}});
+		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
 	},
 	updateTweet:function(event){
 		var me = event.data.self;
@@ -282,6 +299,7 @@ console.log("addTweet idIndex:"+event.data.idIndex+"/me.cursor:"+me.cursor+"/me.
 console.log("AAA idIndex:"+idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.tweetIdMap.toSource());
 		if(me.state.selected===idIndex){
 			me.clearTweet(event);
+			me.state.selected = undefined;
 		}
 		me.tweetIdMap=MansikiMapUtil.del(me.tweetIdMap,idIndex);
 		me.cursor=MansikiMapUtil.getMaxIndex(me.tweetIdMap);
@@ -521,6 +539,12 @@ console.log("execBuildTweetBox idIndex:"+idIndex+"/me.tweets:"+me.tweets.toSourc
 	},
 	getViewList:function(){
 		return this.viewList;
+	},
+	getIdIndexByCousor:function(cursor){
+		return this.tweetIdMap[cursor];
+	},
+	getCurrentIdIndexByCousor:function(){
+		return this.getIdIndexByCousor(this.cursor);
 	}
 }
 var MansikiMapUtil={
@@ -632,7 +656,7 @@ console.log("del tmpCursor:"+newIndex+":"+tmpVal+"/targetIndex:"+targetIndex);
 	}
 }
 
-var ManikiFunctions=function(editor,idIndex,alfa){
+var ManikiFunctions=function(editor,idIndex,keyBindFunc){
 	this.editor = editor;
 	this.frame="";
 	this.nameLc="日本語名";
@@ -650,6 +674,8 @@ var ManikiFunctions=function(editor,idIndex,alfa){
 	this.indentClassPrefix="indent";
 	this.infoMap={};
 	this.isFormFocusd=false;
+	this.keyBindFunc = keyBindFunc;
+console.log("ManikiFunctions:keyBindFunc:"+keyBindFunc);
 	this.init();
 }
 
@@ -661,6 +687,7 @@ ManikiFunctions.prototype={
 		if(this.Funcs[id]===undefined){
 			return ;
 		}
+console.log("getFunc keyBindFuncLocal:"+this.keyBindFunc);
 		return this.Funcs[id];
 	},
 	init:function(){
@@ -672,8 +699,14 @@ ManikiFunctions.prototype={
 	isFocusOnForm:function(){
 		return this.isFormFocusd;
 	},
-	create:function(idIndex){
-		return new ManikiFunctions(this.editor,idIndex);
+	create:function(idIndex,keyBindFunc){
+console.log("AAAAcreate keyBindFuncLocal:"+keyBindFuncLocal);
+console.log("BBBBcreate keyBindFuncLocal:"+keyBindFuncLocal);
+console.log("CCCCcreate keyBindFuncLocal:"+keyBindFuncLocal);
+		this.keyBindFunc = this.keyBindFunc===undefined?this.editor.MansikiTweetStyleKeyBind:this.keyBindFunc;
+		var keyBindFuncLocal = keyBindFunc===undefined?this.keyBindFunc:keyBindFunc;
+console.log("create keyBindFuncLocal:"+keyBindFuncLocal);
+		return new ManikiFunctions(this.editor,idIndex,keyBindFuncLocal);
 	},
 	autoResize:function(event){
 		var me= event.data.self;
@@ -687,10 +720,12 @@ ManikiFunctions.prototype={
 	onFocus:function(event){
 		var me= event.data.self;
 		me.isFormFocusd=true;
+		me.keyBindFunc.bindActionToInputForm(me.tweetArea);
 	},
 	onBlur:function(event){
 		var me= event.data.self;
 		me.isFormFocusd=false;
+		me.keyBindFunc.unbindActionToInputForm(me.tweetArea);
 	},
 	makeInputArea:function(){
 		this.inputArea.empty();
@@ -808,7 +843,7 @@ console.log("doDrag top:"+top+"/y:"+y+"/start:"+start+"/diff:"+diff+"/height:"+h
 	}
 }
 
-var ManikiFuncTitle=function(editor,idIndex){
+var ManikiFuncTitle=function(editor,idIndex,keyBindFunc){
 	ManikiFunctions.apply(this, arguments);
 	this.nameLc="作品";
 	this.nameEn="Title";
@@ -820,11 +855,11 @@ var ManikiFuncTitle=function(editor,idIndex){
 }
 ManikiFuncTitle.prototype = new ManikiFunctions();
 //ManikiFuncPage.prototype.
-ManikiFuncTitle.prototype.create=function(idIndex){
-	return new ManikiFuncTitle(this.editor,idIndex);
+ManikiFuncTitle.prototype.create=function(idIndex,keyBindFunc){
+	return new ManikiFuncTitle(this.editor,idIndex,keyBindFunc);
 }
 
-var ManikiFuncPage=function(editor,idIndex){
+var ManikiFuncPage=function(editor,idIndex,keyBindFunc){
 	ManikiFunctions.apply(this, arguments);
 	this.nameLc="頁";
 	this.nameEn="Page";
@@ -836,11 +871,11 @@ var ManikiFuncPage=function(editor,idIndex){
 }
 ManikiFuncPage.prototype = new ManikiFunctions();
 //ManikiFuncPage.prototype.
-ManikiFuncPage.prototype.create=function(idIndex){
-	return new ManikiFuncPage(this.editor,idIndex);
+ManikiFuncPage.prototype.create=function(idIndex,keyBindFunc){
+	return new ManikiFuncPage(this.editor,idIndex,keyBindFunc);
 }
 
-var ManikiFuncKoma=function(editor,idIndex){
+var ManikiFuncKoma=function(editor,idIndex,keyBindFunc){
 	ManikiFunctions.apply(this, arguments);
 	this.nameLc="コマ";
 	this.nameEn="koma";
@@ -852,12 +887,12 @@ var ManikiFuncKoma=function(editor,idIndex){
 }
 ManikiFuncKoma.prototype = new ManikiFunctions();
 //ManikiFuncPage.prototype.
-ManikiFuncKoma.prototype.create=function(idIndex){
-	return new ManikiFuncKoma(this.editor,idIndex);
+ManikiFuncKoma.prototype.create=function(idIndex,keyBindFunc){
+	return new ManikiFuncKoma(this.editor,idIndex,keyBindFunc);
 }
 
 
-var ManikiFuncFukidashi=function(editor,idIndex){
+var ManikiFuncFukidashi=function(editor,idIndex,keyBindFunc){
 	ManikiFunctions.apply(this, arguments);
 	this.nameLc="噴き出し";
 	this.nameEn="Baloon";
@@ -869,12 +904,12 @@ var ManikiFuncFukidashi=function(editor,idIndex){
 }
 ManikiFuncFukidashi.prototype = new ManikiFunctions();
 //ManikiFuncPage.prototype.
-ManikiFuncFukidashi.prototype.create=function(idIndex){
-	return new ManikiFuncFukidashi(this.editor,idIndex);
+ManikiFuncFukidashi.prototype.create=function(idIndex,keyBindFunc){
+	return new ManikiFuncFukidashi(this.editor,idIndex,keyBindFunc);
 }
 
 
-var ManikiFuncSetting=function(editor,idIndex){
+var ManikiFuncSetting=function(editor,idIndex,keyBindFunc){
 	ManikiFunctions.apply(this, arguments);
 	this.nameLc="設定";
 	this.nameEn="Settings";
@@ -886,12 +921,12 @@ var ManikiFuncSetting=function(editor,idIndex){
 }
 ManikiFuncSetting.prototype = new ManikiFunctions();
 //ManikiFuncSetting.prototype.
-ManikiFuncSetting.prototype.create=function(idIndex){
-	return new ManikiFuncSetting(this.editor,idIndex);
+ManikiFuncSetting.prototype.create=function(idIndex,keyBindFunc){
+	return new ManikiFuncSetting(this.editor,idIndex,keyBindFunc);
 }
 
 
-var ManikiFuncActor=function(editor,idIndex){
+var ManikiFuncActor=function(editor,idIndex,keyBindFunc){
 	ManikiFunctions.apply(this, arguments);
 	this.nameLc="役者";
 	this.nameEn="Actor";
@@ -903,12 +938,12 @@ var ManikiFuncActor=function(editor,idIndex){
 }
 ManikiFuncActor.prototype = new ManikiFunctions();
 //ManikiFuncActor.prototype.
-ManikiFuncActor.prototype.create=function(idIndex){
-	return new ManikiFuncActor(this.editor,idIndex);
+ManikiFuncActor.prototype.create=function(idIndex,keyBindFunc){
+	return new ManikiFuncActor(this.editor,idIndex,keyBindFunc);
 }
 
 
-var ManikiFuncObject=function(editor,idIndex){
+var ManikiFuncObject=function(editor,idIndex,keyBindFunc){
 	ManikiFunctions.apply(this, arguments);
 	this.nameLc="小道具";
 	this.nameEn="Object";
@@ -920,12 +955,12 @@ var ManikiFuncObject=function(editor,idIndex){
 }
 ManikiFuncObject.prototype = new ManikiFunctions();
 //ManikiFuncObject.prototype.
-ManikiFuncObject.prototype.create=function(idIndex){
-	return new ManikiFuncObject(this.editor,idIndex);
+ManikiFuncObject.prototype.create=function(idIndex,keyBindFunc){
+	return new ManikiFuncObject(this.editor,idIndex,keyBindFunc);
 }
 
 
-var ManikiFuncBackground=function(editor,idIndex){
+var ManikiFuncBackground=function(editor,idIndex,keyBindFunc){
 	ManikiFunctions.apply(this, arguments);
 	this.nameLc="背景";
 	this.nameEn="Background";
@@ -937,12 +972,12 @@ var ManikiFuncBackground=function(editor,idIndex){
 }
 ManikiFuncBackground.prototype = new ManikiFunctions();
 //ManikiFuncBackground.prototype.
-ManikiFuncBackground.prototype.create=function(idIndex){
-	return new ManikiFuncBackground(this.editor,idIndex);
+ManikiFuncBackground.prototype.create=function(idIndex,keyBindFunc){
+	return new ManikiFuncBackground(this.editor,idIndex,keyBindFunc);
 }
 
 
-var ManikiFuncSound=function(editor,idIndex){
+var ManikiFuncSound=function(editor,idIndex,keyBindFunc){
 	ManikiFunctions.apply(this, arguments);
 	this.nameLc="擬音";
 	this.nameEn="Sound";
@@ -954,12 +989,12 @@ var ManikiFuncSound=function(editor,idIndex){
 }
 ManikiFuncSound.prototype = new ManikiFunctions();
 //ManikiFuncSound.prototype.
-ManikiFuncSound.prototype.create=function(idIndex){
-	return new ManikiFuncSound(this.editor,idIndex);
+ManikiFuncSound.prototype.create=function(idIndex,keyBindFunc){
+	return new ManikiFuncSound(this.editor,idIndex,keyBindFunc);
 }
 
 
-var ManikiFuncEffect=function(editor,idIndex){
+var ManikiFuncEffect=function(editor,idIndex,keyBindFunc){
 	ManikiFunctions.apply(this, arguments);
 	this.nameLc="効果";
 	this.nameEn="Effect";
@@ -971,12 +1006,12 @@ var ManikiFuncEffect=function(editor,idIndex){
 }
 ManikiFuncEffect.prototype = new ManikiFunctions();
 //ManikiFuncEffect.prototype.
-ManikiFuncEffect.prototype.create=function(idIndex){
-	return new ManikiFuncEffect(this.editor,idIndex);
+ManikiFuncEffect.prototype.create=function(idIndex,keyBindFunc){
+	return new ManikiFuncEffect(this.editor,idIndex,keyBindFunc);
 }
 
 
-var ManikiFuncNalation=function(editor,idIndex){
+var ManikiFuncNalation=function(editor,idIndex,keyBindFunc){
 	ManikiFunctions.apply(this, arguments);
 	this.nameLc="説明";
 	this.nameEn="Settings";
@@ -988,12 +1023,12 @@ var ManikiFuncNalation=function(editor,idIndex){
 }
 ManikiFuncNalation.prototype = new ManikiFunctions();
 //ManikiFuncNalation.prototype.
-ManikiFuncNalation.prototype.create=function(idIndex){
-	return new ManikiFuncNalation(this.editor,idIndex);
+ManikiFuncNalation.prototype.create=function(idIndex,keyBindFunc){
+	return new ManikiFuncNalation(this.editor,idIndex,keyBindFunc);
 }
 
 
-var ManikiFuncQuote=function(editor,idIndex){
+var ManikiFuncQuote=function(editor,idIndex,keyBindFunc){
 	ManikiFunctions.apply(this, arguments);
 	this.nameLc="注釈";
 	this.nameEn="Quote";
@@ -1005,12 +1040,12 @@ var ManikiFuncQuote=function(editor,idIndex){
 }
 ManikiFuncQuote.prototype = new ManikiFunctions();
 //ManikiFuncQuote.prototype.
-ManikiFuncQuote.prototype.create=function(idIndex){
-	return new ManikiFuncQuote(this.editor,idIndex);
+ManikiFuncQuote.prototype.create=function(idIndex,keyBindFunc){
+	return new ManikiFuncQuote(this.editor,idIndex,keyBindFunc);
 }
 
 
-var ManikiFuncSean=function(editor,idIndex){
+var ManikiFuncSean=function(editor,idIndex,keyBindFunc){
 	ManikiFunctions.apply(this, arguments);
 	this.nameLc="場所";
 	this.nameEn="Sean";
@@ -1022,12 +1057,12 @@ var ManikiFuncSean=function(editor,idIndex){
 }
 ManikiFuncSean.prototype = new ManikiFunctions();
 //ManikiFuncSean.prototype.
-ManikiFuncSean.prototype.create=function(idIndex){
-	return new ManikiFuncSean(this.editor,idIndex);
+ManikiFuncSean.prototype.create=function(idIndex,keyBindFunc){
+	return new ManikiFuncSean(this.editor,idIndex,keyBindFunc);
 }
 
 
-var ManikiFuncFukusen=function(editor,idIndex){
+var ManikiFuncFukusen=function(editor,idIndex,keyBindFunc){
 	ManikiFunctions.apply(this, arguments);
 	this.nameLc="伏線";
 	this.nameEn="Settings";
@@ -1039,8 +1074,8 @@ var ManikiFuncFukusen=function(editor,idIndex){
 }
 ManikiFuncFukusen.prototype = new ManikiFunctions();
 //ManikiFuncFukusen.prototype.
-ManikiFuncFukusen.prototype.create=function(idIndex){
-	return new ManikiFuncFukusen(this.editor,idIndex);
+ManikiFuncFukusen.prototype.create=function(idIndex,keyBindFunc){
+	return new ManikiFuncFukusen(this.editor,idIndex,keyBindFunc);
 }
 
 
@@ -1146,19 +1181,54 @@ MansikiTweetStyleKeyBind=function(editor){
 	this.editor=editor;
 	this.eventField ;
 	this.nowTime = new Date().getTime();
+	this.escapeKeyInput=["key9","key116"];
+	this.escapeKeyMain=["key116"];
 }
 MansikiTweetStyleKeyBind.prototype ={
 	setKeyEventField:function(eventField){
 		this.eventField  = eventField;
+		this.eventField.unbind('keydown');
+		this.eventField.bind('keydown',{self:this,escapeKeyList:this.escapeKeyMain},this.blockBubbleEvent);
 		this.eventField.unbind('keyup');
 		this.eventField.bind('keyup',{self:this},this.doMainKeyEvent);
 	}
+	,isEscapeKeyInput:function(event){
+		var keyCode = event.keyCode;
+		var escapeKeyList = event.data.escapeKeyList;
+		var shiftKey = event.shiftKey===true?"sft":"";
+		var ctrlKey = event.ctrlKey===true?"ctl":"";
+		var key = shiftKey.length >0 || ctrlKey.length >0 ?"":"key";
+		var keyInputed = shiftKey+ctrlKey+key+keyCode;
+		for(var i = 0;i<escapeKeyList.length;i++){
+			if(escapeKeyList[i]===keyInputed){
+				return true;
+			}
+		}
+		return false;
+	}
 	,blockBubbleEvent:function(event){
+		var me = event.data.self;
+		if(me.isEscapeKeyInput(event)===true){
+			return ;
+		}
 		event.returnValue=false;//伝播は防御
 		event.preventDefault();//伝播は防御
 		event.stopPropagation();//伝播は防御
 	}
-	,doMainKeyEvent:function(event){
+	,bindActionToInputForm:function(target){
+		if(target!==undefined){
+			target.unbind('keyup');
+			target.bind('keyup',{self:this},this.doInputFormKeyEvent);
+			target.unbind('keydown');
+			target.bind('keydown',{self:this,escapeKeyList:this.escapeKeyInput},this.blockBubbleEvent);
+		}
+	}
+	,unbindActionToInputForm:function(target){
+		if(target!==undefined){
+			target.unbind('keyup');
+		}
+	}
+	,doInputFormKeyEvent:function(event){
 		var me = event.data.self;
 		var nowTime = new Date().getTime();
 		me.eventField.css("cursor","wait");//  
@@ -1172,6 +1242,7 @@ MansikiTweetStyleKeyBind.prototype ={
 		var y =event.clientY;
 		if(keyCode===9 ){//Tab
 			me.blockBubbleEvent(event);
+			me.eventField.focus();
 		}
 		
 		console.log("keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modifiers+"/event.ctrlKey:"+event.ctrlKey);
@@ -1186,49 +1257,83 @@ MansikiTweetStyleKeyBind.prototype ={
 			
 		}else if(isShiftKey===false && isCtrlKey===true ){
 			if(keyCode=="85" ){//u 
-				me.blockBubbleEvent(event);
 				me.undo();
 			}else if(keyCode=="82" ){//r 
-				me.blockBubbleEvent(event);
 				me.redo();
 			}else if(keyCode=="8" ){//delete 
-				me.blockBubbleEvent(event);
 				me.cursorDelete();
 			}else if(keyCode=="69" ){//e
-				me.blockBubbleEvent(event);
 				me.clear();
 			}else if(keyCode=="38" ){//up
-				me.blockBubbleEvent(event);
 				me.moveUp();
 			}else if(keyCode=="40" ){//down
-				me.blockBubbleEvent(event);
 				me.moveDown();
 			}else if(keyCode=="13" ){//enter
-				me.blockBubbleEvent(event);
 				me.addupdate();
 			}else if(keyCode=="83" ){//s
-				me.blockBubbleEvent(event);
+				me.cursorSelect();
+			}else if(keyCode=="78" ){//n
+				me.cursorSelect();
+			}
+		}else if(isShiftKey===true && isCtrlKey===false ){
+			
+		}
+	}
+	,doMainKeyEvent:function(event){
+		event.returnValue=false;//伝播は防御
+		event.preventDefault();//伝播は防御
+		event.stopPropagation();//伝播は防御	
+		var me = event.data.self;
+		var nowTime = new Date().getTime();
+		me.eventField.css("cursor","wait");//  
+		me.keyUpCount ++;
+		var keyCode = event.keyCode;
+		var isShiftKey = event.shiftKey;
+		var isCtrlKey = event.ctrlKey;
+		var wicth= event.which;
+		var modifiers=event.modifiers;
+		var x =event.clientX;
+		var y =event.clientY;
+		if(keyCode===9 ){//Tab
+			me.blockBubbleEvent(event);
+			me.eventField.focus();
+		}
+		
+		console.log("keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modifiers+"/event.ctrlKey:"+event.ctrlKey);
+		
+
+		if(keyCode=="38" ){//up
+			me.cursorUp();
+		}else if(keyCode=="40" ){//down
+			me.cursorDown();
+		}else if(keyCode=="37" ){//left
+		}else if(keyCode=="39" ){//right
+			
+		}else if(isShiftKey===false && isCtrlKey===true ){
+			if(keyCode=="85" ){//z 
+				me.undo();
+			}else if(keyCode=="82" ){//y
+				me.redo();
+			}else if(keyCode=="8" ){//delete 
+				me.cursorDelete();
+			}else if(keyCode=="69" ){//e
+				me.clear();
+			}else if(keyCode=="38" ){//up
+				me.moveUp();
+			}else if(keyCode=="40" ){//down
+				me.moveDown();
+			}else if(keyCode=="13" ){//enter
+				me.addupdate();
+			}else if(keyCode=="83" ){//s
+				me.cursorSelect();
+			}else if(keyCode=="78" ){//n
 				me.cursorSelect();
 			}
 		}else if(isShiftKey===true && isCtrlKey===false ){
 			
 		}
 		
-		
 		/**
-			if(keyCode=="38" ){//up
-			}else if(keyCode=="40" ){//down
-			}else if(keyCode=="37" ){//left
-			}else if(keyCode=="39" ){//right
-			}else if(keyCode=="8" ){//delete
-			} if(keyCode=="13" ){//enter
-			} if(keyCode=="8" ){//delete
-			}else if(keyCode=="8"){
-			}else if(event.shiftKey===true ){
-			}
-			if(event.shiftKey===false && event.ctrlKey===false ){//SHIFT押し以外
-			}else{
-			}
 			if(keyCode=="67" && event.ctrlKey===true){//Copy
 			}else if(keyCode=="86" && event.ctrlKey===true){//peast
 			}else if(keyCode=="88" && event.ctrlKey===true){//Cut
@@ -1238,35 +1343,52 @@ MansikiTweetStyleKeyBind.prototype ={
 		me.eventField.css("cursor","text");
 	}
 	,cursorUp:function(){
-		console.log("cursorUp");
+		console.log("cursorUp cursor:"+this.editor.cursor);
+		this.editor.curosrMoveUp();
 	}
 	,cursorDown:function(){
-		console.log("cursorDown");
+		console.log("cursorDown cursor:"+this.editor.cursor);
+		this.editor.curosrMoveDown();
 	}
 	,cursorDelete:function(){
-		console.log("cursorDelete");
+		console.log("cursorDelete cursor:"+this.editor.cursor);
 	}
 	,cursorSelect:function(){
-		console.log("cursorSelect");
+		console.log("cursorSelect cursor:"+this.editor.cursor);
+		var idIndex =this.editor.getCurrentIdIndexByCousor();
+		this.editor.loadTweet({data:{self:this.editor,idIndex:idIndex}});
 	}
 	,clear:function(){
-		console.log("clear");
+		console.log("clear cursor:"+this.editor.cursor);
 		this.editor.clearTweet({data:{self:this.editor}});
 	}
 	,moveUp:function(){
-		console.log("moveUp");
+		console.log("moveUp cursor:"+this.editor.cursor);
+		var selected  = this.editor.state.selected;
+		if(selected!==undefined){
+			this.editor.moveTweet({data:{self:this.editor,idIndex:selected,direct:"up"}});
+		}
 	}
 	,moveDown:function(){
-		console.log("moveDown");
+		console.log("moveDown cursor:"+this.editor.cursor);
+		var selected  = this.editor.state.selected;
+		if(selected!==undefined){
+			this.editor.moveTweet({data:{self:this.editor,idIndex:selected,direct:"down"}});
+		}
 	}
 	,addupdate:function(){
-		console.log("addupdate");
+		console.log("addupdate cursor:"+this.editor.cursor);
+		this.editor.addTweet({data:{self:this.editor}});
 	}
 	,undo:function(){
-		console.log("undo");
+		console.log("undo cursor:"+this.editor.cursor);
 	}
 	,redo:function(){
-		console.log("redo");
+		console.log("redo cursor:"+this.editor.cursor);
+	}
+	,newTweet:function(){
+		console.log("newTweet cursor:"+this.editor.cursor);
+		this.editor.clearTweet({data:{self:this.editor}});
 	}
 }
 
