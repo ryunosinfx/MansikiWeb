@@ -38,7 +38,6 @@ var MansikiModeConst={
 	,koma:{color:"#3C3C50"}
 
 }
-
 var MansikiTweetStyleEditor= function(id, width,height,ancer){
 	this.keyMain="MansikiTweetStyleEditor_keyMain_"+id;
 	this.doc;
@@ -125,28 +124,41 @@ MansikiTweetStyleEditor.prototype={
 		me.cmdButtonsHilightInit();
 	}, 
 	cmdButtonsHilightInit:function(){
-		var bottons = $(".commands div");
+		var buttons = $(".commands>div");
 		var firstId;
-		for(var i=0;i<bottons.length;i++){
-			var button = bottons.eq(i);
-			id= button.attr("id");
+		for(var i=0;i<buttons.length;i++){
+			var id= this.cmdButtonInfoInit(buttons.eq(i));
 			if(firstId===undefined){
 				firstId = id;
 			}
-//alert(button.length+"/i:"+i+"/id:"+id+"/"+button.css("background-color"));
-			var buttonState = {};
-			this.cmdButtonsState[id] = buttonState;
-			buttonState["border"]=button.css("border");
-			buttonState["color"]=button.css("color");
-			buttonState["background-color"]=button.css("background-color");
-			button.bind("click",{self:this,id:id},this.cmdButtonsHilight);
+//alert(buttons.eq(i).length+"/i:"+i+"/id:"+id+"/"+buttons.eq(i).css("background-color")+"/"+this.cmdButtonsState[id] );
 		}
 		//first selected
 		this.cmdButtonsHilight({data:{self:this,id:firstId}});
 	},
+	cmdButtonInfoInit:function(button){
+		var id= button.attr("id");
+		if(id===undefined){
+		    return ;
+		}
+//alert(button.length+"/i:"+0+"/id:"+id+"/"+button.css("background-color"));
+		var buttonState = {};
+		this.cmdButtonsState[id] = buttonState;
+		buttonState["border"]=button.css("border");
+		buttonState["color"]=button.css("color");
+		buttonState["background-color"]=button.css("background-color");
+		button.bind("click",{self:this,id:id},this.cmdButtonsHilight);
+		var func = this.funcs.getFunc(id);
+		var name = func.nameLc;
+		var funcId = func.Id;
+		var cmd = this.MansikiTweetStyleKeyBind.keyBindViewFuncs[funcId];
+		button.children("div.TWFuncName").eq(0).text(name);
+		button.children("div.TWFuncCommand").eq(0).text(cmd);
+	    return id;
+	},
 	cmdButtonsHilight:function(event){
 		var me= event.data.self;
-		var bottons = $(".commands div");
+		var bottons = $(".commands>div");
 		for(var i=0;i<bottons.length;i++){
 			var button = bottons.eq(i);
 			id= button.attr("id");
@@ -177,6 +189,10 @@ MansikiTweetStyleEditor.prototype={
 console.log("focus :"+me.tweetHideTextarea.val());
 			me.tweetHideTextarea.val("");
 			me.state.selected=undefined;
+			for(var cursor in me.tweetIdMap){
+				var tmpId = me.constMap.tweetIdPrefix+me.tweetIdMap[cursor];
+				$("#"+tmpId).removeClass("TwselectedBox");
+			}
 		}
 	},
 	//--------------------------------------------------------------------
@@ -231,7 +247,7 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 				me.tweetIdCount++;
 				event.data.idIndex=me.tweetIdCount;
 				me.insertTweet(event);
-console.log("addTweet idIndex:"+event.data.idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.tweetIdMap.toSource());
+//console.log("addTweet idIndex:"+event.data.idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.tweetIdMap.toSource());
 				me.cursor++;
 				me.bredgeArea.val("");
 				me.funcs.clearTweet();
@@ -269,9 +285,9 @@ console.log("addTweet idIndex:"+event.data.idIndex+"/me.cursor:"+me.cursor+"/me.
 		var tweetBox=me.getTweetBoxObj(me,idIndex);
 		for(var cursor in me.tweetIdMap){
 			var tmpId = me.constMap.tweetIdPrefix+me.tweetIdMap[cursor];
-			$("#"+tmpId).css("box-shadow","0px");
+			$("#"+tmpId).removeClass("TwselectedBox");
 		}
-		tweetBox.css("box-shadow","20px");
+		tweetBox.addClass("TwselectedBox");
 		var text= me.tweets[idIndex];
 		var func = me.tweetsFuncs[idIndex];
 		me.bredgeArea.val(text);
@@ -299,9 +315,10 @@ console.log("addTweet idIndex:"+event.data.idIndex+"/me.cursor:"+me.cursor+"/me.
 	deleteTweet:function(event){
 		var me= event.data.self;
 		var idIndex = event.data.idIndex;
+		var id = me.constMap.tweetIdPrefix+idIndex;
 		delete me.tweets[idIndex] ;
 		delete me.tweetsFuncs[idIndex];
-console.log("AAA idIndex:"+idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.tweetIdMap.toSource());
+//console.log("AAA idIndex:"+idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.tweetIdMap.toSource());
 		if(me.state.selected===idIndex){
 			me.clearTweet(event);
 			me.state.selected = undefined;
@@ -310,7 +327,7 @@ console.log("AAA idIndex:"+idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.
 		me.cursor=MansikiMapUtil.getMaxIndex(me.tweetIdMap);
 		me.getTweetBoxObj(me,idIndex).parent().children("#"+id).eq(0).remove();
 		me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor]}});
-console.log("idIndex:"+idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.tweetIdMap.toSource());
+//console.log("idIndex:"+idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.tweetIdMap.toSource());
 		me.rebuildAll(me);
 	},
 	unionTweet:function(event){
@@ -344,7 +361,7 @@ console.log("idIndex:"+idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.twee
 			}
 		}
 		me.tweetIdMap = newMap;
-console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"/cursor:"+cursor+"/offset:"+offset+"/oldMap:"+oldMap.toSource());
+//console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"/cursor:"+cursor+"/offset:"+offset+"/oldMap:"+oldMap.toSource());
 		if(subject !== undefined){
 			me.cursor=cursor+offset;
 			var subjectId = me.constMap.tweetIdPrefix+subject;
@@ -392,25 +409,36 @@ console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"
 	initViewCursorObj:function(event){
 		var me= event.data.self;
 		var idIndex = event.data.idIndex;
-		var offsetY = event.data.offsetY===undefined?0:event.data.offsetY;;
+		var offsetY = event.data.offsetY===undefined?0:event.data.offsetY;
+		var scrolltop = $("body").scrollTop()*1;
+		var topToSet = 0;
+		var clientHeight = $("body").get(0).clientHeight;
+		var height = 0;
 		if(me.state.selected ===undefined || idIndex===me.state.selected ){
 			var target = me.getTweetBoxObj(me,idIndex);
 			if(target.length<1){return;}
-	//console.log("aaaa  /id:"+id+"/target:"+target.length+"/me.cursor:"+me.cursor);
+//console.log("aaaa  initViewCursorObj /id:"+id+"/target:"+target.length+"/me.cursor:"+me.cursor+"/clientHeight:"+clientHeight);
 			var top = target.position().top;
 			var left = target.position().left;
-			var height = target.css("height").replace("px","")*1;
+			height = target.css("height").replace("px","")*1;
 			if(offsetY===999){
 				//height=height;
 				offsetY=-height;
 			}
 	//console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/id:"+id+"/offsetY:"+offsetY);
 			height+=(-height-offsetY);
-
-			$("#svgAreaArrow").css("top",(top*1+height)).css("left",left);
+			topToSet = (top*1+height);
+			
+			$("#svgAreaArrow").css("top",topToSet).css("left",left);
 			me.cursor=MansikiMapUtil.getKey(me.tweetIdMap,idIndex);
 			me.showCursor(me);
 		}
+		if(topToSet < scrolltop){
+		    scrolltop = topToSet-20;
+		}else if (topToSet > clientHeight+scrolltop-20){
+		    scrolltop = topToSet - clientHeight +20 + height;
+		}
+		$("body").scrollTop(scrolltop);
 	},
 	clearTweet:function(event){
 		var me= event.data.self;
@@ -480,7 +508,7 @@ console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"
 		return me.execBuildTweetBox(me,idIndex);
 	},
 	execBuildTweetBox:function(me,idIndex){
-console.log("execBuildTweetBox idIndex:"+idIndex+"/me.tweets:"+me.tweets.toSource()+"/me.tweetIdMap:"+me.tweetIdMap.toSource()+"/text:"+me.tweets[idIndex]);
+//console.log("execBuildTweetBox idIndex:"+idIndex+"/me.tweets:"+me.tweets.toSource()+"/me.tweetIdMap:"+me.tweetIdMap.toSource()+"/text:"+me.tweets[idIndex]);
 		var text = me.tweets[idIndex];
 		var id=me.constMap.tweetIdPrefix+idIndex;
 		var tweetBox=$("<div id='"+id+"'class='TMtweetBox' index='"+idIndex+"'>"+"</div>");
@@ -570,10 +598,10 @@ var MansikiMapUtil={
 		var oldMap = map;
 		var newMap ={};
 		var hasProp =false;
-console.log("after index:"+index+"/value:"+value);
+//console.log("after index:"+index+"/value:"+value);
 		for(var tmpCursor in oldMap){
 			var offset = 0;
-console.log("after index:"+index+"/tmpCursor:"+tmpCursor);
+//console.log("after index:"+index+"/tmpCursor:"+tmpCursor);
 			if(tmpCursor*1>=index){
 				offset = 1;
 			}
@@ -591,21 +619,24 @@ console.log("after index:"+index+"/tmpCursor:"+tmpCursor);
 		for(var tmpCursor in oldMap){
 			var tmpVal = oldMap [tmpCursor];
 			if(value*1===tmpVal*1){
-				targetIndex = tmpCursor;
+				targetIndex = tmpCursor*1;
 				break;
 			}
 		}
-console.log("del targetIndex:"+targetIndex);
+//console.log("del targetIndex:"+targetIndex);
 		for(var tmpCursor in oldMap){
 			var newIndex = tmpCursor*1;
 			var tmpVal = oldMap [newIndex];
-console.log("del tmpCursor:"+newIndex+":"+tmpVal+"/targetIndex:"+targetIndex);
-			if(targetIndex < newIndex && newIndex>0){
+//console.log("del tmpCursor:"+newIndex+":"+tmpVal+"/targetIndex:"+targetIndex);
+			if(targetIndex*1 === newIndex*1 ){
+			    //skip
+			}else if(targetIndex*1 < newIndex && newIndex>0){
 				newMap[(newIndex-1)] =tmpVal;
 			}else if(targetIndex !== newIndex){
 				newMap[(newIndex)] = tmpVal;
 			}
 		}
+//console.log("newMap:"+newMap.toSource());
 		return newMap;
 	},
 	add:function(map,value){
@@ -690,7 +721,11 @@ ManikiFunctions.prototype={
 	},
 	getFunc:function(id){
 		if(this.Funcs[id]===undefined){
-			return ;
+		    var fullId = this.idPrefix+id+this.idSufix
+			if(this.Funcs[fullId]===undefined){
+			    return ;
+			}
+		    return this.Funcs[fullId];
 		}
 console.log("getFunc keyBindFuncLocal:"+this.keyBindFunc);
 		return this.Funcs[id];
@@ -705,9 +740,6 @@ console.log("getFunc keyBindFuncLocal:"+this.keyBindFunc);
 		return this.isFormFocusd;
 	},
 	create:function(idIndex,keyBindFunc){
-console.log("AAAAcreate keyBindFuncLocal:"+keyBindFuncLocal);
-console.log("BBBBcreate keyBindFuncLocal:"+keyBindFuncLocal);
-console.log("CCCCcreate keyBindFuncLocal:"+keyBindFuncLocal);
 		this.keyBindFunc = this.keyBindFunc===undefined?this.editor.MansikiTweetStyleKeyBind:this.keyBindFunc;
 		var keyBindFuncLocal = keyBindFunc===undefined?this.keyBindFunc:keyBindFunc;
 console.log("create keyBindFuncLocal:"+keyBindFuncLocal);
@@ -1137,6 +1169,7 @@ MansikiTweetStateAnaliser.prototype ={
 			if(idIndex===undefined){
 				continue;
 			}
+console.log("i:"+i+"idIndex:"+idIndex);
 			var rowStat = {};
 			var func = tweetsFuncs[idIndex];
 			var id = func.Id;
@@ -1191,7 +1224,22 @@ MansikiTweetStyleKeyBind=function(editor){
 	
 	this.keyBindViewInput={MOVEUP:"Ctrl+up",MOVEDOWN:"Ctrl+down",UPDATE:"Ctrl+Entr",FOCUSOUT:"Esc",CLEAR:"Ctrl+E"};
 	this.keyBindViewMain={UP:"up",DOWN:"down",LOAD:"space",CLEAR:"Ctrl+E",DELETE:"Ctrl+Del"};
-	this.keyBindViewFuncs={PAGE:"Ctl+1",PAGE:"Ctl+1",LOAD:"space",CLEAR:"Ctrl+E",DELETE:"Ctrl+Del"};
+	this.keyBindViewFuncs ={};
+	this.keyBindViewFuncs[SUBTITEL] = "Ctl+<";
+	this.keyBindViewFuncs[NONBLE] = "Ctl+>";
+	this.keyBindViewFuncs[PAGE] = "Ctl+1";
+	this.keyBindViewFuncs[KOMA] = "Ctl+2";
+	this.keyBindViewFuncs[FUKIDASHI] = "Ctl+3";
+	this.keyBindViewFuncs[SETTING] = "Ctl+4";
+	this.keyBindViewFuncs[NALATION] = "Ctl+5";
+	this.keyBindViewFuncs[OBJECT] = "Ctl+6";
+	this.keyBindViewFuncs[BACKGROUND] = "Ctl+7";
+	this.keyBindViewFuncs[SOUND] = "Ctl+8";
+	this.keyBindViewFuncs[EFFECT] = "Ctl+9";
+	this.keyBindViewFuncs[QUOTE] = "Ctl+0";
+	this.keyBindViewFuncs[SEAN] = "Ctl+q";
+	this.keyBindViewFuncs[ACTOR] = "Ctl+i";
+	this.keyBindViewFuncs[FUKUSEN] = "Ctl+w";
 }
 MansikiTweetStyleKeyBind.prototype ={
 	setKeyEventField:function(eventField){
@@ -1255,11 +1303,8 @@ MansikiTweetStyleKeyBind.prototype ={
 		if(keyCode===9 ){//Tab
 			me.blockBubbleEvent(event);
 			me.eventField.focus();
-		}
-		
-		console.log("doInputFormKeyEvent keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modifiers+"/event.ctrlKey:"+event.ctrlKey);
-		
-
+		}		
+console.log("doInputFormKeyEvent keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modifiers+"/event.ctrlKey:"+event.ctrlKey);
 		if(keyCode=="38" ){//up
 		}else if(keyCode=="40" ){//down
 		}else if(keyCode=="37" ){//left
@@ -1283,6 +1328,32 @@ MansikiTweetStyleKeyBind.prototype ={
 				me.addupdate();
 			}else if(keyCode=="77" ){//m
 				me.moveCursorToOuter();
+			}else if(keyCode=="49" ){//1
+				me.callCmdButtonsHilight(PAGE);
+			}else if(keyCode=="50" ){//2
+				me.callCmdButtonsHilight(KOMA);
+			}else if(keyCode=="51" ){//3
+				me.callCmdButtonsHilight(FUKIDASHI);
+			}else if(keyCode=="52" ){//4
+				me.callCmdButtonsHilight(SETTING);
+			}else if(keyCode=="53" ){//5
+				me.callCmdButtonsHilight(NALATION);
+			}else if(keyCode=="54" ){//6
+				me.callCmdButtonsHilight(OBJECT);
+			}else if(keyCode=="55" ){//7
+				me.callCmdButtonsHilight(BACKGROUND);
+			}else if(keyCode=="56" ){//8
+				me.callCmdButtonsHilight(SOUND);
+			}else if(keyCode=="57" ){//9
+				me.callCmdButtonsHilight(EFFECT);
+			}else if(keyCode=="48" ){//0
+				me.callCmdButtonsHilight(QUOTE);
+			}else if(keyCode=="81" ){//q
+				me.callCmdButtonsHilight(SEAN);
+			}else if(keyCode=="73" ){//i
+				me.callCmdButtonsHilight(ACTOR);
+			}else if(keyCode=="87" ){//w
+				me.callCmdButtonsHilight(FUKUSEN);
 			}
 		}else if(isShiftKey===true && isCtrlKey===false ){
 			
@@ -1304,10 +1375,7 @@ MansikiTweetStyleKeyBind.prototype ={
 			me.blockBubbleEvent(event);
 			me.eventField.focus();
 		}
-		
-		console.log("doMainKeyEvent keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modifiers+"/event.ctrlKey:"+event.ctrlKey);
-		
-
+console.log("doMainKeyEvent keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modifiers+"/event.ctrlKey:"+event.ctrlKey);
 		if(keyCode=="38" ){//up
 			me.cursorUp();
 		}else if(keyCode=="40" ){//down
@@ -1336,6 +1404,32 @@ MansikiTweetStyleKeyBind.prototype ={
 				me.cursorSelect();
 			}else if(keyCode=="78" ){//n
 				me.clear();
+			}else if(keyCode=="49" ){//1
+				me.callCmdButtonsHilight(PAGE);
+			}else if(keyCode=="50" ){//2
+				me.callCmdButtonsHilight(KOMA);
+			}else if(keyCode=="51" ){//3
+				me.callCmdButtonsHilight(FUKIDASHI);
+			}else if(keyCode=="52" ){//4
+				me.callCmdButtonsHilight(SETTING);
+			}else if(keyCode=="53" ){//5
+				me.callCmdButtonsHilight(NALATION);
+			}else if(keyCode=="54" ){//6
+				me.callCmdButtonsHilight(OBJECT);
+			}else if(keyCode=="55" ){//7
+				me.callCmdButtonsHilight(BACKGROUND);
+			}else if(keyCode=="56" ){//8
+				me.callCmdButtonsHilight(SOUND);
+			}else if(keyCode=="57" ){//9
+				me.callCmdButtonsHilight(EFFECT);
+			}else if(keyCode=="48" ){//0
+				me.callCmdButtonsHilight(QUOTE);
+			}else if(keyCode=="81" ){//q
+				me.callCmdButtonsHilight(SEAN);
+			}else if(keyCode=="73" ){//i
+				me.callCmdButtonsHilight(ACTOR);
+			}else if(keyCode=="87" ){//w
+				me.callCmdButtonsHilight(FUKUSEN);
 			}
 		}else if(isShiftKey===true && isCtrlKey===false ){
 			
@@ -1360,6 +1454,8 @@ MansikiTweetStyleKeyBind.prototype ={
 	}
 	,cursorDelete:function(){
 		console.log("cursorDelete cursor:"+this.editor.cursor);
+		var idIndex =this.editor.getCurrentIdIndexByCousor();
+		this.editor.deleteTweet({data:{self:this.editor,idIndex:idIndex}});
 	}
 	,cursorSelect:function(){
 		console.log("cursorSelect cursor:"+this.editor.cursor);
@@ -1402,6 +1498,10 @@ MansikiTweetStyleKeyBind.prototype ={
 		console.log("coursorMovable cursor:"+this.editor.cursor);
 		this.editor.clearTweet({data:{self:this.editor}});
 		this.editor.onFocusToCmd({data:{self:this.editor}});
+	},
+	callCmdButtonsHilight:function(funcId){
+	    var func = this.editor.funcs.getFunc(funcId);
+	    this.editor.cmdButtonsHilight({data:{self:this.editor,id:func.getFullId()}});
 	}
 }
 

@@ -197,6 +197,25 @@ div.tweetTab p{
     	inset -1px -1pxrgba(255, 255, 255, 0.5)
     ;
 }
+div.TWFuncIcon{
+	width:18px;
+	height:20px;
+	float:left;
+	
+}
+div.TWFuncChar{
+	width:18px;
+	height:20px;
+	float:left;
+}
+div.TWFuncName,div.TWFuncCommand{
+	height:10px;
+	width:38px;
+	float:left;
+	font-size:9px;
+	line-height:10px;
+}
+
 #addPageIcon{
 	background-color: rgb(51, 204, 255);
 }
@@ -424,6 +443,10 @@ div.tweetList {
 	opacity:0.2;
 	z-index:502;
 }
+.TwselectedBox{
+	border-color:black;
+}
+
 .tweetBoxCmd{
 	width:250px;
 	margin-left:250px;
