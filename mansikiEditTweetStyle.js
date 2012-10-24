@@ -146,9 +146,10 @@ MansikiTweetStyleEditor.prototype={
 		this.cmdButtonsState[id] = buttonState;
 		buttonState["border"]=button.css("border");
 		buttonState["color"]=button.css("color");
-		buttonState["background-color"]=button.css("background-color");
 		button.bind("click",{self:this,id:id},this.cmdButtonsHilight);
 		var func = this.funcs.getFunc(id);
+		button.css("background-color",func.color);
+		buttonState["background-color"]=button.css("background-color");
 		var name = func.nameLc;
 		var funcId = func.Id;
 		var cmd = this.MansikiTweetStyleKeyBind.keyBindViewFuncs[funcId];
@@ -164,11 +165,14 @@ MansikiTweetStyleEditor.prototype={
 			id= button.attr("id");
 			var buttonState = me.cmdButtonsState[id] ;
 			button.css("border",buttonState["border"]).css("color",buttonState["color"]).css("background-color",buttonState["background-color"]);
+			button.css("font-weight","nomal");
 		}
 		var id= event.data.id;
 		var buttonState = me.cmdButtonsState[id];
 		//alert("id:"+id);
 		$("#"+id).css("border-color",buttonState["background-color"]);
+		$("#"+id).css("color","black");
+		$("#"+id).css("font-weight","bold");
 		me.twCmdAreaUpper.css("background-color",buttonState["background-color"]);
 		me.twCmdAreaUnder.css("background-color",buttonState["background-color"]);
 		me.currentFuncId =id;
@@ -193,6 +197,7 @@ console.log("focus :"+me.tweetHideTextarea.val());
 				var tmpId = me.constMap.tweetIdPrefix+me.tweetIdMap[cursor];
 				$("#"+tmpId).removeClass("TwselectedBox");
 			}
+			this.MansikiTweetStyleKeyBind.buidCmdAreaMain();
 		}
 	},
 	//--------------------------------------------------------------------
@@ -259,6 +264,7 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 			}
 			me.rebuildAll(me);
 		}
+		this.MansikiTweetStyleKeyBind.buidCmdAreaInput();
 	},
 	insertTweet:function(event){
 		var me= event.data.self;
@@ -296,6 +302,7 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 		me.state.selected = idIndex;
 		$("#TMTweetMode").text(me.constMap.modUpdate);
 		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
+		me.MansikiTweetStyleKeyBind.buidCmdAreaInput();
 	},
 	updateTweet:function(event){
 		var me = event.data.self;
@@ -450,6 +457,7 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 		me.funcs.clearTweet();
 		$("#TMTweetMode").text(me.constMap.modAdd);
 		me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor],offsetY:20}});
+		me.MansikiTweetStyleKeyBind.buidCmdAreaInput();
 	},
 	showCursor:function(me){
 		$("#TMCursor").text(me.cursor*1+1);
@@ -1217,6 +1225,7 @@ console.log("i:"+i+"idIndex:"+idIndex);
 
 MansikiTweetStyleKeyBind=function(editor){
 	this.editor=editor;
+	this.id=editor.id+"MansikiTweetStyleKeyBind";
 	this.eventField ;
 	this.nowTime = new Date().getTime();
 	this.escapeKeyInput=["key27","key9","key116","ctl13","ctl8","ctl38","ctl40","ctl77","ctl82","ctl85"];
@@ -1240,8 +1249,28 @@ MansikiTweetStyleKeyBind=function(editor){
 	this.keyBindViewFuncs[SEAN] = "Ctl+q";
 	this.keyBindViewFuncs[ACTOR] = "Ctl+i";
 	this.keyBindViewFuncs[FUKUSEN] = "Ctl+w";
+	this.buidCmdAreaMain();
 }
 MansikiTweetStyleKeyBind.prototype ={
+	buidCmdAreaInput:function(){
+	    this.buidCmdArea(this.keyBindViewInput);
+	},
+        buidCmdAreaMain:function(){
+            this.buidCmdArea(this.keyBindViewMain);
+        },
+	buidCmdArea:function(ShortCutMap){
+	    var html = "";
+	    for(var key in ShortCutMap){
+		var shortCutText = ShortCutMap[key];
+		html+="<span id='"+this.id+key+"'>"+key+"</span>|"+shortCutText;
+	    }
+	    $("#TWcommandList").html(html);
+	},
+	hilightCmd:function(key){
+	    var id =this.id+key;
+	    $("#"+id).addClass("TwcommandHliright");
+	    this.hilightTimer = setTimeout(function(){$("#"+id).removeClass("TwcommandHliright");},500);
+	},
 	setKeyEventField:function(eventField){
 		this.eventField  = eventField;
 		this.eventField.unbind('keydown');
@@ -1447,24 +1476,29 @@ console.log("doMainKeyEvent keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modi
 	,cursorUp:function(){
 		console.log("cursorUp cursor:"+this.editor.cursor);
 		this.editor.curosrMoveUp();
+		this.hilightCmd("UP");
 	}
 	,cursorDown:function(){
 		console.log("cursorDown cursor:"+this.editor.cursor);
 		this.editor.curosrMoveDown();
+		this.hilightCmd("DOWN");
 	}
 	,cursorDelete:function(){
 		console.log("cursorDelete cursor:"+this.editor.cursor);
 		var idIndex =this.editor.getCurrentIdIndexByCousor();
 		this.editor.deleteTweet({data:{self:this.editor,idIndex:idIndex}});
+		this.hilightCmd("DELETE");
 	}
 	,cursorSelect:function(){
 		console.log("cursorSelect cursor:"+this.editor.cursor);
 		var idIndex =this.editor.getCurrentIdIndexByCousor();
 		this.editor.loadTweet({data:{self:this.editor,idIndex:idIndex}});
+		this.hilightCmd("DELETE");
 	}
 	,clear:function(){
 		console.log("clear cursor:"+this.editor.cursor);
 		this.editor.clearTweet({data:{self:this.editor}});
+		this.hilightCmd("CLEAR");
 	}
 	,moveUp:function(){
 		console.log("moveUp cursor:"+this.editor.cursor);
@@ -1472,6 +1506,7 @@ console.log("doMainKeyEvent keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modi
 		if(selected!==undefined){
 			this.editor.moveTweet({data:{self:this.editor,idIndex:selected,direct:"up"}});
 		}
+		this.hilightCmd("MOVEUP");
 	}
 	,moveDown:function(){
 		console.log("moveDown cursor:"+this.editor.cursor);
@@ -1479,6 +1514,7 @@ console.log("doMainKeyEvent keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modi
 		if(selected!==undefined){
 			this.editor.moveTweet({data:{self:this.editor,idIndex:selected,direct:"down"}});
 		}
+		this.hilightCmd("MOVEDOWN");
 	}
 	,addupdate:function(){
 		console.log("addupdate cursor:"+this.editor.cursor);
@@ -1493,11 +1529,13 @@ console.log("doMainKeyEvent keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modi
 	,newTweet:function(){
 		console.log("newTweet cursor:"+this.editor.cursor);
 		this.editor.clearTweet({data:{self:this.editor}});
+		this.hilightCmd("UPDATE");
 	}
 	,moveCursorToOuter:function(){
 		console.log("coursorMovable cursor:"+this.editor.cursor);
 		this.editor.clearTweet({data:{self:this.editor}});
 		this.editor.onFocusToCmd({data:{self:this.editor}});
+		this.hilightCmd("FOCUSOUT");
 	},
 	callCmdButtonsHilight:function(funcId){
 	    var func = this.editor.funcs.getFunc(funcId);
