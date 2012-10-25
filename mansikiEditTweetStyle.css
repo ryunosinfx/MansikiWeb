@@ -136,15 +136,17 @@ div.tweetTab p{
 }
 .status{
 	background-color:black;
-	height:24px;
+	height:54px;
 	padding:2px;
 	border:dotted 1px #C0C0FF;
 	border-width:2px 0px 0px 0px;
 	color:gray;
+	font-size:9px;
+	lineheight:12px;
 }
 .status div{
-	width:90px;
-	height:22px;
+	width:50px;
+	height:52px;
 	padding:4px;
 	float:left;
 	color:#C0C0FF;
@@ -152,6 +154,8 @@ div.tweetTab p{
 	border:dotted 1px #C0C0FF;
 	border-width:0px 1px 0px 0px;
 	text-align:center;
+	font-size:9px;
+	lineheight:20px;
 }
 .status div.pages{
 	border-width:0px;

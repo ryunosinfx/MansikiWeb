@@ -1162,8 +1162,35 @@ MansikiTweetStateAnaliser=function(editor){
 	this.margeStateRule[QUOTE][UPD]=[QUOTE];
 	this.margeStateRule[SEAN]={};
 	this.margeStateRule[SEAN][UPD]=[SEAN];
+	this.pageDiarect="L";
+	this.pageStartSide="L";
+	this.rowDiarect="L";
+	this.letterDiarect="V";
 }
 MansikiTweetStateAnaliser.prototype ={
+	getTitleInitSetting:function(){
+	    if($("#TWPageDiarectR").attr("checked")==="checked"){
+		this.pageDiarect="R";
+	    }else{
+		this.pageDiarect="L";
+	    }
+	    if($("#TWPageStartR").attr("checked")==="checked"){
+		this.pageStartSide="R";
+	    }else{
+		this.pageStartSide="L";
+	    }
+	    if($("#TWRowDiarectR").attr("checked")==="checked"){
+		this.rowDiarect="R";
+	    }else{
+		this.rowDiarect="L";
+	    }
+	    if($("#TWLetterDiarectV").attr("checked")==="checked"){
+		this.letterDiarect="V";
+	    }else{
+		this.letterDiarect="H";
+	    }
+	    
+	},
 	fullAnalize:function(){
 		this.state = {};
 		var tweets = this.editor.tweets;
