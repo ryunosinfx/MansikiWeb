@@ -717,6 +717,7 @@ var ManikiFunctions=function(editor,idIndex,keyBindFunc){
 	this.level=1;
 	this.indentClassPrefix="indent";
 	this.infoMap={};
+	this.addInfo="";
 	this.isFormFocusd=false;
 	this.keyBindFunc = keyBindFunc;
 console.log("ManikiFunctions:keyBindFunc:"+keyBindFunc);
@@ -804,10 +805,10 @@ console.log("create keyBindFuncLocal:"+keyBindFuncLocal);
 	getFullId:function(){
 		return this.idPrefix+this.Id+this.idSufix;
 	},
-	showState:function(){
+	showStateExec:function(){
 		var state=this.editor.analizer.state;
 		var currentState = state[this.idIndex];
-		var info= this.nameLc;
+		var info= this.nameLc+this.addInfo;
 		if(currentState!==undefined){
 			var count = currentState.rowStat[this.Id];
 			info+="<div>"+count+"</div>";
@@ -815,6 +816,12 @@ console.log("create keyBindFuncLocal:"+keyBindFuncLocal);
 		this.editor.setInfo(this.editor, this.idIndex,info);
 		this.editor.addText(this.editor, this.idIndex,"");//state[this.idIndex].toSource());
 //console.log("state.toSource():"+state[this.idIndex].toSource()+"/this.Id:"+this.Id);
+	},
+	showState:function(){
+	    this.showStateExec();
+	    this.showStatePost();
+	},
+	showStatePost:function(){
 	},
 	initBindEventToTweetBox:function(tweetBox){
 		tweetBox.css("background-color",this.color);
@@ -918,7 +925,15 @@ ManikiFuncPage.prototype = new ManikiFunctions();
 //ManikiFuncPage.prototype.
 ManikiFuncPage.prototype.create=function(idIndex,keyBindFunc){
 	return new ManikiFuncPage(this.editor,idIndex,keyBindFunc);
-}
+};
+ManikiFuncPage.prototype.showState=function(){
+	var state=this.editor.analizer.state;
+	var currentState = state[this.idIndex].rowStat;
+	this.addInfo = currentState===undefined?"":currentState[this.editor.analizer.pageSide];
+console.log("AAAAAAAAAAAAAAAAAAAAAAAA"+(state[this.idIndex]===undefined?"":state[this.idIndex].toSource()));
+    this.showStateExec();
+    this.showStatePost();
+};
 
 var ManikiFuncKoma=function(editor,idIndex,keyBindFunc){
 	ManikiFunctions.apply(this, arguments);
@@ -1128,6 +1143,9 @@ ManikiFuncFukusen.prototype.create=function(idIndex,keyBindFunc){
 MansikiTweetStateAnaliser=function(editor){
 	this.state ={};
 	this.editor=editor;	
+	this.pageSide ="pageSide";
+	this.margeOnChangeFunc={};//PAGEなど
+	this.margeOnChangeFunc[PAGE]=this.onPageChange;
 	this.margeStateRule={};//DEL,UPD,INS
 	this.margeStateRule[OBJECT]={};
 	this.margeStateRule[FUKUSEN]={};
@@ -1166,30 +1184,42 @@ MansikiTweetStateAnaliser=function(editor){
 	this.pageStartSide="L";
 	this.rowDiarect="L";
 	this.letterDiarect="V";
+	this.init();
 }
 MansikiTweetStateAnaliser.prototype ={
-	getTitleInitSetting:function(){
+	init:function(){
+	    $("#TWPageDiarectR").bind("change",{self:this},this.getTitleInitSetting);
+	    $("#TWPageDiarectL").bind("change",{self:this},this.getTitleInitSetting);
+	    $("#TWPageStartR").bind("change",{self:this},this.getTitleInitSetting);
+	    $("#TWPageStartL").bind("change",{self:this},this.getTitleInitSetting);
+	    $("#TWRowDiarectR").bind("change",{self:this},this.getTitleInitSetting);
+	    $("#TWRowDiarectL").bind("change",{self:this},this.getTitleInitSetting);
+	    $("#TWLetterDiarectV").bind("change",{self:this},this.getTitleInitSetting);
+	    $("#TWLetterDiarectH").bind("change",{self:this},this.getTitleInitSetting);
+	},
+	getTitleInitSetting:function(event){
+	    var me  = event.data.self;
 	    if($("#TWPageDiarectR").attr("checked")==="checked"){
-		this.pageDiarect="R";
+		me.pageDiarect="R";
 	    }else{
-		this.pageDiarect="L";
+		me.pageDiarect="L";
 	    }
 	    if($("#TWPageStartR").attr("checked")==="checked"){
-		this.pageStartSide="R";
+		me.pageStartSide="R";
 	    }else{
-		this.pageStartSide="L";
+		me.pageStartSide="L";
 	    }
 	    if($("#TWRowDiarectR").attr("checked")==="checked"){
-		this.rowDiarect="R";
+		me.rowDiarect="R";
 	    }else{
-		this.rowDiarect="L";
+		me.rowDiarect="L";
 	    }
 	    if($("#TWLetterDiarectV").attr("checked")==="checked"){
-		this.letterDiarect="V";
+		me.letterDiarect="V";
 	    }else{
-		this.letterDiarect="H";
+		me.letterDiarect="H";
 	    }
-	    
+	    me.fullAnalize();
 	},
 	fullAnalize:function(){
 		this.state = {};
@@ -1219,7 +1249,7 @@ console.log("i:"+i+"idIndex:"+idIndex);
 	margeMap:function(addMap,preRowStat){
 //console.log("margeMap:"+addMap.toSource()+"/"+preRowStat.toSource());
 		var rowState = MansikiMapUtil.deepCopyMap(preRowStat);
-		var	isLastMap = {};
+		var isLastMap = {};
 		preRowStat["isLastMap"] = isLastMap;
 		for(var key in addMap){
 			var Id= addMap[key];
@@ -1242,10 +1272,23 @@ console.log("i:"+i+"idIndex:"+idIndex);
 			for(var index in rule[INS]){
 				rowState[rule[INS][index]] = FLAG_ON;
 			}
+			var func = this.margeOnChangeFunc[Id];
+			if(func!==undefined){
+			    func(this,rowState);
+			}
 		}
 		return rowState;
+	},
+	onPageChange:function(self,rowState){
+	    var index = rowState[PAGE];
+	    var side = index%2;//奇数偶数頁
+	    if(self.pageStartSide==="L"){//左始まり、左右送り＝奇数：右・偶数:左
+		rowState[self.pageSide]=side===1?"R":"L";
+	    }else {//左始まり、右左送り＝奇数：左・偶数:右
+		rowState[self.pageSide]=side===1?"L":"R";
+	    }
+	    
 	}
-
 }
 
 
@@ -1272,7 +1315,7 @@ MansikiTweetStyleKeyBind=function(editor){
 	this.keyBindViewFuncs[BACKGROUND] = "Ctl+7";
 	this.keyBindViewFuncs[SOUND] = "Ctl+8";
 	this.keyBindViewFuncs[EFFECT] = "Ctl+9";
-	this.keyBindViewFuncs[QUOTE] = "Ctl+0";
+	this.keyBindViewFuncs[QUOTE]= "Ctl+0";
 	this.keyBindViewFuncs[SEAN] = "Ctl+q";
 	this.keyBindViewFuncs[ACTOR] = "Ctl+i";
 	this.keyBindViewFuncs[FUKUSEN] = "Ctl+w";
