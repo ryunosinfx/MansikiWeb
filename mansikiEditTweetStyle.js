@@ -107,6 +107,8 @@ MansikiTweetStyleEditor.prototype={
 			this.tweetIdMap = loadedData.tweetIdMap;
 			this.tweets = loadedData.tweets;
 			this.tweetIdCount = loadedData.tweetIdCount*1;
+
+			this.analizer.loadTitleStates(loadedData.titleStates);;
 			for(var idIndex in this.tweetsFuncsIds){
 				var funcId = this.tweetsFuncsIds[idIndex];
 				this.buildFuncs(this,idIndex,funcId);
@@ -396,6 +398,7 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 		saveData.tweets = me.tweets;
 		saveData.tweetIdMap = me.tweetIdMap;
 		saveData.tweetsFuncsIds = me.tweetsFuncsIds;
+		saveData.titleStates = me.analizer.titleStates;
 		MansikiMapUtil.saveToLS(me.keyMain,saveData);
 		
 	},
@@ -823,6 +826,16 @@ console.log("create keyBindFuncLocal:"+keyBindFuncLocal);
 	},
 	showStatePost:function(){
 	},
+	getUpperMovableCursor:function(){
+		var state=this.editor.analizer.state;
+		var currentState = state[this.idIndex];
+		if(currentState!==undefined){
+			var count = currentState.rowStat[this.Id];
+			
+		}
+	    
+	    return 0;
+	},
 	initBindEventToTweetBox:function(tweetBox){
 		tweetBox.css("background-color",this.color);
 		var infoBoxCover = this.editor.getTweetBoxInfoCover(tweetBox);
@@ -929,7 +942,8 @@ ManikiFuncPage.prototype.create=function(idIndex,keyBindFunc){
 ManikiFuncPage.prototype.showState=function(){
 	var state=this.editor.analizer.state;
 	var currentState = state[this.idIndex].rowStat;
-	this.addInfo = currentState===undefined?"":currentState[this.editor.analizer.pageSide];
+	var addInfo = currentState===undefined?"":currentState[this.editor.analizer.pageSide];
+	this.addInfo = addInfo==="L"?"[左 ]":addInfo==="R"?"[ 右]":"";
 console.log("AAAAAAAAAAAAAAAAAAAAAAAA"+(state[this.idIndex]===undefined?"":state[this.idIndex].toSource()));
     this.showStateExec();
     this.showStatePost();
@@ -1185,6 +1199,7 @@ MansikiTweetStateAnaliser=function(editor){
 	this.rowDiarect="L";
 	this.letterDiarect="V";
 	this.init();
+	this.titleStates={};
 }
 MansikiTweetStateAnaliser.prototype ={
 	init:function(){
@@ -1196,6 +1211,41 @@ MansikiTweetStateAnaliser.prototype ={
 	    $("#TWRowDiarectL").bind("change",{self:this},this.getTitleInitSetting);
 	    $("#TWLetterDiarectV").bind("change",{self:this},this.getTitleInitSetting);
 	    $("#TWLetterDiarectH").bind("change",{self:this},this.getTitleInitSetting);
+	},
+	loadTitleStates:function(titleStates){
+	    this.titleStates = titleStates===undefined ?{}:titleStates;
+	    if(this.titleStates["pageDiarect"]!==undefined){
+		if(this.titleStates["pageDiarect"]==="R"){
+		    $("#TWPageDiarectR").attr("checked","checked");
+		}else{
+		    $("#TWPageDiarectL").attr("checked","checked");
+		}
+		this.pageDiarect=this.titleStates["PageDiarect"];
+	    }
+	    if(this.titleStates["pageStartSide"]!==undefined){
+		if(this.titleStates["pageStartSide"]==="R"){
+		    $("#TWPageStartR").attr("checked","checked");
+		}else{
+		    $("#TWPageStartL").attr("checked","checked");
+		}
+		this.pageStartSide=this.titleStates["pageStartSide"];
+	    }
+	    if(this.titleStates["rowDiarect"]!==undefined){
+		if(this.titleStates["rowDiarect"]==="R"){
+		    $("#TWRowDiarectR").attr("checked","checked");
+		}else{
+		    $("#TWRowDiarectL").attr("checked","checked");
+		}
+		this.rowDiarect=this.titleStates["rowDiarect"];
+	    }
+	    if(this.titleStates["letterDiarect"]!==undefined){
+		if(this.titleStates["letterDiarect"]==="V"){
+		    $("#TWLetterDiarectV").attr("checked","checked");
+		}else{
+		    $("#TWLetterDiarectH").attr("checked","checked");
+		}
+		this.letterDiarect=this.titleStates["letterDiarect"];
+	    }
 	},
 	getTitleInitSetting:function(event){
 	    var me  = event.data.self;
@@ -1219,6 +1269,10 @@ MansikiTweetStateAnaliser.prototype ={
 	    }else{
 		me.letterDiarect="H";
 	    }
+	    me.titleStates["pageDiarect"] = me.pageDiarect;
+	    me.titleStates["pageStartSide"] = me.pageStartSide;
+	    me.titleStates["rowDiarect"] = me.rowDiarect;
+	    me.titleStates["letterDiarect"] = me.letterDiarect;
 	    me.fullAnalize();
 	},
 	fullAnalize:function(){
