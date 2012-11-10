@@ -192,7 +192,7 @@ MansikiTweetStyleEditor.prototype={
 		if(nowFunc.isFocusOnForm()!==true){
 			me.tweetHideTextarea.focus();
 			$("#TMTweetMode").text(me.constMap.modCursor);
-console.log("focus :"+me.tweetHideTextarea.val());
+//console.log("focus :"+me.tweetHideTextarea.val());
 			me.tweetHideTextarea.val("");
 			me.state.selected=undefined;
 			for(var cursor in me.tweetIdMap){
@@ -282,10 +282,26 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 				me.viewList.append(tweetBox);
 			}
 		}else{
-			var idIndex=me.tweetIdMap[me.cursor-1];
-			var preId=me.constMap.tweetIdPrefix+idIndex;
-			$("#"+preId).after(tweetBox);
+			var idIndex=me.tweetIdMap[me.cursor];
+			var func = me.tweetsFuncs[idIndex];
+			var preIdIndex=me.tweetIdMap[me.cursor-1];
+			var preFunc = me.tweetsFuncs[preIdIndex];
+			var preId=me.constMap.tweetIdPrefix+preIdIndex;
+			if(preFunc.level === func.level){
+				$("#"+preId).after(tweetBox);
+			}else if(preFunc.level <func.level){
+				var slot = $("#"+preId).children("div.tweetSlot").eq(0);
+				//alert(slot.length);
+				slot.prepend(tweetBox);
+			}else if( preFunc.level === func.level+1){
+				$("#"+preId).parent().parent().after(tweetBox);
+			}else if(preFunc.level === func.level+2){
+				$("#"+preId).parent().parent().parent().parent().after(tweetBox);
+			}else if(preFunc.level === func.level+3){
+				$("#"+preId).parent().parent().parent().parent().parent().parent().parent().after(tweetBox);
+			}
 		}
+		 
 	},
 	loadTweet:function(event){
 		var me= event.data.self;
@@ -347,43 +363,169 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 		var me= event.data.self;
 		var direct= event.data.direct;
 		var idIndex = event.data.idIndex;
-		var id = me.constMap.tweetIdPrefix+idIndex;
 		var cursor = MansikiMapUtil.getKey(me.tweetIdMap,idIndex*1)*1;
+		var offset = 0;
+		var func = me.tweetsFuncs[idIndex];
+		var childCount = func.getChildCount() ;
+		if(direct==="up"){
+		    var upperTarget =  func.getUpperMovableCursor();
+console.log("moveTweet up upperTarget:"+upperTarget);
+		    offset= upperTarget>0 ? upperTarget - cursor :-1;
+		}else if(direct==="down"){
+		    var downerTarget =  func.getDownerMovableCursor();
+console.log("moveTweet down downerTarget:"+downerTarget);
+		    offset= downerTarget>0 ? downerTarget - childCount - cursor:1;
+		}
+console.log("moveTweet offset:"+offset);
+		if(offset===0){
+		    return ;
+		}
+		me.moveExecute(me,idIndex,cursor,offset,direct,func.level,childCount);
+		
+	},
+	moveExecute:function(me,idIndex,cursor,offset,direct,level,childCount){
+	    	var subject = convertMovedNewMap(me,idIndex,cursor,offset,direct,level,childCount);
+		/**var id = me.constMap.tweetIdPrefix+idIndex;
 		var oldMap = me.tweetIdMap;
 		var newMap = {};
-		var subject ;
 		for(var tmpCursor in oldMap){
 			newMap[tmpCursor] = oldMap[tmpCursor];
 		}
-		var offset = 0;
-		if(direct==="up"){
-			offset=-1;
-		}else if(direct==="down"){
-			offset=1;
-		}
-		for(var tmpCursor in oldMap){
-			if(cursor+offset===tmpCursor*1){
-				subject = oldMap[tmpCursor];
+		var hasMovedIndex =0;
+		var max=MansikiMapUtil.getMaxIndex(me.tweetIdMap)*1;
+		var subject = undefined;
+		var childOffset = direct==="down"? childCount :direct==="up"?childCount*-1:0;
+		for(var tmpCursor =0 ;tmpCursor<= max;tmpCursor++){
+		    	var tempSubject =  oldMap[tmpCursor];
+		    	if(tempSubject===undefined){//Empty through
+		    	    continue;
+		    	}
+			if(cursor===tmpCursor-offset){
+ console.log("moveTweet cursor:"+cursor+"/hasMovedIndex:"+hasMovedIndex
+	 +"/tmpCursor:"+tmpCursor+"/childCount:"+childCount+"/childOffset:"+childOffset
+	 +"/cursor + childOffset:"+(cursor + childOffset)+"/"+oldMap[cursor + childOffset]+"/tempSubject:"+tempSubject+"/"+(cursor+offset));
+ 
+				subject = tempSubject;
+				var childOffsetTmp = hasMovedIndex===0 ? childCount:hasMovedIndex;
 				newMap[cursor] = subject;
-				newMap[tmpCursor] = oldMap[cursor];
+				newMap[cursor+offset-childOffset] = oldMap[cursor+childOffset];
+				for(var i =1 ;i<=childCount;i++){
+				    	var tempChildSubject =  oldMap[tmpCursor+i];
+					newMap[cursor+i] = tempChildSubject;
+				}
 				break;
 			}
 		}
 		me.tweetIdMap = newMap;
-//console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"/cursor:"+cursor+"/offset:"+offset+"/oldMap:"+oldMap.toSource());
+		**/
+console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"/cursor:"+cursor+"/offset:"+offset+"/oldMap:"+oldMap.toSource());
 		if(subject !== undefined){
-			me.cursor=cursor+offset;
 			var subjectId = me.constMap.tweetIdPrefix+subject;
+			var subObj = documet.getElementById(subjectId);
+			var subParent = subObj.parentNode;
+			me.cursor=cursor+offset;
+		/**	
 			var tweetBox = me.execBuildTweetBox(me,subject);
 			$("#"+subjectId).remove();
-			if(direct==="up"){
-				$("#"+id).after(tweetBox);
-			}else if(direct==="down"){
-				$("#"+id).before(tweetBox);
+		**/
+			var target = documet.getElementById(id);
+			var parent = target.parentNode;
+    			if(subParent.id===parent.id){
+        			var after = null;
+        			var afterAfter = null;
+        			var targetOrverd = false;
+        			var count =0;
+        			for(var child in parent.childNodes){
+        			    if(after !==null){
+        				afterAfter = child;
+        				break;
+        			    }
+        			    if(targetOrverd ===true){
+        				after = child;
+        				count++;
+        			    }
+        			    if(child.id===id){
+        				target=child;
+        				targetOrverd=true;
+        			    }
+        			}
+        			if(direct==="up"){
+        			    parent.insertBefore(target,after);
+        			}else if(direct==="down"){
+        			    parent.insertBefore(target,afterAfter);
+        			}
+			}else{
+            			if(direct==="up"){
+        			    var upperParentIndexId = me.getUpperParentIndexId(me,idIndex);
+        			    var upperParentId = me.constMap.tweetIdPrefix+upperParentIndexId;
+        			    var upperParentObj = document.getElementById(upperParentId);
+        			    upperParentObj.appendChild(target);
+        			}else if(direct==="down"){
+        			    parent.insertBefore(target,afterAfter);
+        			}
 			}
 		}
+
+for(var tmpCursor =0 ;tmpCursor<= max;tmpCursor++){
+    console.log("moveTweet tmpCursor:"+tmpCursor+"/IdIndex:"+newMap[tmpCursor]+"/IdIndex:"+oldMap[tmpCursor]);
+}
 		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
 		me.rebuildAll(me);
+	},
+	convertMovedNewMap:function(me,idIndex,currentCursor,offset,direct,level,childCount){
+		var id = me.constMap.tweetIdPrefix+idIndex;
+		var oldMap = me.tweetIdMap;
+		var newMap = {};
+		for(var tmpCursor in oldMap){
+			newMap[tmpCursor] = oldMap[tmpCursor];
+		}
+		var hasMovedIndex =0;
+		var max=MansikiMapUtil.getMaxIndex(me.tweetIdMap)*1;
+		var subject = undefined;
+		var a = direct==="down"? -1 :direct==="up"? 1:0;
+		for(var targetCursor =0 ;targetCursor<= max;targetCursor++){
+		    	var tempSubject =  oldMap[targetCursor];
+		    	if(tempSubject===undefined){//Empty through
+		    	    continue;
+		    	}
+		    	
+			if(currentCursor===targetCursor-offset){//Offset contein Targets Children Count
+//-----------------------------------------------
+ console.log("moveTweet cursor:"+currentCursor+"/hasMovedIndex:"+hasMovedIndex
+	 +"/tmpCursor:"+targetCursor+"/childCount:"+childCount+"/childOffset:"+childOffset
+	 +"/cursor + childOffset:"+(currentCursor + childOffset)+"/"+oldMap[currentCursor + childOffset]+"/tempSubject:"+tempSubject+"/"+(currentCursor+offset));
+//-----------------------------------------------
+				subject = tempSubject;
+				var varOffset = direct==="down"? offset :direct==="up"? childCount:0;
+				newMap[targetCursor] = oldMap[currentCursor];
+				newMap[currentCursor+varOffset] = oldMap[targetCursor];//mada
+				for(var i =1 ;i<=childCount;i++){
+					newMap[targetCursor-i] = oldMap[currentCursor-i];
+				}
+				for(var i =1 ;i<=offset*a;i++){//abs
+					newMap[currentCursor+childCount-i] = oldMap[targetCursor-i];
+				}
+				break;
+			}
+		}
+		me.tweetIdMap = newMap;
+		return subject;//for delete
+	},
+	getUpperParentIndexId:function(me,subject){
+		var max=MansikiMapUtil.getMaxIndex(me.tweetIdMap)*1;
+		var upperId = undefined;
+		var func = me.tweetsFuncs[subject];
+		for(var targetCursor =0 ;targetCursor<= max;targetCursor++){
+		    	var tempSubject =  me.tweetIdMap[targetCursor];
+		    	if(tempSubject===subject){//Empty through
+		    	    break;
+		    	}
+		    	var upperFunc = me.tweetsFuncs[tempSubject];
+		    	if(upperFunc.level = func.level){
+		    	    upperIndexId = tempSubject;
+		    	}
+		}
+	    return upperIndexId;
 	},
 	rebuildAll:function(me){
 		me.analizer.fullAnalize();
@@ -713,6 +855,7 @@ var ManikiFunctions=function(editor,idIndex,keyBindFunc){
 	this.idPrefix ="add";
 	this.idSufix ="Icon";
 	this.text="";
+	this.level = 0;
 	this.Funcs={};
 	this.inputArea = $("#TMinputArea");
 	this.tweetArea = $("#TMtweetTextarea");
@@ -739,7 +882,7 @@ ManikiFunctions.prototype={
 			}
 		    return this.Funcs[fullId];
 		}
-console.log("getFunc keyBindFuncLocal:"+this.keyBindFunc);
+//console.log("getFunc keyBindFuncLocal:"+this.keyBindFunc);
 		return this.Funcs[id];
 	},
 	init:function(){
@@ -828,13 +971,94 @@ console.log("create keyBindFuncLocal:"+keyBindFuncLocal);
 	},
 	getUpperMovableCursor:function(){
 		var state=this.editor.analizer.state;
+		var editor = this.editor;
 		var currentState = state[this.idIndex];
+console.log("getUpperMovableCursor this.idIndex:"+this.idIndex+"/currentState"+state.toSource());
 		if(currentState!==undefined){
-			var count = currentState.rowStat[this.Id];
-			
+			var max=MansikiMapUtil.getMaxIndex(editor.tweetIdMap)*1;
+			var cursor=-1;
+			var beMovable = false;
+			for(var i = 0;i<= max;i++){
+				var idIndexTmp = editor.tweetIdMap[i];
+				if(idIndexTmp===undefined){
+					continue;
+				}
+				if(idIndexTmp*1 === this.idIndex*1){
+				    if(beMovable===false || cursor ===-1){
+					cursor=i;
+				    }
+				    break;
+				}
+				var func = editor.tweetsFuncs[idIndexTmp];
+
+				if((this.level*1 ===1 ||beMovable === true )&& (func.level*1 ===this.level*1 || func.level*1+1 ===this.level*1)){
+					console.log("getUpperMovableCursor beMovable:"+beMovable+"/cursor:"+cursor);
+				    cursor=i;
+				}
+				if(func.level*1 ===1 || func.level*1 === this.level*1+1){
+					console.log("getUpperMovableCursor beMovable:"+beMovable);
+				    beMovable=true;
+				}
+			}
+			console.log("getUpperMovableCursor cursor:"+cursor);
+			return cursor;
 		}
-	    
+		console.log("getUpperMovableCursor  0 cursor:"+0);
 	    return 0;
+	},
+	getDownerMovableCursor:function(){
+		var state=this.editor.analizer.state;
+		var editor = this.editor;
+		var currentState = state[this.idIndex];
+console.log("getUpperMovableCursor  this.idIndex:"+this.idIndex+"/currentState"+state.toSource());
+		if(currentState!==undefined){
+			var max=MansikiMapUtil.getMaxIndex(editor.tweetIdMap)*1;
+			var cursor=max+1;
+			for(var i = max;i>0;i--){
+				var idIndexTmp = editor.tweetIdMap[i];
+				if(idIndexTmp===undefined){
+					continue;
+				}
+				if(idIndexTmp*1 === this.idIndex*1){
+				    if(cursor ===max + 1){
+					cursor=i;
+				    }
+				    break;
+				}
+				var func = editor.tweetsFuncs[idIndexTmp];
+				console.log("getDownerMovableCursor idIndexTmp:"+idIndexTmp+"/this.idIndex:"+this.idIndex+"/i:"+i+"/func.level :"+func.level +"/this.level:"+this.level);
+				if(func.level*1+1 === this.level*1 || func.level*1 === this.level*1){
+				    cursor=i;
+				}
+			}
+			console.log("getDownerMovableCursor cursor:"+cursor+"/editor.tweetIdMap:"+editor.tweetIdMap.toSource());
+			return cursor;
+		}
+		console.log("getDownerMovableCursor  0 cursor:"+0);
+	    return 0;
+	},
+	getChildCount :function(){
+		var editor = this.editor;
+		var max=MansikiMapUtil.getMaxIndex(editor.tweetIdMap)*1;
+		var cursor=max+1;
+		var childCount = 0;
+		for(var i = max;i>0;i--){
+			var idIndexTmp = editor.tweetIdMap[i];
+			if(idIndexTmp===undefined){
+				continue;
+			}
+			if(idIndexTmp*1 === this.idIndex*1){
+			    break;
+			}
+			var func = editor.tweetsFuncs[idIndexTmp];
+			if(func.level > this.level*1){
+			    childCount++;
+			}else{
+			    childCount=0;
+			}
+		}
+		return childCount;
+	    
 	},
 	initBindEventToTweetBox:function(tweetBox){
 		tweetBox.css("background-color",this.color);
@@ -1341,11 +1565,8 @@ console.log("i:"+i+"idIndex:"+idIndex);
 	    }else {//左始まり、右左送り＝奇数：左・偶数:右
 		rowState[self.pageSide]=side===1?"L":"R";
 	    }
-	    
 	}
 }
-
-
 
 MansikiTweetStyleKeyBind=function(editor){
 	this.editor=editor;

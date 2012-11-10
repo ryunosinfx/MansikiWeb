@@ -506,15 +506,18 @@ span.TwcommandHliright{
 }
 .indent2{
 	width:550px;
-	margin-left :26px;
+	margin-left :2px;
+	m:26px;
 }
 .indent3{
 	width:520px;
-	margin-left :48px;
+	margin-left :2px;
+	m:48px;
 }
 .indent4{
 	width:490px;
-	margin-left :70px;
+	margin-left :2px;
+	m:70px;
 }
 
 #svgAreaArrow{
