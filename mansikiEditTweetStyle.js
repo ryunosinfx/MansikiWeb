@@ -374,7 +374,7 @@ console.log("moveTweet up upperTarget:"+upperTarget);
 		}else if(direct==="down"){
 		    var downerTarget =  func.getDownerMovableCursor();
 console.log("moveTweet down downerTarget:"+downerTarget);
-		    offset= downerTarget>0 ? downerTarget - childCount - cursor:1;
+		    offset= downerTarget>0 ? downerTarget - childCount - cursor+1:1;
 		}
 console.log("moveTweet offset:"+offset);
 		if(offset===0){
@@ -384,59 +384,30 @@ console.log("moveTweet offset:"+offset);
 		
 	},
 	moveExecute:function(me,idIndex,cursor,offset,direct,level,childCount){
-	    	var subject = convertMovedNewMap(me,idIndex,cursor,offset,direct,level,childCount);
-		/**var id = me.constMap.tweetIdPrefix+idIndex;
+	console.log("moveExecute oldMap:"+me.tweetIdMap.toSource());
+	    
+	    	var subject = this.convertMovedNewMap(me,idIndex,cursor,offset,direct,level,childCount);
+	console.log("moveExecute oldMap:"+me.tweetIdMap.toSource()+"/subject:"+subject);
 		var oldMap = me.tweetIdMap;
-		var newMap = {};
-		for(var tmpCursor in oldMap){
-			newMap[tmpCursor] = oldMap[tmpCursor];
-		}
-		var hasMovedIndex =0;
+		var id = me.constMap.tweetIdPrefix+idIndex;
 		var max=MansikiMapUtil.getMaxIndex(me.tweetIdMap)*1;
-		var subject = undefined;
-		var childOffset = direct==="down"? childCount :direct==="up"?childCount*-1:0;
-		for(var tmpCursor =0 ;tmpCursor<= max;tmpCursor++){
-		    	var tempSubject =  oldMap[tmpCursor];
-		    	if(tempSubject===undefined){//Empty through
-		    	    continue;
-		    	}
-			if(cursor===tmpCursor-offset){
- console.log("moveTweet cursor:"+cursor+"/hasMovedIndex:"+hasMovedIndex
-	 +"/tmpCursor:"+tmpCursor+"/childCount:"+childCount+"/childOffset:"+childOffset
-	 +"/cursor + childOffset:"+(cursor + childOffset)+"/"+oldMap[cursor + childOffset]+"/tempSubject:"+tempSubject+"/"+(cursor+offset));
- 
-				subject = tempSubject;
-				var childOffsetTmp = hasMovedIndex===0 ? childCount:hasMovedIndex;
-				newMap[cursor] = subject;
-				newMap[cursor+offset-childOffset] = oldMap[cursor+childOffset];
-				for(var i =1 ;i<=childCount;i++){
-				    	var tempChildSubject =  oldMap[tmpCursor+i];
-					newMap[cursor+i] = tempChildSubject;
-				}
-				break;
-			}
-		}
-		me.tweetIdMap = newMap;
-		**/
 console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"/cursor:"+cursor+"/offset:"+offset+"/oldMap:"+oldMap.toSource());
 		if(subject !== undefined){
 			var subjectId = me.constMap.tweetIdPrefix+subject;
-			var subObj = documet.getElementById(subjectId);
+			var subObj = document.getElementById(subjectId);
 			var subParent = subObj.parentNode;
 			me.cursor=cursor+offset;
-		/**	
-			var tweetBox = me.execBuildTweetBox(me,subject);
-			$("#"+subjectId).remove();
-		**/
-			var target = documet.getElementById(id);
+			var target = document.getElementById(id);
 			var parent = target.parentNode;
     			if(subParent.id===parent.id){
         			var after = null;
         			var afterAfter = null;
+        			var before = null;
         			var targetOrverd = false;
         			var count =0;
-        			for(var child in parent.childNodes){
-        			    if(after !==null){
+        			for(var childIndex in document.getElementById(parent.id).childNodes){
+        			    var child = parent.childNodes[childIndex];
+        			    if(after !==null && child.id!==undefined){
         				afterAfter = child;
         				break;
         			    }
@@ -447,12 +418,22 @@ console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"
         			    if(child.id===id){
         				target=child;
         				targetOrverd=true;
+        			    }else if(targetOrverd ===false){
+        				before = child;
         			    }
+ console.log("moveTweetHHHHS "+id+":"+child.id+"/"+parent.id+"/"+parent.childNodes+"/"+before.id+"/z"+(target.id)+"/y"+(after===null?"":after.id)
+	 +"/"+(afterAfter===null?"":afterAfter.id)+"/"+(afterAfter===null)+"/x "+direct);
         			}
         			if(direct==="up"){
-        			    parent.insertBefore(target,after);
+        			    parent.insertBefore(target,before);
         			}else if(direct==="down"){
-        			    parent.insertBefore(target,afterAfter);
+        			    console.log(afterAfter+"/"+(afterAfter===null));
+        			    if((afterAfter===null)=="true"){
+            			    	parent.appendChild(target);
+        			    }else{
+            			    	//parent.appendChild(target);
+            			    	parent.insertBefore(target,afterAfter);
+        			    }
         			}
 			}else{
             			if(direct==="up"){
@@ -465,10 +446,6 @@ console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"
         			}
 			}
 		}
-
-for(var tmpCursor =0 ;tmpCursor<= max;tmpCursor++){
-    console.log("moveTweet tmpCursor:"+tmpCursor+"/IdIndex:"+newMap[tmpCursor]+"/IdIndex:"+oldMap[tmpCursor]);
-}
 		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
 		me.rebuildAll(me);
 	},
@@ -476,37 +453,95 @@ for(var tmpCursor =0 ;tmpCursor<= max;tmpCursor++){
 		var id = me.constMap.tweetIdPrefix+idIndex;
 		var oldMap = me.tweetIdMap;
 		var newMap = {};
-		for(var tmpCursor in oldMap){
-			newMap[tmpCursor] = oldMap[tmpCursor];
-		}
-		var hasMovedIndex =0;
+		var nextMoveIndexMap ={};
+		var corigionList =[];
+		var remarkMap ={};
+		var remarkList =[];
+		var repeatList=[];
 		var max=MansikiMapUtil.getMaxIndex(me.tweetIdMap)*1;
-		var subject = undefined;
-		var a = direct==="down"? -1 :direct==="up"? 1:0;
-		for(var targetCursor =0 ;targetCursor<= max;targetCursor++){
-		    	var tempSubject =  oldMap[targetCursor];
-		    	if(tempSubject===undefined){//Empty through
-		    	    continue;
-		    	}
-		    	
-			if(currentCursor===targetCursor-offset){//Offset contein Targets Children Count
-//-----------------------------------------------
- console.log("moveTweet cursor:"+currentCursor+"/hasMovedIndex:"+hasMovedIndex
-	 +"/tmpCursor:"+targetCursor+"/childCount:"+childCount+"/childOffset:"+childOffset
-	 +"/cursor + childOffset:"+(currentCursor + childOffset)+"/"+oldMap[currentCursor + childOffset]+"/tempSubject:"+tempSubject+"/"+(currentCursor+offset));
-//-----------------------------------------------
-				subject = tempSubject;
-				var varOffset = direct==="down"? offset :direct==="up"? childCount:0;
-				newMap[targetCursor] = oldMap[currentCursor];
-				newMap[currentCursor+varOffset] = oldMap[targetCursor];//mada
-				for(var i =1 ;i<=childCount;i++){
-					newMap[targetCursor-i] = oldMap[currentCursor-i];
-				}
-				for(var i =1 ;i<=offset*a;i++){//abs
-					newMap[currentCursor+childCount-i] = oldMap[targetCursor-i];
-				}
-				break;
+		for(var tmpCursor=0;tmpCursor <= max;tmpCursor++ ){
+		    corigionList.push([]) ;
+		}
+		for(var tmpCursor=0;tmpCursor <= max;tmpCursor++ ){
+		    
+			var idIndex = oldMap[tmpCursor];
+			if(idIndex===undefined){
+			    continue;
 			}
+			if(tmpCursor === currentCursor){
+			    for(var i = 0;i<=childCount ;i++){
+				idIndex = oldMap[tmpCursor+i];
+				var targetCurosor = tmpCursor+offset+i;
+				if(targetCurosor < 0){
+				    targetCurosor =0;
+				}
+				if(targetCurosor > max){
+				    targetCurosor =max;
+				}
+				corigionList[targetCurosor].push(idIndex);
+				nextMoveIndexMap[idIndex]=tmpCursor+offset+i;
+				remarkMap[idIndex] =true;
+				remarkList.push(idIndex);
+			    }
+			}else if(nextMoveIndexMap[idIndex]===undefined){
+			    nextMoveIndexMap[idIndex]=tmpCursor;
+			    corigionList[tmpCursor].push(idIndex);
+			}
+		}
+		var stack=[];
+		var usedMap ={};
+		//var hasMovedIndex =0;
+		//var max=MansikiMapUtil.getMaxIndex(me.tweetIdMap)*1;
+		var isDoubled =false;
+		var subject = undefined;
+		var a = direct==="down"? 1 :direct==="up"? -1:0;
+		for(var targetCursor =0 ;targetCursor<= max;targetCursor++){
+		    var thisIndexs = corigionList[targetCursor];
+//console.log("thisIndexs.toSource():"+thisIndexs.toSource()+"/targetCurosor:"+targetCursor);
+                    if(currentIdIndex===true){
+                        for(var n=0;n<repeatList.length ;n++){
+                    		stack.push(repeatList[n]);
+                        }
+                        currentIdIndex=false;
+                    }
+		    if(thisIndexs===undefined || thisIndexs.length <1){
+			continue;
+		    }else if(thisIndexs.length===1){
+			stack.push(thisIndexs[0]);
+		    }else if(direct==="down"){
+			for(var j=0;j<thisIndexs.length ;j++){
+			    var currentIdIndex = thisIndexs[j];
+			    if(remarkMap[currentIdIndex]!==undefined){
+				stack.push(currentIdIndex);
+			    }else{
+				repeatList.push(currentIdIndex) ;
+			    }
+			}
+			currentIdIndex=true;
+		    }else if(direct==="up"){
+			for(var j=0;j<thisIndexs.length ;j++){
+			    var currentIdIndex = thisIndexs[j];
+			    if(remarkMap[currentIdIndex]!==undefined){
+				stack.push(currentIdIndex);
+			    }else{
+				repeatList.push(currentIdIndex) ;
+			    }
+			}
+			currentIdIndex=true;
+		    }
+		}
+		if(currentIdIndex===true){
+		    for(var n=0;n<repeatList.length ;n++){
+			stack.push(repeatList[n]);
+		    }
+		}
+		    for(var n=0;n<repeatList.length ;n++){
+			subject = repeatList[n];
+			break;
+		    }
+console.log("stack.toSource():"+stack.toSource()+"/corigionList:"+corigionList.toSource());
+		for(var targetCursor =0 ;targetCursor<= max;targetCursor++){
+		    newMap[targetCursor]=stack[targetCursor];
 		}
 		me.tweetIdMap = newMap;
 		return subject;//for delete
@@ -1026,15 +1061,15 @@ console.log("getUpperMovableCursor  this.idIndex:"+this.idIndex+"/currentState"+
 				    break;
 				}
 				var func = editor.tweetsFuncs[idIndexTmp];
-				console.log("getDownerMovableCursor idIndexTmp:"+idIndexTmp+"/this.idIndex:"+this.idIndex+"/i:"+i+"/func.level :"+func.level +"/this.level:"+this.level);
+console.log("getDownerMovableCursor idIndexTmp:"+idIndexTmp+"/this.idIndex:"+this.idIndex+"/i:"+i+"/func.level :"+func.level +"/this.level:"+this.level);
 				if(func.level*1+1 === this.level*1 || func.level*1 === this.level*1){
 				    cursor=i;
 				}
 			}
-			console.log("getDownerMovableCursor cursor:"+cursor+"/editor.tweetIdMap:"+editor.tweetIdMap.toSource());
+console.log("getDownerMovableCursor max:"+max+" cursor:"+cursor+"/editor.tweetIdMap:"+editor.tweetIdMap.toSource());
 			return cursor;
 		}
-		console.log("getDownerMovableCursor  0 cursor:"+0);
+console.log("getDownerMovableCursor  0 cursor:"+0);
 	    return 0;
 	},
 	getChildCount :function(){
@@ -1165,10 +1200,11 @@ ManikiFuncPage.prototype.create=function(idIndex,keyBindFunc){
 };
 ManikiFuncPage.prototype.showState=function(){
 	var state=this.editor.analizer.state;
+console.log("AAAAAAAAAAAAAAAAAAAAAAAA"+"/this.idIndex:"+this.idIndex+"/"+(state[this.idIndex]===undefined?"":state[this.idIndex].toSource()));
 	var currentState = state[this.idIndex].rowStat;
 	var addInfo = currentState===undefined?"":currentState[this.editor.analizer.pageSide];
 	this.addInfo = addInfo==="L"?"[左 ]":addInfo==="R"?"[ 右]":"";
-console.log("AAAAAAAAAAAAAAAAAAAAAAAA"+(state[this.idIndex]===undefined?"":state[this.idIndex].toSource()));
+//console.log("AAAAAAAAAAAAAAAAAAAAAAAA"+(state[this.idIndex]===undefined?"":state[this.idIndex].toSource()));
     this.showStateExec();
     this.showStatePost();
 };
