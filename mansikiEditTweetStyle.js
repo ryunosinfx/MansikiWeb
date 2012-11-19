@@ -369,12 +369,12 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 		var childCount = func.getChildCount() ;
 		if(direct==="up"){
 		    var upperTarget =  func.getUpperMovableCursor();
-console.log("moveTweet up upperTarget:"+upperTarget);
+console.log("moveTweet up upperTarget:"+upperTarget+"/cursor:"+cursor);
 		    offset= upperTarget>0 ? upperTarget - cursor :-1;
 		}else if(direct==="down"){
 		    var downerTarget =  func.getDownerMovableCursor();
-console.log("moveTweet down downerTarget:"+downerTarget);
-		    offset= downerTarget>0 ? downerTarget - childCount - cursor+1:1;
+console.log("moveTweet down downerTarget:"+downerTarget+"/cursor:"+cursor);
+		    offset= downerTarget>0 ? downerTarget - childCount - cursor:1;
 		}
 console.log("moveTweet offset:"+offset);
 		if(offset===0){
@@ -384,10 +384,10 @@ console.log("moveTweet offset:"+offset);
 		
 	},
 	moveExecute:function(me,idIndex,cursor,offset,direct,level,childCount){
-	console.log("moveExecute oldMap:"+me.tweetIdMap.toSource());
+console.log("moveExecute oldMap:"+me.tweetIdMap.toSource());
 	    
 	    	var subject = this.convertMovedNewMap(me,idIndex,cursor,offset,direct,level,childCount);
-	console.log("moveExecute oldMap:"+me.tweetIdMap.toSource()+"/subject:"+subject);
+console.log("moveExecute newMap:"+me.tweetIdMap.toSource()+"/subject:"+subject);
 		var oldMap = me.tweetIdMap;
 		var id = me.constMap.tweetIdPrefix+idIndex;
 		var max=MansikiMapUtil.getMaxIndex(me.tweetIdMap)*1;
@@ -511,7 +511,7 @@ console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"
 		    }else if(direct==="down"){
 			for(var j=0;j<thisIndexs.length ;j++){
 			    var currentIdIndex = thisIndexs[j];
-			    if(remarkMap[currentIdIndex]!==undefined){
+			    if(remarkMap[currentIdIndex]===undefined){
 				stack.push(currentIdIndex);
 			    }else{
 				repeatList.push(currentIdIndex) ;
@@ -535,11 +535,11 @@ console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"
 			stack.push(repeatList[n]);
 		    }
 		}
-		    for(var n=0;n<repeatList.length ;n++){
+		for(var n=0;n<repeatList.length ;n++){
 			subject = repeatList[n];
 			break;
-		    }
-console.log("stack.toSource():"+stack.toSource()+"/corigionList:"+corigionList.toSource());
+		}
+console.log("stack.toSource():"+stack.toSource()+"/corigionList:"+corigionList.toSource()+"/repeatList:"+repeatList.toSource()+"/remarkMap:"+remarkMap.toSource());
 		for(var targetCursor =0 ;targetCursor<= max;targetCursor++){
 		    newMap[targetCursor]=stack[targetCursor];
 		}
