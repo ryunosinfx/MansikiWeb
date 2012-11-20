@@ -399,7 +399,8 @@ console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"
 			me.cursor=cursor+offset;
 			var target = document.getElementById(id);
 			var parent = target.parentNode;
-    			if(subParent.id===parent.id){
+console.log("moveTweetA idIndex:"+idIndex+"/subject:"+subParent.id+"/parent.id:"+parent.id+"/");
+    			if(subParent.id!=="" && subParent.id===parent.id){
         			var after = null;
         			var afterAfter = null;
         			var before = null;
@@ -436,6 +437,8 @@ console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"
         			    }
         			}
 			}else{
+console.log("moveTweetVVVVVS "+id+"/"+parent.id+"/"+parent.childNodes+"/b:"+before+"/z"+(target.id)+"/af:"+(after===undefined||after===null?"null":after.id)
+					 +"/afaf:"+(afterAfter===undefined||afterAfter===null?"null":afterAfter.id)+"/"+(afterAfter===null)+"/x "+direct);
             			if(direct==="up"){
         			    var upperParentIndexId = me.getUpperParentIndexId(me,idIndex);
         			    var upperParentId = me.constMap.tweetIdPrefix+upperParentIndexId;
