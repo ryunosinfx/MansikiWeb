@@ -385,7 +385,7 @@ console.log("moveTweet offset:"+offset);
 	},
 	moveExecute:function(me,idIndex,cursor,offset,direct,level,childCount){
 console.log("moveExecute oldMap:"+me.tweetIdMap.toSource());
-	    
+	    var slotDomObjIndex=2;
 	    	var subject = this.convertMovedNewMap(me,idIndex,cursor,offset,direct,level,childCount);
 console.log("moveExecute newMap:"+me.tweetIdMap.toSource()+"/subject:"+subject);
 		var oldMap = me.tweetIdMap;
@@ -393,20 +393,32 @@ console.log("moveExecute newMap:"+me.tweetIdMap.toSource()+"/subject:"+subject);
 		var max=MansikiMapUtil.getMaxIndex(me.tweetIdMap)*1;
 console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"/cursor:"+cursor+"/offset:"+offset+"/oldMap:"+oldMap.toSource());
 		if(subject !== undefined){
+
+		    	var targetFunc = me.tweetsFuncs[idIndex];
+		    	var subFunc = me.tweetsFuncs[subject];
 			var subjectId = me.constMap.tweetIdPrefix+subject;
 			var subObj = document.getElementById(subjectId);
 			var subParent = subObj.parentNode;
+			var subParentId = subParent.id;
 			me.cursor=cursor+offset;
 			var target = document.getElementById(id);
 			var parent = target.parentNode;
-console.log("moveTweetA idIndex:"+idIndex+"/subject:"+subParent.id+"/parent.id:"+parent.id+"/");
-    			if(subParent.id!=="" && subParent.id===parent.id){
+			var parentId = parent.id;
+			var targetCursor=MansikiMapUtil.getKey(me.tweetIdMap,idIndex);
+			if(parent.id===""){
+			    parentId = parent.parentNode.id;
+			}
+			if(subParent.id===""){
+			    subParentId = subParent.parentNode.id;
+			}
+console.log("moveTweetA idIndex:"+idIndex+"/"+subject+"/subject:"+subParentId+"/"+subParent.id+"/parent.id:"+parentId+"/"+parent.id);
+    			if(subParentId!=="" && subParentId===parentId){
         			var after = null;
         			var afterAfter = null;
         			var before = null;
         			var targetOrverd = false;
         			var count =0;
-        			for(var childIndex in document.getElementById(parent.id).childNodes){
+        			for(var childIndex in parent.childNodes){
         			    var child = parent.childNodes[childIndex];
         			    if(after !==null && child.id!==undefined){
         				afterAfter = child;
@@ -422,7 +434,7 @@ console.log("moveTweetA idIndex:"+idIndex+"/subject:"+subParent.id+"/parent.id:"
         			    }else if(targetOrverd ===false){
         				before = child;
         			    }
- console.log("moveTweetHHHHS "+id+":"+child.id+"/"+parent.id+"/"+parent.childNodes+"/"+before.id+"/z"+(target.id)+"/y"+(after===null?"":after.id)
+ console.log("moveTweetHHHHS "+id+":"+child.id+"/"+parentId+"/"+parent.childNodes+"/"+(before!==null?before.id:null)+"/z"+(target.id)+"/y"+(after===null?"":after.id)
 	 +"/"+(afterAfter===null?"":afterAfter.id)+"/"+(afterAfter===null)+"/x "+direct);
         			}
         			if(direct==="up"){
@@ -436,16 +448,52 @@ console.log("moveTweetA idIndex:"+idIndex+"/subject:"+subParent.id+"/parent.id:"
             			    	parent.insertBefore(target,afterAfter);
         			    }
         			}
-			}else{
-console.log("moveTweetVVVVVS "+id+"/"+parent.id+"/"+parent.childNodes+"/b:"+before+"/z"+(target.id)+"/af:"+(after===undefined||after===null?"null":after.id)
+			}else{//非対称の場合に限る,しかも越境に限るAfterは必ず上位
+console.log("moveTweetVVVVVS "+id+"/"+parentId+"/"+parent.getAttribute("class")+"/"+parent.childNodes+"/b:"+before+"/z"+(target.id)+"/af:"+(after===undefined||after===null?"null":after.id)
 					 +"/afaf:"+(afterAfter===undefined||afterAfter===null?"null":afterAfter.id)+"/"+(afterAfter===null)+"/x "+direct);
-            			if(direct==="up"){
-        			    var upperParentIndexId = me.getUpperParentIndexId(me,idIndex);
+
+				if(direct==="up"){
+				    //alert("upup");
+        			    var upperParentIndexId = me.getUpperParentIndexId(me,idIndex);//これが取ってくる者は何？ない場合もありうる。
+        			    if(upperParentIndexId===undefined){
+        				
+        			    }
         			    var upperParentId = me.constMap.tweetIdPrefix+upperParentIndexId;
+				    var upperFunc = me.tweetsFuncs[upperParentIndexId];
         			    var upperParentObj = document.getElementById(upperParentId);
-        			    upperParentObj.appendChild(target);
-        			}else if(direct==="down"){
-        			    parent.insertBefore(target,afterAfter);
+        			    if(targetFunc.level===upperFunc.level){
+        				var slot = upperParentObj.parent;//ここの認識がおかしい。
+        				slot.appendChild(target);
+        			    }else{
+        				var slot = upperParentObj.childNodes[slotDomObjIndex];
+        				slot.appendChild(target);
+        			    }
+        			}else if(direct==="down"){//ここの計算が狂っている、ここに来る時点でソートは終了している。
+        			    var afterIdIndex = max<=targetCursor*1+1?null:me.tweetIdMap[(targetCursor*1+1)];//一個手前を取得
+console.log("moveTweetVVVVVX afterIdIndex:"+afterIdIndex+"/max:"+max+"/targetCursor"+targetCursor);
+        			    
+        			    if(afterIdIndex!==null){
+    					    	var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
+        					var afterAfter = document.getElementById(afterId);
+        				    	var afterFunc = me.tweetsFuncs[afterIdIndex];
+console.log("moveTweetVVVVVY afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId+"/target:"+target+"/afterFunc.level:"+afterFunc.level);	
+        					if(targetFunc.level<=afterFunc.level){//slotの位置のよる,<はありえないはず
+        					    var parent = afterAfter.parentNode;
+        					    parent.insertBefore(target,afterAfter);
+        					}else{//上位の場合は配置転換は終わっているので、一個上のものを取得
+            	        			    var afterIdIndex = max===targetCursor*1+1?null:me.tweetIdMap[(targetCursor*1-1)];
+        					    var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
+            					    var afterAfter = document.getElementById(afterId);
+console.log("moveTweetVVVVVW afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	
+        					    afterAfter.childNodes[slotDomObjIndex].appendChild(target);
+        					}
+    					}else if(max===targetCursor*1){//配置転換は終わっているので、一個上のものを取得
+    	        			    var afterIdIndex = max===targetCursor*1+1?null:me.tweetIdMap[(targetCursor*1-1)];
+					    var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
+    					    var afterAfter = document.getElementById(afterId);
+console.log("moveTweetVVVVVZ afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	
+					    afterAfter.childNodes[slotDomObjIndex].appendChild(target);
+    					}
         			}
 			}
 		}
@@ -515,6 +563,9 @@ console.log("moveTweetVVVVVS "+id+"/"+parent.id+"/"+parent.childNodes+"/b:"+befo
 			for(var j=0;j<thisIndexs.length ;j++){
 			    var currentIdIndex = thisIndexs[j];
 			    if(remarkMap[currentIdIndex]===undefined){
+				if(subject===undefined ){
+				    subject = currentIdIndex;
+				}
 				stack.push(currentIdIndex);
 			    }else{
 				repeatList.push(currentIdIndex) ;
@@ -527,6 +578,9 @@ console.log("moveTweetVVVVVS "+id+"/"+parent.id+"/"+parent.childNodes+"/b:"+befo
 			    if(remarkMap[currentIdIndex]!==undefined){
 				stack.push(currentIdIndex);
 			    }else{
+				if(subject===undefined ){
+				    subject = currentIdIndex;
+				}
 				repeatList.push(currentIdIndex) ;
 			    }
 			}
@@ -538,32 +592,29 @@ console.log("moveTweetVVVVVS "+id+"/"+parent.id+"/"+parent.childNodes+"/b:"+befo
 			stack.push(repeatList[n]);
 		    }
 		}
-		for(var n=0;n<repeatList.length ;n++){
-			subject = repeatList[n];
-			break;
-		}
 console.log("stack.toSource():"+stack.toSource()+"/corigionList:"+corigionList.toSource()+"/repeatList:"+repeatList.toSource()+"/remarkMap:"+remarkMap.toSource());
 		for(var targetCursor =0 ;targetCursor<= max;targetCursor++){
 		    newMap[targetCursor]=stack[targetCursor];
 		}
 		me.tweetIdMap = newMap;
-		return subject;//for delete
+		return subject;//for delete//この選択がおかしい。
 	},
 	getUpperParentIndexId:function(me,subject){
 		var max=MansikiMapUtil.getMaxIndex(me.tweetIdMap)*1;
-		var upperId = undefined;
 		var func = me.tweetsFuncs[subject];
+		var upperIndexId = undefined;
 		for(var targetCursor =0 ;targetCursor<= max;targetCursor++){
 		    	var tempSubject =  me.tweetIdMap[targetCursor];
 		    	if(tempSubject===subject){//Empty through
 		    	    break;
 		    	}
 		    	var upperFunc = me.tweetsFuncs[tempSubject];
-		    	if(upperFunc.level = func.level){
+		    	if(upperFunc.level === func.level || upperFunc.level+1 === func.level){//SameLevel
 		    	    upperIndexId = tempSubject;
 		    	}
 		}
-	    return upperIndexId;
+console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
+	    return upperIndexId;//OK
 	},
 	rebuildAll:function(me){
 		me.analizer.fullAnalize();
@@ -1016,8 +1067,16 @@ console.log("getUpperMovableCursor this.idIndex:"+this.idIndex+"/currentState"+s
 			var max=MansikiMapUtil.getMaxIndex(editor.tweetIdMap)*1;
 			var cursor=-1;
 			var beMovable = false;
+			var FuncLevels=[];
 			for(var i = 0;i<= max;i++){
 				var idIndexTmp = editor.tweetIdMap[i];
+				var funcA = editor.tweetsFuncs[idIndexTmp];
+			    FuncLevels.push(idIndexTmp+":"+funcA.idIndex+":"+funcA.level);
+			}
+console.log("DgetUpperMovableCursor beMovable:"+beMovable+"/max:"+max+"/editor.tweetsFuncs:"+FuncLevels.toSource());
+			for(var i = 0;i<= max;i++){
+				var idIndexTmp = editor.tweetIdMap[i];
+console.log("EgetUpperMovableCursor beMovable:"+beMovable+"/this.idIndex:"+this.idIndex+"/idIndexTmp:"+idIndexTmp+"/i:"+i);
 				if(idIndexTmp===undefined){
 					continue;
 				}
@@ -1029,15 +1088,18 @@ console.log("getUpperMovableCursor this.idIndex:"+this.idIndex+"/currentState"+s
 				}
 				var func = editor.tweetsFuncs[idIndexTmp];
 
-				if((this.level*1 ===1 ||beMovable === true )&& (func.level*1 ===this.level*1 || func.level*1+1 ===this.level*1)){
-					console.log("getUpperMovableCursor beMovable:"+beMovable+"/cursor:"+cursor);
+console.log("FgetUpperMovableCursor beMovable:"+beMovable+"/cursor:"+cursor+"/func.level:"+func.level+"/this.level:"+this.level+"/idIndexTmp:"+idIndexTmp);
+				if((this.level*1 ===1 ||beMovable === true )
+				&& (func.level*1 ===this.level*1 || func.level*1+1 ===this.level*1)){
+					console.log("AgetUpperMovableCursor beMovable:"+beMovable+"/cursor:"+cursor);
 				    cursor=i;
 				}
 				if(func.level*1 ===1 || func.level*1 === this.level*1+1){
-					console.log("getUpperMovableCursor beMovable:"+beMovable);
+					console.log("BgetUpperMovableCursor beMovable:"+beMovable);
 				    beMovable=true;
 				}
 			}
+			console.log("CgetUpperMovableCursor beMovable:"+beMovable);
 			console.log("getUpperMovableCursor cursor:"+cursor);
 			return cursor;
 		}

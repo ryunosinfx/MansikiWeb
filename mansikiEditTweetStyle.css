@@ -369,6 +369,7 @@ div.tweetList {
 	font-size:12px;
 	border-left-width:20px;
 	z-index:510;
+	opacity:1;
 }
 
 .tweetBoxCmdFrame{
@@ -445,8 +446,8 @@ div.tweetList {
 	display:block;
 	border:solid 1px green;
 	background-color:green;
-	opacity:0.2;
-	z-index:502;
+	background-opacity:0.2;
+	z-index:18;
 }
 .TwselectedBox{
 	border-color:black;
