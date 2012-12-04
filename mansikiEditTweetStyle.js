@@ -383,6 +383,7 @@ console.log("moveTweet offset:"+offset);
 		me.moveExecute(me,idIndex,cursor,offset,direct,func.level,childCount);
 		
 	},
+	//実際にDOM上で動かす。
 	moveExecute:function(me,idIndex,cursor,offset,direct,level,childCount){
 console.log("moveExecute oldMap:"+me.tweetIdMap.toSource());
 	    var slotDomObjIndex=2;
@@ -462,7 +463,8 @@ console.log("moveTweetVVVVVS "+id+"/"+parentId+"/"+parent.getAttribute("class")+
 				    var upperFunc = me.tweetsFuncs[upperParentIndexId];
         			    var upperParentObj = document.getElementById(upperParentId);
         			    if(targetFunc.level===upperFunc.level){
-        				var slot = upperParentObj.parent;//ここの認識がおかしい。
+console.log("moveTweetVVVVUS targetFunc.level:"+targetFunc.level+"/max:"+max+"/upperFunc.level"+upperFunc.level+"/upperParentId:"+upperParentId);
+        				var slot = upperParentObj.parentNode;//ここの認識がおかしい。
         				slot.appendChild(target);
         			    }else{
         				var slot = upperParentObj.childNodes[slotDomObjIndex];
@@ -477,12 +479,22 @@ console.log("moveTweetVVVVVX afterIdIndex:"+afterIdIndex+"/max:"+max+"/targetCur
         					var afterAfter = document.getElementById(afterId);
         				    	var afterFunc = me.tweetsFuncs[afterIdIndex];
 console.log("moveTweetVVVVVY afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId+"/target:"+target+"/afterFunc.level:"+afterFunc.level);	
-        					if(targetFunc.level<=afterFunc.level){//slotの位置のよる,<はありえないはず
+						if(targetFunc.level<afterFunc.level){//slotの位置のよる,<はありえないはず
+						    var levelDiff = afterFunc.level-targetFunc.level;
+						    var superParentNode =afterAfter;
+						    if(targetFunc.level===1){
+							superParentNode = superParentNode.parentNode;
+						    }
+						    superParentNode.insertBefore(target,afterAfter);
+
+console.log("moveTweetVVVVVD afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	    
+						}else if(targetFunc.level===afterFunc.level){//slotの位置のよる
         					    var parent = afterAfter.parentNode;
         					    parent.insertBefore(target,afterAfter);
+console.log("moveTweetVVVVVE afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	
         					}else{//上位の場合は配置転換は終わっているので、一個上のものを取得
             	        			    var afterIdIndex = max===targetCursor*1+1?null:me.tweetIdMap[(targetCursor*1-1)];
-        					    var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
+        					    var afterId = me.constafterFuncMap.tweetIdPrefix+afterIdIndex;//エラー発生！
             					    var afterAfter = document.getElementById(afterId);
 console.log("moveTweetVVVVVW afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	
         					    afterAfter.childNodes[slotDomObjIndex].appendChild(target);
@@ -493,6 +505,13 @@ console.log("moveTweetVVVVVW afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/a
     					    var afterAfter = document.getElementById(afterId);
 console.log("moveTweetVVVVVZ afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	
 					    afterAfter.childNodes[slotDomObjIndex].appendChild(target);
+    					}else if(max===targetCursor*1+1 && max >=3){//
+    					    var afterIdIndex = me.tweetIdMap[(targetCursor*1-1)];//一個手前を取得
+					    var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
+    					    var afterAfter = document.getElementById(afterId);
+console.log("moveTweetVVVVVC afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	
+					    afterAfter.childNodes[slotDomObjIndex].appendChild(target);
+    					    
     					}
         			}
 			}
@@ -500,6 +519,7 @@ console.log("moveTweetVVVVVZ afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/a
 		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
 		me.rebuildAll(me);
 	},
+	//とにかくソートを実施する。
 	convertMovedNewMap:function(me,idIndex,currentCursor,offset,direct,level,childCount){
 		var id = me.constMap.tweetIdPrefix+idIndex;
 		var oldMap = me.tweetIdMap;
@@ -507,38 +527,42 @@ console.log("moveTweetVVVVVZ afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/a
 		var nextMoveIndexMap ={};
 		var corigionList =[];
 		var remarkMap ={};
-		var remarkList =[];
 		var repeatList=[];
+		var childrenList ={};
+		var childrenStack=[];
+		if(direct==="down"){
+		    offset+=childCount;
+		}else{
+		    offset;//上りは何もしない。
+		}
 		var max=MansikiMapUtil.getMaxIndex(me.tweetIdMap)*1;
 		for(var tmpCursor=0;tmpCursor <= max;tmpCursor++ ){
 		    corigionList.push([]) ;
 		}
 		for(var tmpCursor=0;tmpCursor <= max;tmpCursor++ ){
-		    
+		    	//OK
 			var idIndex = oldMap[tmpCursor];
 			if(idIndex===undefined){
 			    continue;
 			}
 			if(tmpCursor === currentCursor){
-			    for(var i = 0;i<=childCount ;i++){
+			    idIndex = oldMap[tmpCursor];
+			    var targetCurosor = tmpCursor+offset;
+			    corigionList[targetCurosor].push(idIndex);
+			    nextMoveIndexMap[idIndex]=targetCurosor;
+			    remarkMap[idIndex] = true;
+			    for(var i = 1;i<=childCount ;i++){//ここは正常に作動している。
 				idIndex = oldMap[tmpCursor+i];
-				var targetCurosor = tmpCursor+offset+i;
-				if(targetCurosor < 0){
-				    targetCurosor =0;
-				}
-				if(targetCurosor > max){
-				    targetCurosor =max;
-				}
-				corigionList[targetCurosor].push(idIndex);
-				nextMoveIndexMap[idIndex]=tmpCursor+offset+i;
-				remarkMap[idIndex] =true;
-				remarkList.push(idIndex);
+				targetCurosor+=i;
+				childrenList[idIndex]=true;//子供リストに搭載
+				childrenStack.push(idIndex);
 			    }
 			}else if(nextMoveIndexMap[idIndex]===undefined){
 			    nextMoveIndexMap[idIndex]=tmpCursor;
 			    corigionList[tmpCursor].push(idIndex);
 			}
 		}
+console.log("convertMovedNewMap corigionList:"+corigionList.toSource()+"/childrenStack:"+childrenStack.toSource()+"/childrenList:"+childrenList.toSource());
 		var stack=[];
 		var usedMap ={};
 		//var hasMovedIndex =0;
@@ -546,21 +570,30 @@ console.log("moveTweetVVVVVZ afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/a
 		var isDoubled =false;
 		var subject = undefined;
 		var a = direct==="down"? 1 :direct==="up"? -1:0;
+		//ここから下で子供の移動が考慮されていない。子供は親が確定したあとに連続で入れるべき。
+		//バグ：上に子供が動いていない。
 		for(var targetCursor =0 ;targetCursor<= max;targetCursor++){
 		    var thisIndexs = corigionList[targetCursor];
-//console.log("thisIndexs.toSource():"+thisIndexs.toSource()+"/targetCurosor:"+targetCursor);
-                    if(currentIdIndex===true){
+console.log("convertMovedNewMap thisIndexs.toSource():"+thisIndexs.toSource()+"/targetCurosor:"+targetCursor+"/childCount:"+childCount);
+console.log("convertMovedNewMap stack:"+stack.toSource());
+                    if(currentIdIndex===true){//競合先が解消している場合。
                         for(var n=0;n<repeatList.length ;n++){
                     		stack.push(repeatList[n]);
+                    		if(direct==="down"){
+				    for(var m = 0;m<childrenStack.length;m++){
+					    stack.push(childrenStack[m]);
+				    }
+                    		}
                         }
                         currentIdIndex=false;
                     }
-		    if(thisIndexs===undefined || thisIndexs.length <1){
+		    if(thisIndexs===undefined || thisIndexs.length <1 || childrenList[thisIndexs[0]]!==undefined){
+			//子供はすっとばす。
 			continue;
 		    }else if(thisIndexs.length===1){
 			stack.push(thisIndexs[0]);
 		    }else if(direct==="down"){
-			for(var j=0;j<thisIndexs.length ;j++){
+			for(var j=0;j<thisIndexs.length ;j++){//ここは競合リストに限定
 			    var currentIdIndex = thisIndexs[j];
 			    if(remarkMap[currentIdIndex]===undefined){
 				if(subject===undefined ){
@@ -568,15 +601,18 @@ console.log("moveTweetVVVVVZ afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/a
 				}
 				stack.push(currentIdIndex);
 			    }else{
-				repeatList.push(currentIdIndex) ;
+				repeatList.push(currentIdIndex) ;//こっちに移動主体が入る
 			    }
 			}
 			currentIdIndex=true;
 		    }else if(direct==="up"){
-			for(var j=0;j<thisIndexs.length ;j++){
+			for(var j=0;j<thisIndexs.length ;j++){//ここは競合リストに限定
 			    var currentIdIndex = thisIndexs[j];
 			    if(remarkMap[currentIdIndex]!==undefined){
-				stack.push(currentIdIndex);
+				stack.push(currentIdIndex);//こっちに移動主体が入る
+				    for(var m = 0;m<childrenStack.length;m++){
+					    stack.push(childrenStack[m]);
+				    }
 			    }else{
 				if(subject===undefined ){
 				    subject = currentIdIndex;
@@ -587,12 +623,14 @@ console.log("moveTweetVVVVVZ afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/a
 			currentIdIndex=true;
 		    }
 		}
+console.log("stack:"+stack.toSource()+"/repeatList:"+repeatList.toSource());
+		//ここってこのIndexの逆引きやってんだっけ？やってたけどいいや。
 		if(currentIdIndex===true){
 		    for(var n=0;n<repeatList.length ;n++){
 			stack.push(repeatList[n]);
 		    }
 		}
-console.log("stack.toSource():"+stack.toSource()+"/corigionList:"+corigionList.toSource()+"/repeatList:"+repeatList.toSource()+"/remarkMap:"+remarkMap.toSource());
+console.log("stack:"+stack.toSource()+"/corigionList:"+corigionList.toSource()+"/repeatList:"+repeatList.toSource()+"/remarkMap:"+remarkMap.toSource());
 		for(var targetCursor =0 ;targetCursor<= max;targetCursor++){
 		    newMap[targetCursor]=stack[targetCursor];
 		}
@@ -1114,7 +1152,8 @@ console.log("getUpperMovableCursor  this.idIndex:"+this.idIndex+"/currentState"+
 		if(currentState!==undefined){
 			var max=MansikiMapUtil.getMaxIndex(editor.tweetIdMap)*1;
 			var cursor=max+1;
-			for(var i = max;i>0;i--){
+			var downerChildCount = 0;
+			for(var i = max;i>0;i--){//カーソル分回す
 				var idIndexTmp = editor.tweetIdMap[i];
 				if(idIndexTmp===undefined){
 					continue;
@@ -1125,14 +1164,16 @@ console.log("getUpperMovableCursor  this.idIndex:"+this.idIndex+"/currentState"+
 				    }
 				    break;
 				}
-				var func = editor.tweetsFuncs[idIndexTmp];
+				var func = editor.tweetsFuncs[idIndexTmp];//該当のレベルを調査
 console.log("getDownerMovableCursor idIndexTmp:"+idIndexTmp+"/this.idIndex:"+this.idIndex+"/i:"+i+"/func.level :"+func.level +"/this.level:"+this.level);
-				if(func.level*1+1 === this.level*1 || func.level*1 === this.level*1){
+				if(func.level*1+1 === this.level*1 || func.level*1 === this.level*1){//自分より上位が来たら操作する。
 				    cursor=i;
+				    downerChildCount = func.getChildCount();
 				}
 			}
-console.log("getDownerMovableCursor max:"+max+" cursor:"+cursor+"/editor.tweetIdMap:"+editor.tweetIdMap.toSource());
-			return cursor;
+			
+console.log("getDownerMovableCursor max:"+max+" cursor:"+cursor+"/downerChildCount:"+downerChildCount+"/editor.tweetIdMap:"+editor.tweetIdMap.toSource());
+			return cursor+downerChildCount;
 		}
 console.log("getDownerMovableCursor  0 cursor:"+0);
 	    return 0;
