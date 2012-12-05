@@ -143,13 +143,22 @@ MansikiTweetStyleEditor.prototype={
 		if(id===undefined){
 		    return ;
 		}
-//alert(button.length+"/i:"+0+"/id:"+id+"/"+button.css("background-color"));
 		var buttonState = {};
+		var func = this.funcs.getFunc(id);
 		this.cmdButtonsState[id] = buttonState;
-		buttonState["border"]=button.css("border");
+		var borderWidth = func.level*3;
+		var width = button.css("width").match(/[0-9]*/)*1;
+		button.css("width",width - borderWidth +7);
+		button.css("padding-right",0);
+		button.css("padding-left",0);
+		button.css("border-left-width",borderWidth);
+		buttonState["border-left-width"]=button.css("border-left-width");
+		buttonState["border-color"]=button.css("border-color");
+		buttonState["border-width"]=button.css("border-width");
+		buttonState["border-style"]=button.css("border-style");
+//alert(button.length+"/i:"+0+"/id:"+id+"/"+button.css("background-color")+"/"+buttonState["border-style"]+"/"+width);
 		buttonState["color"]=button.css("color");
 		button.bind("click",{self:this,id:id},this.cmdButtonsHilight);
-		var func = this.funcs.getFunc(id);
 		button.css("background-color",func.color);
 		buttonState["background-color"]=button.css("background-color");
 		var name = func.nameLc;
@@ -166,7 +175,10 @@ MansikiTweetStyleEditor.prototype={
 			var button = bottons.eq(i);
 			id= button.attr("id");
 			var buttonState = me.cmdButtonsState[id] ;
-			button.css("border",buttonState["border"]).css("color",buttonState["color"]).css("background-color",buttonState["background-color"]);
+			
+			button.css("border-style",buttonState["border-style"]).css("border-width",buttonState["border-width"])
+			.css("border-color",buttonState["border-color"]).css("border-left-width",buttonState["border-left-width"])
+			.css("color",buttonState["color"]).css("background-color",buttonState["background-color"]);
 			button.css("font-weight","nomal");
 		}
 		var id= event.data.id;
@@ -485,7 +497,7 @@ console.log("moveTweetVVVVVY afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/a
 						    if(targetFunc.level===1){
 							superParentNode = superParentNode.parentNode;
 						    }
-						    superParentNode.insertBefore(target,afterAfter);
+						    superParentNode.insertBefore(target,afterAfter);//またエラー発生！
 
 console.log("moveTweetVVVVVD afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	    
 						}else if(targetFunc.level===afterFunc.level){//slotの位置のよる
@@ -507,11 +519,20 @@ console.log("moveTweetVVVVVZ afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/a
 					    afterAfter.childNodes[slotDomObjIndex].appendChild(target);
     					}else if(max===targetCursor*1+1 && max >=3){//
     					    var afterIdIndex = me.tweetIdMap[(targetCursor*1-1)];//一個手前を取得
-					    var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
-    					    var afterAfter = document.getElementById(afterId);
+					    var afterFunc = me.tweetsFuncs[afterIdIndex];
 console.log("moveTweetVVVVVC afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	
-					    afterAfter.childNodes[slotDomObjIndex].appendChild(target);
-    					    
+                                            if(targetFunc.level<afterFunc.level){//slotの位置のよる,<はありえないはず
+                                                var levelDiff = afterFunc.level-targetFunc.level;
+        					var afterIdIndex = me.tweetIdMap[(targetCursor*1+1)];//一個手前を取得
+    					    	var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
+        					var afterAfter = document.getElementById(afterId);
+                                                var superParentNode =afterAfter.parentNode;
+                                                superParentNode.insertBefore(target,afterAfter);
+                                            }else{
+                                        	var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
+    					    	var afterAfter = document.getElementById(afterId);
+    					    	afterAfter.childNodes[slotDomObjIndex].appendChild(target);
+                                            }
     					}
         			}
 			}
@@ -572,6 +593,7 @@ console.log("convertMovedNewMap corigionList:"+corigionList.toSource()+"/childre
 		var a = direct==="down"? 1 :direct==="up"? -1:0;
 		//ここから下で子供の移動が考慮されていない。子供は親が確定したあとに連続で入れるべき。
 		//バグ：上に子供が動いていない。
+		var currentIdIndex =false;
 		for(var targetCursor =0 ;targetCursor<= max;targetCursor++){
 		    var thisIndexs = corigionList[targetCursor];
 console.log("convertMovedNewMap thisIndexs.toSource():"+thisIndexs.toSource()+"/targetCurosor:"+targetCursor+"/childCount:"+childCount);
@@ -607,7 +629,7 @@ console.log("convertMovedNewMap stack:"+stack.toSource());
 			currentIdIndex=true;
 		    }else if(direct==="up"){
 			for(var j=0;j<thisIndexs.length ;j++){//ここは競合リストに限定
-			    var currentIdIndex = thisIndexs[j];
+			    currentIdIndex = thisIndexs[j];
 			    if(remarkMap[currentIdIndex]!==undefined){
 				stack.push(currentIdIndex);//こっちに移動主体が入る
 				    for(var m = 0;m<childrenStack.length;m++){
@@ -623,14 +645,19 @@ console.log("convertMovedNewMap stack:"+stack.toSource());
 			currentIdIndex=true;
 		    }
 		}
-console.log("stack:"+stack.toSource()+"/repeatList:"+repeatList.toSource());
-		//ここってこのIndexの逆引きやってんだっけ？やってたけどいいや。
-		if(currentIdIndex===true){
-		    for(var n=0;n<repeatList.length ;n++){
-			stack.push(repeatList[n]);
-		    }
-		}
-console.log("stack:"+stack.toSource()+"/corigionList:"+corigionList.toSource()+"/repeatList:"+repeatList.toSource()+"/remarkMap:"+remarkMap.toSource());
+console.log("stackA:"+stack.toSource()+"/repeatList:"+repeatList.toSource()+"/childrenList:"+childrenList.toSource());
+                if(currentIdIndex===true){//競合先が解消している場合。
+                    for(var n=0;n<repeatList.length ;n++){
+                		stack.push(repeatList[n]);
+                		if(direct==="down"){
+				    for(var m = 0;m<childrenStack.length;m++){
+					    stack.push(childrenStack[m]);
+				    }
+                		}
+                    }
+                    currentIdIndex=false;
+                }
+console.log("stackB:"+stack.toSource()+"/corigionList:"+corigionList.toSource()+"/repeatList:"+repeatList.toSource()+"/remarkMap:"+remarkMap.toSource()+"/childrenList:"+childrenList.toSource());
 		for(var targetCursor =0 ;targetCursor<= max;targetCursor++){
 		    newMap[targetCursor]=stack[targetCursor];
 		}
