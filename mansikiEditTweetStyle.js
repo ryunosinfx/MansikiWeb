@@ -490,14 +490,27 @@ console.log("moveTweetVVVVVX afterIdIndex:"+afterIdIndex+"/max:"+max+"/targetCur
     					    	var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
         					var afterAfter = document.getElementById(afterId);
         				    	var afterFunc = me.tweetsFuncs[afterIdIndex];
+        					target = document.getElementById(id);
 console.log("moveTweetVVVVVY afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId+"/target:"+target+"/afterFunc.level:"+afterFunc.level);	
 						if(targetFunc.level<afterFunc.level){//slotの位置のよる,<はありえないはず
 						    var levelDiff = afterFunc.level-targetFunc.level;
 						    var superParentNode =afterAfter;
+console.log("moveTweetVVVVVE targetFunc.level:"+targetFunc.level+"/afterFunc.level:"+afterFunc.level+"/afterId"+afterId);
 						    if(targetFunc.level===1){
-							superParentNode = superParentNode.parentNode;
+							superParentNode = target.parentNode;;
 						    }
-						    superParentNode.insertBefore(target,afterAfter);//またエラー発生！
+						    //また後ろを取りに行く。子供数だけオフセットすると後ろが取れる。
+						    var afterIdIndex = max<=targetCursor*1+childCount+1?null:me.tweetIdMap[(targetCursor*1+childCount+1)];
+console.log("moveTweetVVVVVF targetFunc.level:"+targetFunc.level+"/afterFunc.level:"+afterFunc.level+"/afterIdIndex"+afterIdIndex+"/id:"+id);
+						    if(afterIdIndex!==null){
+							var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
+							var afterAfter = document.getElementById(afterId);
+							var afterFunc = me.tweetsFuncs[afterIdIndex];
+console.log("moveTweetVVVVVG afterId:"+afterId+"/afterFunc.level:"+afterFunc.level+"/afterIdIndex"+afterIdIndex+"/id:"+id);
+							superParentNode.insertBefore(target,afterAfter);
+						    }else{
+							superParentNode.appendChild(target);//最後尾なので追加
+						    }
 
 console.log("moveTweetVVVVVD afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	    
 						}else if(targetFunc.level===afterFunc.level){//slotの位置のよる
@@ -513,21 +526,56 @@ console.log("moveTweetVVVVVW afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/a
         					}
     					}else if(max===targetCursor*1){//配置転換は終わっているので、一個上のものを取得
     	        			    var afterIdIndex = max===targetCursor*1+1?null:me.tweetIdMap[(targetCursor*1-1)];
-					    var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
-    					    var afterAfter = document.getElementById(afterId);
-console.log("moveTweetVVVVVZ afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	
-					    afterAfter.childNodes[slotDomObjIndex].appendChild(target);
+					    var afterFunc = me.tweetsFuncs[afterIdIndex];
+console.log("moveTweetVVVVVC afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId:"+afterId);	
+                                            if(targetFunc.level<afterFunc.level){//slotの位置のよる,<は子持ち！
+						    var levelDiff = afterFunc.level-targetFunc.level;
+						    var superParentNode =afterAfter;
+console.log("moveTweetVVVVVE3 targetFunc.level:"+targetFunc.level+"/afterFunc.level:"+afterFunc.level+"/afterId"+afterId);
+						    if(targetFunc.level===1){
+							superParentNode = target.parentNode;;
+						    }
+						    //また後ろを取りに行く。子供数だけオフセットすると後ろが取れる。
+						    var afterIdIndex = max<=targetCursor*1+childCount+1?null:me.tweetIdMap[(targetCursor*1+childCount+1)];
+console.log("moveTweetVVVVVF3 targetFunc.level:"+targetFunc.level+"/afterFunc.level:"+afterFunc.level+"/afterIdIndex"+afterIdIndex+"/id:"+id);
+						    if(afterIdIndex!==null){
+							var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
+							var afterAfter = document.getElementById(afterId);
+							var afterFunc = me.tweetsFuncs[afterIdIndex];
+console.log("moveTweetVVVVVG3 afterId:"+afterId+"/afterFunc.level:"+afterFunc.level+"/afterIdIndex"+afterIdIndex+"/id:"+id);
+							superParentNode.insertBefore(target,afterAfter);
+						    }else{
+							superParentNode.appendChild(target);//最後尾なので追加
+						    }
+                                            }else{
+                                        	var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
+    					    	var afterAfter = document.getElementById(afterId);
+console.log("moveTweetVVVVVZ afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	//ここでafterAfterの階級考慮がない
+					    	afterAfter.childNodes[slotDomObjIndex].appendChild(target);
+                                            }
     					}else if(max===targetCursor*1+1 && max >=3){//
     					    var afterIdIndex = me.tweetIdMap[(targetCursor*1-1)];//一個手前を取得
 					    var afterFunc = me.tweetsFuncs[afterIdIndex];
-console.log("moveTweetVVVVVC afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	
-                                            if(targetFunc.level<afterFunc.level){//slotの位置のよる,<はありえないはず
-                                                var levelDiff = afterFunc.level-targetFunc.level;
-        					var afterIdIndex = me.tweetIdMap[(targetCursor*1+1)];//一個手前を取得
-    					    	var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
-        					var afterAfter = document.getElementById(afterId);
-                                                var superParentNode =afterAfter.parentNode;
-                                                superParentNode.insertBefore(target,afterAfter);
+console.log("moveTweetVVVVVC afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId:"+afterId);	
+                                            if(targetFunc.level<afterFunc.level){//slotの位置のよる,<は子持ち！
+						    var levelDiff = afterFunc.level-targetFunc.level;
+						    var superParentNode =afterAfter;
+console.log("moveTweetVVVVVE2 targetFunc.level:"+targetFunc.level+"/afterFunc.level:"+afterFunc.level+"/afterId"+afterId);
+						    if(targetFunc.level===1){
+							superParentNode = target.parentNode;;
+						    }
+						    //また後ろを取りに行く。子供数だけオフセットすると後ろが取れる。
+						    var afterIdIndex = max<=targetCursor*1+childCount+1?null:me.tweetIdMap[(targetCursor*1+childCount+1)];
+console.log("moveTweetVVVVVF2 targetFunc.level:"+targetFunc.level+"/afterFunc.level:"+afterFunc.level+"/afterIdIndex"+afterIdIndex+"/id:"+id);
+						    if(afterIdIndex!==null){
+							var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
+							var afterAfter = document.getElementById(afterId);
+							var afterFunc = me.tweetsFuncs[afterIdIndex];
+console.log("moveTweetVVVVVG2 afterId:"+afterId+"/afterFunc.level:"+afterFunc.level+"/afterIdIndex"+afterIdIndex+"/id:"+id);
+							superParentNode.insertBefore(target,afterAfter);
+						    }else{
+							superParentNode.appendChild(target);//最後尾なので追加
+						    }
                                             }else{
                                         	var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
     					    	var afterAfter = document.getElementById(afterId);
