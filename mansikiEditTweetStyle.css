@@ -287,23 +287,42 @@ div.TWFuncName,div.TWFuncCommand{
 span#TMTweetMode{
 	display:block;
 	float:left;
-	width:100px;
+	width:80px;
 	text-align:left;
 	height:20px;
+	border:0px solid black;
+	margin:0px 2px;
+	border-bottom-width:1px;
 }
-span#TMCursor{
-	display:block;
-	float:left;
-	width:70px;
-	text-align:left;
-	height:20px;
-}
-span#TMTweetCount{
+span#TMTweetType{
 	display:block;
 	float:left;
 	width:100px;
 	text-align:right;
 	height:20px;
+	border:0px solid black;
+	margin:0px 2px;
+	border-bottom-width:1px;
+}
+span#TMCursor{
+	display:block;
+	float:left;
+	width:30px;
+	text-align:left;
+	height:20px;
+	border:0px solid black;
+	margin:0px 2px;
+	border-bottom-width:1px;
+}
+span#TMTweetCount{
+	display:block;
+	float:left;
+	width:50px;
+	text-align:right;
+	height:20px;
+	border:0px solid black;
+	margin:0px 2px;
+	border-bottom-width:1px;
 }
 .deside{
 	height:30px;

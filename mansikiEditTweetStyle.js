@@ -693,8 +693,9 @@ console.log("convertMovedNewMap stack:"+stack.toSource());
 			currentIdIndex=true;
 		    }
 		}
-console.log("stackA:"+stack.toSource()+"/repeatList:"+repeatList.toSource()+"/childrenList:"+childrenList.toSource());
+console.log("stackA:"+stack.toSource()+"/repeatList:"+repeatList.toSource()+"/childrenList:"+childrenList.toSource()+"/currentIdIndex:"+currentIdIndex);
                 if(currentIdIndex===true){//競合先が解消している場合。
+                    
                     for(var n=0;n<repeatList.length ;n++){
                 		stack.push(repeatList[n]);
                 		if(direct==="down"){
@@ -704,6 +705,15 @@ console.log("stackA:"+stack.toSource()+"/repeatList:"+repeatList.toSource()+"/ch
                 		}
                     }
                     currentIdIndex=false;
+                }else{
+                    if(repeatList.length===0 && childCount > 0){
+        		if(direct==="down"){
+			    for(var m = 0;m<childrenStack.length;m++){
+				    stack.push(childrenStack[m]);
+			    }
+        		}
+                	
+                    }
                 }
 console.log("stackB:"+stack.toSource()+"/corigionList:"+corigionList.toSource()+"/repeatList:"+repeatList.toSource()+"/remarkMap:"+remarkMap.toSource()+"/childrenList:"+childrenList.toSource());
 		for(var targetCursor =0 ;targetCursor<= max;targetCursor++){
@@ -808,6 +818,15 @@ console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
 	},
 	showCursor:function(me){
 		$("#TMCursor").text(me.cursor*1+1);
+		var idIndex = me.tweetIdMap[me.cursor];
+		var func = me.tweetsFuncs[idIndex];
+		if(func!==undefined){
+			$("#TMTweetType").text(func.nameLc+"/L:"+func.level);
+			$("#TMTweetType").css("background-color",func.color);
+		}else{
+			$("#TMTweetType").text("");
+			$("#TMTweetType").css("background-color","transparent");
+		}
 	},
 	showCmdBox:function(event){
 		var me= event.data.self;
@@ -1409,7 +1428,7 @@ ManikiFuncKoma.prototype.create=function(idIndex,keyBindFunc){
 
 var ManikiFuncFukidashi=function(editor,idIndex,keyBindFunc){
 	ManikiFunctions.apply(this, arguments);
-	this.nameLc="噴き出し";
+	this.nameLc="噴出";
 	this.nameEn="Baloon";
 	this.color="#33FF3D";
 	this.Id =FUKIDASHI;
