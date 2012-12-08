@@ -492,20 +492,35 @@ console.log("moveTweetVVVVVX afterIdIndex:"+afterIdIndex+"/max:"+max+"/targetCur
         				    	var afterFunc = me.tweetsFuncs[afterIdIndex];
         					target = document.getElementById(id);
 console.log("moveTweetVVVVVY afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId+"/target:"+target+"/afterFunc.level:"+afterFunc.level);	
-						if(targetFunc.level<afterFunc.level){//slotの位置のよる,<はありえないはず
+						if(targetFunc.level<afterFunc.level){//slotの位置のよる,<は下位
 						    var levelDiff = afterFunc.level-targetFunc.level;
 						    var superParentNode =afterAfter;
 console.log("moveTweetVVVVVE targetFunc.level:"+targetFunc.level+"/afterFunc.level:"+afterFunc.level+"/afterId"+afterId);
-						    if(targetFunc.level===1){
+						    if(targetFunc.level===1){//上位の場合はこれ
 							superParentNode = target.parentNode;;
 						    }
 						    //また後ろを取りに行く。子供数だけオフセットすると後ろが取れる。
 						    var afterIdIndex = max<=targetCursor*1+childCount+1?null:me.tweetIdMap[(targetCursor*1+childCount+1)];
-console.log("moveTweetVVVVVF targetFunc.level:"+targetFunc.level+"/afterFunc.level:"+afterFunc.level+"/afterIdIndex"+afterIdIndex+"/id:"+id);
+console.log("moveTweetVVVVVF max:"+max+"/targetFunc.level:"+targetFunc.level+"/afterFunc.level:"+afterFunc.level+"/afterIdIndex"+afterIdIndex+"/id:"+id);
 						    if(afterIdIndex!==null){
-							var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
 							var afterAfter = document.getElementById(afterId);
-							var afterFunc = me.tweetsFuncs[afterIdIndex];
+							//この時点で逆にレベルが上位だった場合の考慮が抜けている
+							for(var h=0;h<3;h++){//想定階層分ずらして親をもらってくる。
+							    var afterIdIndex = max<=targetCursor*1+childCount+1+h?null:me.tweetIdMap[(targetCursor*1+childCount+1+h)];
+							    var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
+							    var afterAfterPre = afterAfter ;
+							    afterAfter = document.getElementById(afterId);
+							    var afterFunc = me.tweetsFuncs[afterIdIndex];//ヤバイなんかcoursorとidIndexが混ざってる！
+console.log("moveTweetVVVVVH0 afterId:"+afterId+"/afterFunc:"+afterFunc+"/afterIdIndex:"+afterIdIndex+"/id:"+id+"/"+(targetCursor*1+childCount+1+h)+"/me.tweetIdMap:"+me.tweetIdMap.toSource());
+console.log("moveTweetVVVVVH1 targetFunc.level:"+targetFunc.level+"/afterFunc.level:"+afterFunc.level+"/afterIdIndex:"+afterIdIndex+"/id:"+id);
+							    if(afterIdIndex===null){
+								alert("error");
+							    }
+							    if(afterFunc.level===targetFunc.level){//同一階層に限定
+								superParentNode = afterAfterPre;
+								break;
+							    }
+							}
 console.log("moveTweetVVVVVG afterId:"+afterId+"/afterFunc.level:"+afterFunc.level+"/afterIdIndex"+afterIdIndex+"/id:"+id);
 							superParentNode.insertBefore(target,afterAfter);
 						    }else{
@@ -519,7 +534,7 @@ console.log("moveTweetVVVVVD afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/a
 console.log("moveTweetVVVVVE afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	
         					}else{//上位の場合は配置転換は終わっているので、一個上のものを取得
             	        			    var afterIdIndex = max===targetCursor*1+1?null:me.tweetIdMap[(targetCursor*1-1)];
-        					    var afterId = me.constafterFuncMap.tweetIdPrefix+afterIdIndex;//エラー発生！
+        					    var afterId = me.constMap.tweetIdPrefix+afterIdIndex;//エラー発生！constMapがundefined
             					    var afterAfter = document.getElementById(afterId);
 console.log("moveTweetVVVVVW afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	
         					    afterAfter.childNodes[slotDomObjIndex].appendChild(target);
