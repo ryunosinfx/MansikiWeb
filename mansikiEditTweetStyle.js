@@ -386,7 +386,7 @@ console.log("moveTweet up upperTarget:"+upperTarget+"/cursor:"+cursor);
 		}else if(direct==="down"){
 		    var downerTarget =  func.getDownerMovableCursor();
 console.log("moveTweet down downerTarget:"+downerTarget+"/cursor:"+cursor);
-		    offset= downerTarget>0 ? downerTarget - childCount - cursor:1;
+		    offset= downerTarget>0 ? downerTarget - cursor:1;
 		}
 console.log("moveTweet offset:"+offset);
 		if(offset===0){
@@ -476,7 +476,7 @@ console.log("moveTweetVVVVVS "+id+"/"+parentId+"/"+parent.getAttribute("class")+
         			    var upperParentObj = document.getElementById(upperParentId);
         			    if(targetFunc.level===upperFunc.level){
 console.log("moveTweetVVVVUS targetFunc.level:"+targetFunc.level+"/max:"+max+"/upperFunc.level"+upperFunc.level+"/upperParentId:"+upperParentId);
-        				var slot = upperParentObj.parentNode;//ここの認識がおかしい。
+        				var slot = upperParentObj.parentNode;//ここの認識がおかしい。うん、なんかおかしい。
         				slot.appendChild(target);
         			    }else{
         				var slot = upperParentObj.childNodes[slotDomObjIndex];
@@ -501,14 +501,14 @@ console.log("moveTweetVVVVVE targetFunc.level:"+targetFunc.level+"/afterFunc.lev
 						    }
 						    //また後ろを取りに行く。子供数だけオフセットすると後ろが取れる。
 						    var afterIdIndex = max<=targetCursor*1+childCount+1?null:me.tweetIdMap[(targetCursor*1+childCount+1)];
-console.log("moveTweetVVVVVF max:"+max+"/targetFunc.level:"+targetFunc.level+"/afterFunc.level:"+afterFunc.level+"/afterIdIndex"+afterIdIndex+"/id:"+id);
+console.log("moveTweetVVVVVF max:"+max+"/targetFunc.level:"+targetFunc.level+"/afterFunc.level:"+afterFunc.level+"/afterIdIndex"+afterIdIndex+"/id:"+id+"/childCount:"+childCount);
 						    if(afterIdIndex!==null){
 							var afterAfter = document.getElementById(afterId);
-							//この時点で逆にレベルが上位だった場合の考慮が抜けている
+							//この時点で逆にレベルが上位だった場合の考慮が抜けているsuperParentNode
 							for(var h=0;h<3;h++){//想定階層分ずらして親をもらってくる。
 							    var afterIdIndex = max<=targetCursor*1+childCount+1+h?null:me.tweetIdMap[(targetCursor*1+childCount+1+h)];
 							    var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
-							    var afterAfterPre = afterAfter ;
+							    //var afterAfterPre = afterAfter ;
 							    afterAfter = document.getElementById(afterId);
 							    var afterFunc = me.tweetsFuncs[afterIdIndex];//ヤバイなんかcoursorとidIndexが混ざってる！
 console.log("moveTweetVVVVVH0 afterId:"+afterId+"/afterFunc:"+afterFunc+"/afterIdIndex:"+afterIdIndex+"/id:"+id+"/"+(targetCursor*1+childCount+1+h)+"/me.tweetIdMap:"+me.tweetIdMap.toSource());
@@ -517,14 +517,27 @@ console.log("moveTweetVVVVVH1 targetFunc.level:"+targetFunc.level+"/afterFunc.le
 								alert("error");
 							    }
 							    if(afterFunc.level===targetFunc.level){//同一階層に限定
-								superParentNode = afterAfterPre;
+								superParentNode = afterAfter.parentNode;
 								break;
 							    }
 							}
 console.log("moveTweetVVVVVG afterId:"+afterId+"/afterFunc.level:"+afterFunc.level+"/afterIdIndex"+afterIdIndex+"/id:"+id);
-							superParentNode.insertBefore(target,afterAfter);
+							superParentNode.insertBefore(target,afterAfter);//エラー発生！
 						    }else{
-							superParentNode.appendChild(target);//最後尾なので追加
+							for(var h=0;h<3;h++){//想定階層分ずらして親をもらってくる。
+    								var afterIdIndex = max<=targetCursor*1-1-h?null:me.tweetIdMap[(targetCursor*1-1-h)];//一個上を取得
+    								var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
+    							    afterAfter = document.getElementById(afterId);
+    							    var afterFunc = me.tweetsFuncs[afterIdIndex];//ヤバイなんかcoursorとidIndexが混ざってる！
+console.log("moveTweetVVVVVI afterId:"+afterId+"/afterIdIndex"+afterIdIndex+"/id:"+id+"/afterAfter:"+afterAfter
+	+"/afterFunc.level:"+afterFunc.level+"/targetFunc.level:"+targetFunc.level);
+								//間違っているのはソートの方
+							    if(afterFunc.level===targetFunc.level){//同一階層に限定
+    								superParentNode=afterAfter.parentNode;
+								break;
+							    }
+							}
+							superParentNode.insertBefore(target,afterAfter);//最後尾なので追加
 						    }
 
 console.log("moveTweetVVVVVD afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	    
@@ -571,6 +584,8 @@ console.log("moveTweetVVVVVZ afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/a
     					}else if(max===targetCursor*1+1 && max >=3){//
     					    var afterIdIndex = me.tweetIdMap[(targetCursor*1-1)];//一個手前を取得
 					    var afterFunc = me.tweetsFuncs[afterIdIndex];
+                                    	    var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
+					    var afterAfter = document.getElementById(afterId);
 console.log("moveTweetVVVVVC afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId:"+afterId);	
                                             if(targetFunc.level<afterFunc.level){//slotの位置のよる,<は子持ち！
 						    var levelDiff = afterFunc.level-targetFunc.level;
@@ -578,6 +593,8 @@ console.log("moveTweetVVVVVC afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/a
 console.log("moveTweetVVVVVE2 targetFunc.level:"+targetFunc.level+"/afterFunc.level:"+afterFunc.level+"/afterId"+afterId);
 						    if(targetFunc.level===1){
 							superParentNode = target.parentNode;;
+						    }else{
+							superParentNode = afterAfter.childNodes[slotDomObjIndex];
 						    }
 						    //また後ろを取りに行く。子供数だけオフセットすると後ろが取れる。
 						    var afterIdIndex = max<=targetCursor*1+childCount+1?null:me.tweetIdMap[(targetCursor*1+childCount+1)];
@@ -615,7 +632,7 @@ console.log("moveTweetVVVVVG2 afterId:"+afterId+"/afterFunc.level:"+afterFunc.le
 		var childrenList ={};
 		var childrenStack=[];
 		if(direct==="down"){
-		    offset+=childCount;
+		    offset;//+=childCount;//offsetのした方向がおかしい？なんか
 		}else{
 		    offset;//上りは何もしない。
 		}
@@ -629,9 +646,11 @@ console.log("moveTweetVVVVVG2 afterId:"+afterId+"/afterFunc.level:"+afterFunc.le
 			if(idIndex===undefined){
 			    continue;
 			}
+console.log("convertMovedNewMapAAAA tmpCursor:"+tmpCursor+"/currentCursor:"+currentCursor+"/offset"+offset+"/id:"+id);
 			if(tmpCursor === currentCursor){
 			    idIndex = oldMap[tmpCursor];
 			    var targetCurosor = tmpCursor+offset;
+console.log("convertMovedNewMapAAAB targetCurosor:"+targetCurosor+"/currentCursor:"+currentCursor+"/offset"+offset+"/id:"+id);
 			    corigionList[targetCurosor].push(idIndex);
 			    nextMoveIndexMap[idIndex]=targetCurosor;
 			    remarkMap[idIndex] = true;
@@ -1253,7 +1272,8 @@ console.log("FgetUpperMovableCursor beMovable:"+beMovable+"/cursor:"+cursor+"/fu
 		console.log("getUpperMovableCursor  0 cursor:"+0);
 	    return 0;
 	},
-	getDownerMovableCursor:function(){
+	getDownerMovableCursor:function(){//ここの計算がおかしい。要するに越境する場合の考慮が怪しい。いや探索方法が間違っている。
+	    //自分のカーソル位置から直近の移動先を撮ってくればいいはず。
 		var state=this.editor.analizer.state;
 		var editor = this.editor;
 		var currentState = state[this.idIndex];
@@ -1261,28 +1281,45 @@ console.log("getUpperMovableCursor  this.idIndex:"+this.idIndex+"/currentState"+
 		if(currentState!==undefined){
 			var max=MansikiMapUtil.getMaxIndex(editor.tweetIdMap)*1;
 			var cursor=max+1;
+			var nowCoursor=max+1;
 			var downerChildCount = 0;
-			for(var i = max;i>0;i--){//カーソル分回す
+			for(var i = max;i>=0;i--){//カーソル分回す下から
 				var idIndexTmp = editor.tweetIdMap[i];
 				if(idIndexTmp===undefined){
 					continue;
 				}
 				if(idIndexTmp*1 === this.idIndex*1){
-				    if(cursor ===max + 1){
-					cursor=i;
-				    }
+				    nowCoursor=i;
 				    break;
+				}
+			}
+			var isOverBorder = false;
+			//ここですでにカーソル位置は確定
+			for(var i = nowCoursor+1;i<=max;i++){//カーソル分回す下から
+				var idIndexTmp = editor.tweetIdMap[i];
+				if(idIndexTmp===undefined){
+					continue;
 				}
 				var func = editor.tweetsFuncs[idIndexTmp];//該当のレベルを調査
 console.log("getDownerMovableCursor idIndexTmp:"+idIndexTmp+"/this.idIndex:"+this.idIndex+"/i:"+i+"/func.level :"+func.level +"/this.level:"+this.level);
-				if(func.level*1+1 === this.level*1 || func.level*1 === this.level*1){//自分より上位が来たら操作する。
+				if(func.level*1 === this.level*1){//自分と同じ
 				    cursor=i;
-				    downerChildCount = func.getChildCount();
+				    downerChildCount = func.getChildCount();//移動先の子供を数える
+				    break;
+				}else if(func.level*1+1 === this.level*1){//自分より上位が来たら。
+				    isOverBorder= true;
+				}
+				if(i ===max){
+				    isOverBorder= false;//結果上位しかない場合
+					cursor=nowCoursor>=max?max:nowCoursor+1+this.getChildCount();//移動１＋子供の分しかさせない
+					break;
 				}
 			}
 			
 console.log("getDownerMovableCursor max:"+max+" cursor:"+cursor+"/downerChildCount:"+downerChildCount+"/editor.tweetIdMap:"+editor.tweetIdMap.toSource());
-			return cursor+downerChildCount;
+			var offset = isOverBorder===true ? -1:	downerChildCount;
+
+			return cursor+offset;//越境する場合は一つ上と交換・越境しない場合は子供の分より下に行く。
 		}
 console.log("getDownerMovableCursor  0 cursor:"+0);
 	    return 0;
