@@ -81,6 +81,7 @@ var MansikiTweetStyleEditor= function(id, width,height,ancer){
 	this.funcs.add2Funcs(new ManikiFuncFukusen(this,0,this.MansikiTweetStyleKeyBind));
 	this.funcs.makeInputArea();
 	this.currentFuncId="";
+	this.isFormFocusd=true;
 	this.analizer= new MansikiTweetStateAnaliser(this);
 }
 MansikiTweetStyleEditor.prototype={
@@ -183,7 +184,6 @@ MansikiTweetStyleEditor.prototype={
 		}
 		var id= event.data.id;
 		var buttonState = me.cmdButtonsState[id];
-		//alert("id:"+id);
 		$("#"+id).css("border-color",buttonState["background-color"]);
 		$("#"+id).css("color","black");
 		$("#"+id).css("font-weight","bold");
@@ -213,6 +213,16 @@ MansikiTweetStyleEditor.prototype={
 			}
 			this.MansikiTweetStyleKeyBind.buidCmdAreaMain();
 		}
+	},
+	onFocus:function(event){
+		var me= event.data.self;
+		me.isFormFocusd=true;
+		$("body").unbind("mousemove",me.onFocusToCmd);
+	},
+	onBlur:function(event){
+		var me= event.data.self;
+		me.isFormFocusd=false;
+		$("body").bind("mousemove",{self:me},me.onFocusToCmd);
 	},
 	//--------------------------------------------------------------------
 	//--------------------------------------------------------------------
@@ -1538,11 +1548,13 @@ console.log("create keyBindFuncLocal:"+keyBindFuncLocal);
 		var me= event.data.self;
 		me.isFormFocusd=true;
 		me.keyBindFunc.bindActionToInputForm(me.tweetArea);
+		me.editor.onFocus({data:{self:me.editor}});
 	},
 	onBlur:function(event){
 		var me= event.data.self;
 		me.isFormFocusd=false;
 		me.keyBindFunc.unbindActionToInputForm(me.tweetArea);
+		me.editor.onFocus({data:{self:me.editor}});
 	},
 	makeInputArea:function(){
 		this.inputArea.empty();
