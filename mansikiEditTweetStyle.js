@@ -399,7 +399,8 @@ console.log("moveTweet offset:"+offset);
 	moveExecute:function(me,idIndex,cursor,offset,direct,level,childCount){
 console.log("moveExecute oldMap:"+me.tweetIdMap.toSource());
 	    var slotDomObjIndex=2;
-	    	var subject = this.convertMovedNewMap(me,idIndex,cursor,offset,direct,level,childCount);
+	    	//var subject = this.convertMovedNewMap(me,idIndex,cursor,offset,direct,level,childCount);
+	    	var subject = this.convertMovedNewMap2(me,idIndex,direct);
 console.log("moveExecute newMap:"+me.tweetIdMap.toSource()+"/subject:"+subject);
 		var oldMap = me.tweetIdMap;
 		var id = me.constMap.tweetIdPrefix+idIndex;
@@ -408,7 +409,7 @@ console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"
 		if(subject !== undefined){
 
 		    	var targetFunc = me.tweetsFuncs[idIndex];
-		    	var subFunc = me.tweetsFuncs[subject];
+		    	//var subFunc = me.tweetsFuncs[subject];
 			var subjectId = me.constMap.tweetIdPrefix+subject;
 			var subObj = document.getElementById(subjectId);
 			var subParent = subObj.parentNode;
@@ -465,21 +466,33 @@ console.log("moveTweetA idIndex:"+idIndex+"/"+subject+"/subject:"+subParentId+"/
 console.log("moveTweetVVVVVS "+id+"/"+parentId+"/"+parent.getAttribute("class")+"/"+parent.childNodes+"/b:"+before+"/z"+(target.id)+"/af:"+(after===undefined||after===null?"null":after.id)
 					 +"/afaf:"+(afterAfter===undefined||afterAfter===null?"null":afterAfter.id)+"/"+(afterAfter===null)+"/x "+direct);
 
-				if(direct==="up"){
-				    //alert("upup");
-        			    var upperParentIndexId = me.getUpperParentIndexId(me,idIndex);//これが取ってくる者は何？ない場合もありうる。
+				if(direct==="up"){//ここに来る時点でソートは終了している。
+console.log("moveTweetVVVVUPUP this.cursor:"+ this.cursor+"/childCount:"+childCount);			    //alert("upup");
+				    var upperParentIndexId = me.tweetIdMap[(this.cursor*1 + childCount*1 -1 )];//この人のIDがおかしいような・・・
+        			    //var upperParentIndexId =  //me.getUpperParentIndexId(me,idIndex);//これが取ってくる者は何？ない場合もありうる。
+        			    //ソートが終わったあとなので一個下ではないか・・・
         			    if(upperParentIndexId===undefined){
-        				
+        				//break;
         			    }
         			    var upperParentId = me.constMap.tweetIdPrefix+upperParentIndexId;
 				    var upperFunc = me.tweetsFuncs[upperParentIndexId];
         			    var upperParentObj = document.getElementById(upperParentId);
-        			    if(targetFunc.level===upperFunc.level){
-console.log("moveTweetVVVVUS targetFunc.level:"+targetFunc.level+"/max:"+max+"/upperFunc.level"+upperFunc.level+"/upperParentId:"+upperParentId);
-        				var slot = upperParentObj.parentNode;//ここの認識がおかしい。うん、なんかおかしい。
+        			    var upperChildCount = upperFunc.getChildCount();
+console.log("moveTweetVVVVUT targetFunc.level:"+targetFunc.level+"/max:"+max+"/offset:"+offset+"/upperFunc.level"+upperFunc.level+"/upperParentId:"+upperParentId+"/"+upperChildCount+"/idIndex:"+idIndex+"/upperParentIndexId:"+upperParentIndexId);
+        			    if( targetFunc.level < upperFunc.level){
+        			    }else if(upperChildCount > 0 && targetFunc.level===upperFunc.level){
+        				var slot = upperParentObj.parentNode;
+        				slot.insertBefore(target,upperParentObj);
+        			    }else if(targetFunc.level===upperFunc.level){
+console.log("moveTweetVVVVUS targetFunc.level:"+targetFunc.level+"/max:"+max+"/offset:"+offset+"/upperFunc.level"+upperFunc.level+"/upperParentId:"+upperParentId+""+upperChildCount+"/idIndex:"+idIndex+"/upperParentIndexId:"+upperParentIndexId);
+        				var slot = upperParentObj.parentNode;//ここの認識がおかしい。うん、なんかおかしい上に子持ちがいたら上にいかない・・・おかしい
+        				//slot.insertBefore(target,upperParentObj);
+        				slot.appendChild(target,upperParentObj);
+        			    }else if(targetFunc.level > upperFunc.level){
+        				var slot = upperParentObj.childNodes[slotDomObjIndex];upperParentIndexId
         				slot.appendChild(target);
         			    }else{
-        				var slot = upperParentObj.childNodes[slotDomObjIndex];
+        				var slot = upperParentObj.childNodes[slotDomObjIndex];upperParentIndexId
         				slot.appendChild(target);
         			    }
         			}else if(direct==="down"){//ここの計算が狂っている、ここに来る時点でソートは終了している。
@@ -586,7 +599,7 @@ console.log("moveTweetVVVVVZ afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/a
 					    var afterFunc = me.tweetsFuncs[afterIdIndex];
                                     	    var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
 					    var afterAfter = document.getElementById(afterId);
-console.log("moveTweetVVVVVC afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId:"+afterId);	
+console.log("moveTweetVVVVVC afterAfter:"+afterAfter+"/afterFunc.level:"+afterFunc.level+"/afterId:"+afterId+"/targetFunc.level:"+targetFunc.level);	
                                             if(targetFunc.level<afterFunc.level){//slotの位置のよる,<は子持ち！
 						    var levelDiff = afterFunc.level-targetFunc.level;
 						    var superParentNode =afterAfter;
@@ -597,7 +610,7 @@ console.log("moveTweetVVVVVE2 targetFunc.level:"+targetFunc.level+"/afterFunc.le
 							superParentNode = afterAfter.childNodes[slotDomObjIndex];
 						    }
 						    //また後ろを取りに行く。子供数だけオフセットすると後ろが取れる。
-						    var afterIdIndex = max<=targetCursor*1+childCount+1?null:me.tweetIdMap[(targetCursor*1+childCount+1)];
+						    var afterIdIndex = max <= targetCursor*1+childCount+1 ?null :me.tweetIdMap[(targetCursor*1+childCount+1)];
 console.log("moveTweetVVVVVF2 targetFunc.level:"+targetFunc.level+"/afterFunc.level:"+afterFunc.level+"/afterIdIndex"+afterIdIndex+"/id:"+id);
 						    if(afterIdIndex!==null){
 							var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
@@ -608,9 +621,17 @@ console.log("moveTweetVVVVVG2 afterId:"+afterId+"/afterFunc.level:"+afterFunc.le
 						    }else{
 							superParentNode.appendChild(target);//最後尾なので追加
 						    }
+                                            }else if(targetFunc.level>afterFunc.level){//越境組
+        					    var afterIdIndex = me.tweetIdMap[(targetCursor*1+1)];//一個手前を取得
+                                            	    var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
+        					    var afterObj = document.getElementById(afterId);
+console.log("moveTweetVVVVVG4 afterId:"+afterId+"/afterFunc.level:"+afterFunc.level+"/afterIdIndex"+afterIdIndex+"/id:"+id+"/afterObj:"+afterObj+"/afterAfter:"+afterAfter+"/target:"+target);
+						    var superParentNode =afterAfter;
+						    superParentNode.childNodes[slotDomObjIndex].insertBefore(target,afterObj);
                                             }else{
                                         	var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
     					    	var afterAfter = document.getElementById(afterId);
+console.log("moveTweetVVVVVG3 afterId:"+afterId+"/afterFunc.level:"+afterFunc.level+"/afterAfter"+afterAfter+"/afterIdIndex:"+afterIdIndex);
     					    	afterAfter.childNodes[slotDomObjIndex].appendChild(target);
                                             }
     					}
@@ -620,7 +641,349 @@ console.log("moveTweetVVVVVG2 afterId:"+afterId+"/afterFunc.level:"+afterFunc.le
 		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
 		me.rebuildAll(me);
 	},
-	//とにかくソートを実施する。
+	//ソートのアルゴリズムを変える。we-
+	convertMovedNewMap2:function(me,idIndex,direct){
+		var id = me.constMap.tweetIdPrefix+idIndex;
+		var oldMap = me.tweetIdMap;
+		var newMap = {};
+		var nextMoveIndexMap ={};
+		var parentLevel =0 ;
+		var subject = undefined;
+		var remarkObjectsListByLevel ={};
+		var corsole =0 ;
+		var parentObj = undefined;
+		var max = MansikiMapUtil.getMaxIndex(me.tweetIdMap)*1;
+		//まずここで管理用のオブジェクトを構築
+    		me.convertMovedNewMap2buildTree(me,parentLevel,parentObj,corsole,max,remarkObjectsListByLevel);
+console.log("XXX remarkObjectsListByLevel:"+remarkObjectsListByLevel.toSource());
+    		//ソートなる移動を実施
+		
+    		subject = me.convertMovedNewMap2MoveExecOnTree(me,max,idIndex,direct,remarkObjectsListByLevel);
+//console.log("remarkObjects:"+remarkObjects.toSource());
+console.log("convertMovedNewMap2buildTree XX remarkObjectsListByLevel:"+remarkObjectsListByLevel.toSource());
+    		//スタックを構成
+		var levelList = remarkObjectsListByLevel["Level"+1];
+//console.log("levelList:"+levelList.toSource());
+    		var stack = me.convertMovedNewMap2AfterMoveMakeStack(levelList,remarkObjectsListByLevel);
+console.log("stack:"+stack.toSource());
+    		for(var targetCursor =0 ;targetCursor<= max;targetCursor++){
+		    newMap[targetCursor]=stack[targetCursor];
+		}
+		me.tweetIdMap = newMap;
+    		return subject;
+	},
+	convertMovedNewMap2buildTree:function(me,parentLevel,parentObj,corsole,max,remarkObjectsListByLevel){//再帰ちゃん
+	    var parentIndexId = -1;
+	    var childrenObjects = [];//子供専用,この階層内で閉じて、ツリーを構成する。
+	    var preObj = undefined;
+	    var currentObj ={};
+console.log("convertMovedNewMap2buildTree Z");
+	    for(var i = corsole; i<=max;i++){
+		    var indexIdTemp = me.tweetIdMap[i];
+		    var indexIdParent = me.tweetIdMap[i-1];
+		    if(parentLevel!==0 && indexIdParent!==undefined ){//なんだここは・・・
+			var parentFunc = me.tweetsFuncs[indexIdParent];
+			if(parentFunc.level ===parentLevel){
+			    parentIndexId = indexIdParent;
+			}
+		    }else if(parentLevel === 0){
+			parentIndexId=undefined;
+		    }
+
+console.log("convertMovedNewMap2buildTree CCC　indexIdTemp:"+indexIdTemp+"/corsole:"+corsole+"/i:"+i);
+		    var func = me.tweetsFuncs[indexIdTemp];
+		    currentObj = {indexID :indexIdTemp,level:func.level,parentIndexId:parentIndexId};
+
+console.log("convertMovedNewMap2buildTree X==:i:"+i+"/parentLevel:"+parentLevel+"/func.level:"+func.level+"/indexIdParent:"+indexIdParent+"/indexIdTemp:"+indexIdTemp+"/childrenObjects:"+childrenObjects.toSource());
+		    if(parentLevel+1 === func.level){
+			preObj = currentObj;
+			//本処理
+			childrenObjects.push(currentObj);
+			if(remarkObjectsListByLevel["Level"+func.level]===undefined){
+			    remarkObjectsListByLevel["Level"+func.level] = [];
+			}
+			remarkObjectsListByLevel["Level"+func.level].push(MansikiMapUtil.deepCopyMap(currentObj));//参照を持てない。
+			remarkObjectsListByLevel[indexIdTemp]=(childrenObjects);
+			remarkObjectsListByLevel["LAST"] = indexIdTemp;//最終版がマスタ扱い。
+console.log("convertMovedNewMap2buildTree  F:i:"+i+"/parentLevel:"+parentLevel+"/func.level:"+func.level+"/indexIdParent:"+indexIdParent+"/indexIdTemp:"+indexIdTemp);
+		    }else if(parentLevel+2 === func.level){
+console.log("convertMovedNewMap2buildTree  D1:i:"+i+"/parentLevel:"+parentLevel+"/func.level:"+func.level+"/indexIdParent:"+indexIdParent+"/indexIdTemp:"+indexIdTemp);
+			
+			//下位は再帰childrenObjects
+			parentLevel++;
+			i = me.convertMovedNewMap2buildTree(me,parentLevel,preObj ,i,max,remarkObjectsListByLevel)-1;
+			
+console.log("convertMovedNewMap2buildTree  D2:i:"+i+"/parentLevel:"+parentLevel+"/func.level:"+func.level+"/indexIdParent:"+indexIdParent+"/indexIdTemp:"+indexIdTemp);
+			parentLevel--;
+		    }else if(parentLevel >= func.level){//いきなり２ステップ以上上の可能性
+console.log("convertMovedNewMap2buildTree  U:i:"+i+"/parentLevel:"+parentLevel+"/func.level:"+func.level+"/indexIdParent:"+indexIdParent+"/indexIdTemp:"+indexIdTemp);
+
+                        if(parentObj!==undefined && childrenObjects.length >0){
+console.log("convertMovedNewMap2buildTree T1:i:"+i+"/childrenObjectsUnder:"+childrenObjects.toSource());
+                        	parentObj.children = childrenObjects;//なんかつけてる先がおかしい。最終端末の場合はなんか通らないのだが・・・
+                        }
+			return i;//上位はインデックス渡して終了
+		    }
+console.log("convertMovedNewMap2buildTree Y:i:"+i+"/func:" +func+"/indexIdTemp:"+indexIdTemp+"/currentObj:"+currentObj.toSource());
+		currentObj =undefined;
+	    }
+            if(parentObj!==undefined && childrenObjects.length >0){
+console.log("convertMovedNewMap2buildTree T2:i:"+i+"/childrenObjectsUnder:"+childrenObjects.toSource());
+	 	parentObj.children = childrenObjects;//なんかつけてる先がおかしい。最終端末の場合はなんか通らないのだが・・・
+	     }
+	    return max+1;
+	},
+	getObjOnTheList:function(indexId,list){
+	    for(var index in list){
+		var tmpObj = list[index];
+		if(indexId===tmpObj.indexID){
+		    return tmpObj;
+		}
+	    }
+	},
+	getIndexOnTheList:function(indexId,list){
+	    for(var index in list){
+		var tmpObj = list[index];
+		if(indexId===tmpObj.indexID){
+		    return index;
+		}
+	    }
+	    
+	},
+	convertMovedNewMap2MoveExecOnTree:function(me,max,indexId,diarect,remarkObjectsListByLevel){//再帰じゃないよ。
+	    var subject = undefined;
+
+	    var funcOfTarget = me.tweetsFuncs[indexId];
+	    var parentLevel = funcOfTarget.level - 1;
+	    for(var i = 0; i<=max;i++){
+		    var indexIdTemp = me.tweetIdMap[i];
+		    var func = me.tweetsFuncs[indexIdTemp];
+console.log("convertMovedNewMap2MoveExecOnTree FirstXX:i:"+i+"/indexIdTemp:"+indexIdTemp+"/func.level:"+func.level+"/parentLevel+1:"+(parentLevel+1)+"/"
+	+parentLevel+"/"+indexIdTemp+"/"+indexId);
+
+		    if(parentLevel+1 === func.level && indexIdTemp*1===indexId*1){//対象がいたら。
+			//本処理
+			var levelList = remarkObjectsListByLevel["Level"+func.level];
+console.log("convertMovedNewMap2buildTree A:i:"+i+"/indexIdTemp:"+indexIdTemp+"/func.level:"+func.level+"/levelList:"+levelList.toSource());
+			var levelListLength = levelList.length;
+			for(var index in levelList){
+			    var targetObj = levelList[index];//各レベルの順番を抜く
+			    if(indexId === targetObj.indexID ){//リスト上の自分
+console.log("convertMovedNewMap2buildTree B:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect+"/"+levelListLength);
+        			    if(diarect ==="down" ){//下を取ってそこの配列にねじ込む。というかそこの配列のその順番の後ろにねじ込む
+        				if(index < levelListLength-1){//まだ後ろがある
+        				    var nextIndex = index*1+1;
+        				    var changeObj = levelList[nextIndex];//あくまでも同じ階層なので
+        				    if(changeObj.parentIndexId ===targetObj.parentIndexId){
+        					//同じ親の配下
+        					var remarkObjects = remarkObjectsListByLevel[indexIdTemp];//レベルは同じなので
+        					
+        	        	//alert("remarkObjects A:"+remarkObjects.toSource()
+        	        	//	+"/indexIdTemp:"+indexIdTemp+"/changeObj.indexID:"+changeObj.indexID+"/targetObj.indexID:"+targetObj.indexID);
+        					levelList.splice(index*1,2,changeObj,targetObj);//レベルリスト内で入れ替え
+        					var changeObjTrue = this.getObjOnTheList(changeObj.indexID,remarkObjects);
+        					var targetObjTrue = this.getObjOnTheList(targetObj.indexID,remarkObjects);
+        					var indexTargetOntheList = this.getIndexOnTheList(targetObj.indexID,remarkObjects);
+        					remarkObjects.splice(indexTargetOntheList,2,changeObjTrue,targetObjTrue);//これの齟齬はおこらないか？おんなじモノ見てるから大丈夫？
+        					subject = changeObj.indexID;
+        	        	//alert("remarkObjects B:"+remarkObjects.toSource()+"/indexIdTemp:"+indexIdTemp);
+            					remarkObjectsListByLevel["Level"+func.level]=levelList;
+        					remarkObjectsListByLevel[indexIdTemp]= remarkObjects;
+        			//alert("remarkObjectsListByLevel:"+remarkObjectsListByLevel.toSource());
+console.log("convertMovedNewMap2buildTree B1:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect);		
+        				    }else{//あー間に上位の空が挟まっている場合の考慮漏れ
+        					var levelListParent = remarkObjectsListByLevel["Level"+(func.level*1-1)];	
+        					for(var n=0,len =levelListParent.length;n<len;n++){
+console.log("convertMovedNewMap2buildTree B1a:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect+"/targetObj.parentIndexId:"+targetObj.parentIndexId+"/levelListParent:"+levelListParent.toSource()+"/"+n);	
+        					    var targetObjParent = levelListParent[n];
+        					    if(targetObjParent.indexID === targetObj.parentIndexId){
+            					    	var nextObjParent = levelListParent[n+1];
+	        					var remarkObjectsParent = remarkObjectsListByLevel[targetObjParent.indexID];
+    	        					var targetObjParentTrue = this.getObjOnTheList(targetObjParent.indexID,remarkObjectsParent);
+	        					var remarkObjectsNext = remarkObjectsListByLevel[nextObjParent.indexID];
+    	        					var nextObjParentTrue = this.getObjOnTheList(nextObjParent.indexID,remarkObjectsNext);
+        						if(nextObjParent.indexID === changeObj.parentIndexId){
+        						    //重要なのはremarkObjectsListByLevelのリスト上でchildをきちんと管理すること
+        	        					var targetObjTrue = targetObjParentTrue.children.pop();
+        	        					nextObjParentTrue.children.unshift(targetObjTrue);
+        						}else{
+        						    	var targetObjTrue =targetObjParentTrue.children.pop();
+                					    	if(nextObjParentTrue.children===undefined){
+                					    	    nextObjParentTrue.children=[];
+                    					    	}
+        	        					nextObjParentTrue.children.unshift(targetObjTrue);//結局こいつらがあるから再度調整が必要
+        						}
+	        					subject = nextObjParent.indexID;
+        						levelListParent[n+1]=nextObjParent;
+    						    	break;
+        					    }
+        					}
+console.log("convertMovedNewMap2buildTree B1A:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect);
+        					remarkObjectsListByLevel["Level"+func.level-1]=levelListParent;
+        				    }
+    console.log("convertMovedNewMap2buildTree B2:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect);
+        				    return subject;
+        				}else if(targetObj.parentIndexId!==undefined){
+        				    
+        				    //上位がある場合はもういちどたぐる※なんかここが動いていない？
+        					var levelListParent = remarkObjectsListByLevel["Level"+(func.level-1)];
+console.log("convertMovedNewMap2buildTree B4a:i:"+i+"/func.level:"+func.level+"/remarkObjectsListByLevel:"+remarkObjectsListByLevel.toSource());
+        					
+        					var levelListParentLength = levelListParent.length;
+        					for(var indexParent in levelListParent){
+        					    var parentObj = levelListParent[indexParent];
+console.log("convertMovedNewMap2buildTree B4b:i:"+i+"/indexParent:"+indexParent+"/index:"+index+"/diarect:"+diarect+"/parentObj.indexID:"+parentObj.indexID+"/"+targetObj.parentIndexId 
+	+"/levelListParentLength:"+levelListParentLength+"/"+(indexParent*1+1));
+	
+        					    if(parentObj.indexID === targetObj.parentIndexId && indexParent*1+1< levelListParentLength){
+                					var remarkObjectsParent = remarkObjectsListByLevel[targetObj.parentIndexId];
+							var nextObjParent = levelListParent[indexParent*1+1];
+							
+        	        				var targetObjParentTrue = this.getObjOnTheList(parentObj.indexID,remarkObjectsParent);
+            					    	var parentObjNext = levelListParent[indexParent*1+1];
+	        					var remarkObjectsNext = remarkObjectsListByLevel[parentObjNext.indexID];
+    	        					var nextObjParentTrue = this.getObjOnTheList(nextObjParent.indexID,remarkObjectsNext);
+	        					var targetObjTrue = targetObjParentTrue.children.pop();
+        						//この親の舌に入れる
+            					    	if(nextObjParentTrue.children===undefined){
+            					    	    nextObjParentTrue.children=[];
+            					    	}
+            					    	nextObjParentTrue.children.unshift(targetObjTrue);
+	        					subject = parentObjNext.indexID;
+        					    }
+        					    
+        					}
+       console.log("convertMovedNewMap2buildTree B4:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect);
+        				}
+        				//そもそも最下位の場合は放置？
+        			    }else{//うっぺｒ−
+        				if(index*1 > 0){
+        				    var changeObj  = levelList[index*1-1];
+        				    if(changeObj.parentIndexId ===targetObj.parentIndexId){
+        					//同じ親の配下
+        					levelList.splice(index*1-1,2,targetObj,changeObj);
+        					var remarkObjects = remarkObjectsListByLevel[indexIdTemp];
+
+        					var changeObjTrue = this.getObjOnTheList(changeObj.indexID,remarkObjects);
+        					var targetObjTrue = this.getObjOnTheList(targetObj.indexID,remarkObjects);
+        					var indexTargetOntheList = this.getIndexOnTheList(changeObjTrue.indexID,remarkObjects);
+        					
+        					remarkObjects.splice(indexTargetOntheList,2,targetObjTrue,changeObjTrue);
+        					subject = changeObj.indexID;
+        				    }else{//あー間に上位の空が挟まっている場合の考慮漏れ
+        					var levelListParent = remarkObjectsListByLevel["Level"+(func.level-1)];
+        					for(var n=0,len =levelListParent.length;n<len;n++){
+        					    var targetObjParent = levelListParent[n];
+        					    if(targetObjParent.indexID === targetObj.parentIndexId){
+            					    	var nextObjParent = levelListParent[n-1];
+	        					var remarkObjectsParent = remarkObjectsListByLevel[targetObjParent.indexID];
+    	        					var targetObjParentTrue = this.getObjOnTheList(targetObjParent.indexID,remarkObjectsParent);
+	        					var remarkObjectsNext = remarkObjectsListByLevel[nextObjParent.indexID];
+    	        					var nextObjParentTrue = this.getObjOnTheList(nextObjParent.indexID,remarkObjectsNext);
+        						if(nextObjParent.indexID === changeObj.parentIndexId){
+        	        					//違う場合はlevelListに手は加えない
+        	        					var targetObjTrue = targetObjParentTrue.children.shift();
+        	        					var remarkObjectsTarget = remarkObjectsListByLevel[changeObj.indexID];
+        	        					nextObjParentTrue.children.push(targetObjTrue);
+        						    
+        						}else{
+        						    	var targetObjTrue =targetObjParentTrue.children.shift();
+                					    	if(nextObjParentTrue.children===undefined){
+                					    	    nextObjParentTrue.children=[];
+                    					    	}
+                					    	nextObjParentTrue.children.push(targetObjTrue);
+        						}
+                					subject = nextObjParent.indexID;
+    						    	break;
+        					    }
+        					}
+        				    }
+   console.log("convertMovedNewMap2buildTree U1:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect);
+        				    return subject;
+        				}else if(targetObj.parentIndexId!==undefined){
+        				    //上位がある場合はもういちどたぐる
+        				    var levelListParent = remarkObjectsListByLevel["Level"+(func.level*1-1)];
+
+        					for(var indexParent in levelListParent){
+        					    var parentObj = levelListParent[indexParent];
+        					    if(parentObj.indexID === targetObj.parentIndexId && indexParent*1 > 0){
+            					    	var nextObjParent = levelListParent[indexParent*1-1];
+                					var remarkObjectsParent = remarkObjectsListByLevel[targetObj.parentIndexId];
+        	        				var targetObjParentTrue = this.getObjOnTheList(parentObj.indexID,remarkObjectsParent);
+            					    	var parentObjNext = levelListParent[(indexParent*1-1)];
+	        					var remarkObjectsNext = remarkObjectsListByLevel[parentObjNext.indexID];
+    	        					var nextObjParentTrue = this.getObjOnTheList(nextObjParent.indexID,remarkObjectsNext);
+	        					var targetObjTrue = targetObjParentTrue.children.shift();
+        						//この親の舌に入れる
+            					    	if(nextObjParentTrue.children===undefined){
+            					    	    nextObjParentTrue.children=[];
+            					    	}
+            					    	nextObjParentTrue.children.push(targetObjTrue);
+                					subject = nextObjParent.indexID;
+            					    	//なんかこのあと作業をしないといけないような・・・もともと端っこだからカンケイナイ？
+        					    }
+        					}
+    console.log("convertMovedNewMap2buildTree U2:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect);
+        				}
+        			    }
+			    }
+			    preIndex= index;
+			}
+			return subject;
+		    }
+	    }
+	    return subject;
+	},
+	convertMovedNewMap2AfterMoveMakeStack:function(levelList,remarkObjectsListByLevel){//ここは階層考慮が抜けている？
+	    var retStack = [];
+		for(var i = 0,len= levelList.length ;i < len ;i++){
+		    var currentObj = levelList[i];
+		    var indexId = currentObj.indexID;
+		    var listOfRef = remarkObjectsListByLevel[indexId];
+		    var children =undefined;
+		    for(var index in listOfRef){
+			var tmpObj = listOfRef[index];
+			if(tmpObj.indexID===indexId){
+			    children = tmpObj.children;
+			    break;
+			}
+		    }
+		    retStack.push(indexId);
+	console.log("indexId:"+indexId);
+		    if(children!==undefined){
+			var childStack = this.convertMovedNewMap2AfterMoveMakeStack(children,remarkObjectsListByLevel);
+			retStack = retStack.concat(childStack);
+		    }
+		}
+	    return retStack;
+	},
+	//これどうなってんだっけ？いるの？
+	convertMovedNewMap2MoveExecSearch:function(me,parentLevel,remarkObjects,corsole,max,indexId,diarect,getObjParent,target){//再帰ちゃん
+	    for(var i = corsole; i<=max;i++){
+		    var indexIdTemp = me.tweetIdMap[i];
+		    var func = me.tweetsFuncs[indexIdTemp];
+		    if(target!==undefined  && target.indexID!==undefined){
+			return max+1;
+		    }
+		    if(parentLevel+1 === func.level && indexIdTemp===indexId){//対象がいたら。
+			//本処理
+			target = remarkObjects[i];
+			delete remarkObjects[i];
+			return ;
+		    }else if(parentLevel === func.level){
+			parentLevel--;
+			return i;//上位はインデックス渡して終了
+		    }else if(parentLevel === func.level+1){
+			//下位は再帰
+			var remarkObjectsUnder = [];
+			parentLevel++;
+			i = me.convertMovedNewMap2MoveExec(me,parentLevel,remarkObjectsUnder ,corsole,max,indexId,diarect)-1;
+			currentObj.children = remarkObjectsUnder;
+		    }
+	    }
+	    return max+1;
+	},
+	//とにかくソートを実施する。古い。
 	convertMovedNewMap:function(me,idIndex,currentCursor,offset,direct,level,childCount){
 		var id = me.constMap.tweetIdPrefix+idIndex;
 		var oldMap = me.tweetIdMap;
@@ -756,17 +1119,24 @@ console.log("stackB:"+stack.toSource()+"/corigionList:"+corigionList.toSource()+
 		me.tweetIdMap = newMap;
 		return subject;//for delete//この選択がおかしい。
 	},
-	getUpperParentIndexId:function(me,subject){
+	getUpperParentIndexId:function(me,subject){//ここのOffsetがおかしい。
 		var max=MansikiMapUtil.getMaxIndex(me.tweetIdMap)*1;
 		var func = me.tweetsFuncs[subject];
+		var upperLevelIndexId  = undefined;
 		var upperIndexId = undefined;
 		for(var targetCursor =0 ;targetCursor<= max;targetCursor++){
 		    	var tempSubject =  me.tweetIdMap[targetCursor];
-		    	if(tempSubject===subject){//Empty through
+		    	if(tempSubject===subject){//Empty through自分自身が来たらエンド
+		    	    if(upperIndexId===undefined && upperLevelIndexId !== undefined ){
+		    		upperIndexId = upperIndexId;
+		    	    }
 		    	    break;
 		    	}
 		    	var upperFunc = me.tweetsFuncs[tempSubject];
-		    	if(upperFunc.level === func.level || upperFunc.level+1 === func.level){//SameLevel
+		    	if(upperFunc.level+1 === func.level){
+		    	    upperLevelIndexId =tempSubject;
+		    	}
+		    	if(upperFunc.level === func.level ){//SameLevel
 		    	    upperIndexId = tempSubject;
 		    	}
 		}
@@ -1329,7 +1699,7 @@ console.log("getDownerMovableCursor  0 cursor:"+0);
 		var max=MansikiMapUtil.getMaxIndex(editor.tweetIdMap)*1;
 		var cursor=max+1;
 		var childCount = 0;
-		for(var i = max;i>0;i--){
+		for(var i = max;i>0;i--){//下からめくる
 			var idIndexTmp = editor.tweetIdMap[i];
 			if(idIndexTmp===undefined){
 				continue;
@@ -1338,10 +1708,11 @@ console.log("getDownerMovableCursor  0 cursor:"+0);
 			    break;
 			}
 			var func = editor.tweetsFuncs[idIndexTmp];
+console.log("getChildCount func.level :"+func.level+"/this.level:"+this.level +"/childCount:"+ childCount+"/idIndexTmp:"+idIndexTmp+"/this.idIndex:"+this.idIndex);
 			if(func.level > this.level*1){
 			    childCount++;
 			}else{
-			    childCount=0;
+			    childCount=0;//リセット
 			}
 		}
 		return childCount;
