@@ -171,25 +171,44 @@ MansikiTweetStyleEditor.prototype={
 	},
 	cmdButtonsHilight:function(event){
 		var me= event.data.self;
+		var fullId= event.data.id;
+		var level= event.data.level;
 		var bottons = $(".commands>div");
+		if(level!==undefined){
+			me.loadedFuncLevel = level;
+		}
 		for(var i=0;i<bottons.length;i++){
 			var button = bottons.eq(i);
-			id= button.attr("id");
+			var id= button.attr("id");
 			var buttonState = me.cmdButtonsState[id] ;
 			
-			button.css("border-style",buttonState["border-style"]).css("border-width",buttonState["border-width"])
-			.css("border-color",buttonState["border-color"]).css("border-left-width",buttonState["border-left-width"])
-			.css("color",buttonState["color"]).css("background-color",buttonState["background-color"]);
-			button.css("font-weight","nomal");
+			button
+			.css("border-style",buttonState["border-style"])
+			.css("border-width",buttonState["border-width"])
+			.css("border-color",buttonState["border-color"])
+			.css("border-left-width",buttonState["border-left-width"])
+			.css("color",buttonState["color"])
+			.css("background-color",buttonState["background-color"])
+			.css("font-weight","nomal");
+			var nowFunc = me.funcs.getFunc(id);
+			if(level!==undefined && level > nowFunc.level || level!==undefined && level+1 < nowFunc.level 
+				|| level===undefined && me.loadedFuncLevel !== undefined && me.loadedFuncLevel > nowFunc.level ){
+			    button.css("opacity","0.3");
+			    button.unbind("click");
+			}else{
+			    button.css("opacity","1");
+			    button.bind("click",{self:me,id:id},me.cmdButtonsHilight);
+			}
 		}
-		var id= event.data.id;
-		var buttonState = me.cmdButtonsState[id];
-		$("#"+id).css("border-color",buttonState["background-color"]);
-		$("#"+id).css("color","black");
-		$("#"+id).css("font-weight","bold");
+		var buttonState = me.cmdButtonsState[fullId];
+		var currentButton = $("#"+fullId);
+		currentButton
+		.css("border-color",buttonState["background-color"])
+		.css("color","black")
+		.css("font-weight","bold");
 		me.twCmdAreaUpper.css("background-color",buttonState["background-color"]);
 		me.twCmdAreaUnder.css("background-color",buttonState["background-color"]);
-		me.currentFuncId =id;
+		me.currentFuncId =fullId;
 	},
 	//--------------------------------------------------------------------
 	onFocusToCmd:function(event){
@@ -206,12 +225,13 @@ MansikiTweetStyleEditor.prototype={
 			$("#TMTweetMode").text(me.constMap.modCursor);
 //console.log("focus :"+me.tweetHideTextarea.val());
 			me.tweetHideTextarea.val("");
+			if(me.state.selected !==undefined)me.state.lastSelected = me.state.selected ;
 			me.state.selected=undefined;
 			for(var cursor in me.tweetIdMap){
 				var tmpId = me.constMap.tweetIdPrefix+me.tweetIdMap[cursor];
 				$("#"+tmpId).removeClass("TwselectedBox");
 			}
-			this.MansikiTweetStyleKeyBind.buidCmdAreaMain();
+			me.MansikiTweetStyleKeyBind.buidCmdAreaMain();
 		}
 	},
 	onFocus:function(event){
@@ -223,6 +243,7 @@ MansikiTweetStyleEditor.prototype={
 		var me= event.data.self;
 		me.isFormFocusd=false;
 		$("body").bind("mousemove",{self:me},me.onFocusToCmd);
+		me.loadedFuncLevel = undefined; 
 	},
 	//--------------------------------------------------------------------
 	//--------------------------------------------------------------------
@@ -272,11 +293,16 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 		var text = me.bredgeArea.val();
 		if(text!==undefined && text.length>0){
 			event.data.text=text;
-			if(me.state.selected === undefined){//add
+			var currentFunc =me.funcs.getFunc(me.currentFuncId);
+			if(me.state.selected !==undefined)me.state.lastSelected = me.state.selected ;
+			var selectedFuncOnList = me.tweetsFuncs[me.state.lastSelected ];
+			if(me.state.selected === undefined || selectedFuncOnList!==undefined && currentFunc.level > selectedFuncOnList.level){//add
 				me.tweetIdCount++;
 				event.data.idIndex=me.tweetIdCount;
-				me.insertTweet(event);
 //console.log("addTweet idIndex:"+event.data.idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.tweetIdMap.toSource());
+				if( selectedFuncOnList!==undefined && currentFunc.level > selectedFuncOnList.level)me.cursor++;
+				//alert("addTweet AAA currentFunc:"+currentFunc+"/selectedFuncOnList:"+selectedFuncOnList+"/me.state.lastSelected :"+me.state.lastSelected );
+				me.insertTweet(event);
 				me.cursor++;
 				me.bredgeArea.val("");
 				me.funcs.clearTweet();
@@ -288,7 +314,7 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 			}
 			me.rebuildAll(me);
 		}
-		this.MansikiTweetStyleKeyBind.buidCmdAreaInput();
+		me.MansikiTweetStyleKeyBind.buidCmdAreaInput();
 	},
 	insertTweet:function(event){
 		var me= event.data.self;
@@ -297,13 +323,24 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 		me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor],offsetY:999}});
 	},
 	doInsertTweet:function(me,tweetBox){
+		var currentFunc =me.funcs.getFunc(me.currentFuncId);
+		var selectedFuncOnList = me.tweetsFuncs[me.state.lastSelected ];
+console.log("doInsertTweet AAA currentFunc:"+currentFunc+"/selectedFuncOnList:"+selectedFuncOnList);
 		if(me.cursor*1===0){
 			if(me.viewList.children("div").length > 0){
 				me.viewList.children("div").eq(0).before(tweetBox);
 			}else{
 				me.viewList.append(tweetBox);
 			}
+		}else if(selectedFuncOnList!==undefined && currentFunc!==undefined && currentFunc.level > selectedFuncOnList.level){
+console.log("doInsertTweet AAB currentFunc:"+currentFunc+"/selectedFuncOnList:"+selectedFuncOnList);
+			var preIdIndex=me.tweetIdMap[(me.cursor*1-1)];
+			var preId=me.constMap.tweetIdPrefix+preIdIndex;
+			var slot = $("#"+preId).children("div.tweetSlot").eq(0);
+			alert(slot.length+"/preId:"+preId+"/preIdIndex:"+preIdIndex+"/me.cursor:"+me.cursor);
+			slot.prepend(tweetBox);
 		}else{
+console.log("doInsertTweet AAC currentFunc:"+currentFunc+"/selectedFuncOnList:"+selectedFuncOnList);
 			var idIndex=me.tweetIdMap[me.cursor];
 			var func = me.tweetsFuncs[idIndex];
 			var preIdIndex=me.tweetIdMap[me.cursor-1];
@@ -338,8 +375,9 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 		var func = me.tweetsFuncs[idIndex];
 		me.bredgeArea.val(text);
 		me.funcs.loadTweet();
-		me.cmdButtonsHilight({data:{self:me,id:func.getFullId()}});
+		me.cmdButtonsHilight({data:{self:me,id:func.getFullId(),level:func.level}});
 		me.state.selected = idIndex;
+		if(me.state.selected !==undefined)me.state.lastSelected = me.state.selected ;
 		$("#TMTweetMode").text(me.constMap.modUpdate);
 		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
 		me.MansikiTweetStyleKeyBind.buidCmdAreaInput();
@@ -1223,6 +1261,7 @@ console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
 		for(var cursor in me.tweetIdMap){
 			me.getTweetBoxObj(me,me.tweetIdMap[cursor]).css("box-shadow","0px");
 		}
+		if(me.state.selected !==undefined)me.state.lastSelected = me.state.selected ;
 		me.state.selected = undefined;
 		me.bredgeArea.val("");
 		me.funcs.clearTweet();
@@ -1554,7 +1593,7 @@ console.log("create keyBindFuncLocal:"+keyBindFuncLocal);
 		var me= event.data.self;
 		me.isFormFocusd=false;
 		me.keyBindFunc.unbindActionToInputForm(me.tweetArea);
-		me.editor.onFocus({data:{self:me.editor}});
+		me.editor.onBlur({data:{self:me.editor}});
 	},
 	makeInputArea:function(){
 		this.inputArea.empty();
