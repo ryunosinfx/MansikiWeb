@@ -118,6 +118,21 @@ MansikiTweetStyleEditor.prototype={
 			this.rebuildAll(this);
 		}
 	},
+	
+	//--------------------------------------------------------------
+	startDownload:function (event) {
+	        var text = document.getElementById("text").value;
+	        var blob = new Blob([text]);
+	        var url = window.URL.createObjectURL(blob);
+	        document.getElementById('TMsaveButton').href = url;
+	},
+	startLoad:function () {
+	        var text = document.getElementById("text").value;
+	        var blob = new Blob([text]);
+	        var url = window.URL.createObjectURL(blob);
+	        document.getElementById('TMsaveButton').href = url;
+	},
+	//--------------------------------------------------------------
 	initBinds:function(me){
 		me.addButton.bind("click",{self:me},me.addTweet);
 		me.clearButton.bind("click",{self:me},me.clearTweet);
@@ -273,7 +288,7 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 		if(this.cursor <0){
 			this.cursor=0;
 		}
-		this.initViewCursorObj({data:{self:this,idIndex:this.tweetIdMap[this.cursor],offsetY:0}});
+		this.initViewCursorObj({data:{self:this,idIndex:this.tweetIdMap[this.cursor],offsetY:0,moveByKey:true}});
 	},
 	curosrMoveDown:function(){
 		if(this.state.selected!==undefined){
@@ -284,7 +299,7 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 		if(this.cursor> max){
 			this.cursor = max;
 		}
-		this.initViewCursorObj({data:{self:this,idIndex:this.tweetIdMap[this.cursor],offsetY:0}});
+		this.initViewCursorObj({data:{self:this,idIndex:this.tweetIdMap[this.cursor],offsetY:0,moveByKey:true}});
 	},
 	//--------------------------------------------------------------------
 	addTweet:function(event){
@@ -521,7 +536,7 @@ console.log("moveTweetVVVVUPUP this.cursor:"+ this.cursor+"/childCount:"+childCo
 				    var levelOffset = targetFunc.level*1 - afterParentFunc.level*1;
 				    //lert("levelOffset:"+levelOffset);
 				    levelOffset = levelOffset===0?1:levelOffset;
-				    var upperParentIndexId = me.tweetIdMap[(this.cursor*1 + childCount*1 -levelOffset )];//この人のIDがおかしいような・・・
+				    var upperParentIndexId = me.tweetIdMap[(this.cursor*1  -levelOffset )];//この人のIDがおかしいような・・・ソート終わってるから子供は考慮いらんような・・・
         			    //var upperParentIndexId =  //me.getUpperParentIndexId(me,idIndex);//これが取ってくる者は何？ない場合もありうる。
         			    //ソートが終わったあとなので一個下ではないか・・・
         			    if(upperParentIndexId===undefined){
@@ -533,18 +548,23 @@ console.log("moveTweetVVVVUPUP this.cursor:"+ this.cursor+"/childCount:"+childCo
         			    var upperChildCount = upperFunc.getChildCount();
 console.log("moveTweetVVVVUT targetFunc.level:"+targetFunc.level+"/max:"+max+"/offset:"+offset+"/upperFunc.level"+upperFunc.level+"/upperParentId:"+upperParentId+"/"+upperChildCount+"/idIndex:"+idIndex+"/upperParentIndexId:"+upperParentIndexId);
         			    if( targetFunc.level < upperFunc.level){
+console.log("moveTweetVVVVUP targetFunc.level:"+targetFunc.level+"/max:"+max+"/offset:"+offset+"/upperFunc.level"+upperFunc.level+"/upperParentId:"+upperParentId+"/"+upperChildCount+"/idIndex:"+idIndex+"/upperParentIndexId:"+upperParentIndexId);
         			    }else if(upperChildCount > 0 && targetFunc.level===upperFunc.level){
-        				var slot = upperParentObj.parentNode;
-        				slot.insertBefore(target,upperParentObj);
+console.log("moveTweetVVVVUO targetFunc.level:"+targetFunc.level+"/max:"+max+"/offset:"+offset+"/upperFunc.level"+upperFunc.level+"/upperParentId:"+upperParentId+"/"+upperChildCount+"/idIndex:"+idIndex+"/upperParentIndexId:"+upperParentIndexId);
+       					var slot = upperParentObj.parentNode;
+        				slot.appendChild(target);
         			    }else if(targetFunc.level===upperFunc.level){
 console.log("moveTweetVVVVUS targetFunc.level:"+targetFunc.level+"/max:"+max+"/offset:"+offset+"/upperFunc.level"+upperFunc.level+"/upperParentId:"+upperParentId+"/"+upperChildCount+"/idIndex:"+idIndex+"/upperParentIndexId:"+upperParentIndexId);
         				var slot = upperParentObj.parentNode;//ここの認識がおかしい。うん、なんかおかしい上に子持ちがいたら上にいかない・・・おかしい
         				//slot.insertBefore(target,upperParentObj);
         				slot.appendChild(target,upperParentObj);
         			    }else if(targetFunc.level > upperFunc.level){
+console.log("moveTweetVVVVUR targetFunc.level:"+targetFunc.level+"/max:"+max+"/offset:"+offset+"/upperFunc.level"+upperFunc.level+"/upperParentId:"+upperParentId+"/"+upperChildCount+"/idIndex:"+idIndex+"/upperParentIndexId:"+upperParentIndexId);
+
         				var slot = upperParentObj.childNodes[slotDomObjIndex];upperParentIndexId
         				slot.appendChild(target);
         			    }else{
+console.log("moveTweetVVVVUQ targetFunc.level:"+targetFunc.level+"/max:"+max+"/offset:"+offset+"/upperFunc.level"+upperFunc.level+"/upperParentId:"+upperParentId+"/"+upperChildCount+"/idIndex:"+idIndex+"/upperParentIndexId:"+upperParentIndexId);
         				var slot = upperParentObj.childNodes[slotDomObjIndex];upperParentIndexId
         				slot.appendChild(target);
         			    }
@@ -843,12 +863,12 @@ console.log("convertMovedNewMap2buildTree B:i:"+i+"/indexId:"+indexId+"/index:"+
             					remarkObjectsListByLevel["Level"+func.level]=levelList;
         					remarkObjectsListByLevel[indexIdTemp]= remarkObjects;
         			//alert("remarkObjectsListByLevel:"+remarkObjectsListByLevel.toSource());
-console.log("convertMovedNewMap2buildTree B1:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect);		
+//console.log("convertMovedNewMap2buildTree B1:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect);		
         				    }else{//あー間に上位の空が挟まっている場合の考慮漏れ
-console.log("convertMovedNewMap2buildTree B1Y:i:"+i+"/remarkObjectsListByLevel:"+remarkObjectsListByLevel.toSource());
+//console.log("convertMovedNewMap2buildTree B1Y:i:"+i+"/remarkObjectsListByLevel:"+remarkObjectsListByLevel.toSource());
         					var levelListParent = remarkObjectsListByLevel["Level"+(func.level*1-1)];	
         					for(var n=0,len =levelListParent.length;n<len;n++){
-console.log("convertMovedNewMap2buildTree B1a:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect+"/targetObj.parentIndexId:"+targetObj.parentIndexId+"/levelListParent:"+levelListParent.toSource()+"/"+n);	
+//console.log("convertMovedNewMap2buildTree B1a:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect+"/targetObj.parentIndexId:"+targetObj.parentIndexId+"/levelListParent:"+levelListParent.toSource()+"/"+n);	
         					    var targetObjParent = levelListParent[n];
         					    if(targetObjParent.indexID === targetObj.parentIndexId){
             					    	var nextObjParent = levelListParent[n+1];
@@ -857,16 +877,16 @@ console.log("convertMovedNewMap2buildTree B1a:i:"+i+"/indexId:"+indexId+"/index:
 	        					var remarkObjectsNext = remarkObjectsListByLevel[nextObjParent.indexID];
     	        					var nextObjParentTrue = me.getObjOnTheList(nextObjParent.indexID,remarkObjectsNext);
         						if(nextObjParent.indexID === changeObj.parentIndexId){
-console.log("convertMovedNewMap2buildTree B1ba:i:"+i+"/nextObjParentTrue:"+nextObjParentTrue.toSource());
+//console.log("convertMovedNewMap2buildTree B1ba:i:"+i+"/nextObjParentTrue:"+nextObjParentTrue.toSource());
         						    //重要なのはremarkObjectsListByLevelのリスト上でchildをきちんと管理すること
-console.log("convertMovedNewMap2buildTree B1V:i:"+i+"/remarkObjectsListByLevel:"+remarkObjectsListByLevel.toSource());
+//console.log("convertMovedNewMap2buildTree B1V:i:"+i+"/remarkObjectsListByLevel:"+remarkObjectsListByLevel.toSource());
         	        					var targetObjTrue = targetObjParentTrue.children.pop();
         	        					remarkObjectsListByLevel[targetObjTrue.indexID]=[targetObjTrue];
-console.log("convertMovedNewMap2buildTree B1W:i:"+i+"/remarkObjectsListByLevel:"+remarkObjectsListByLevel.toSource());
+//console.log("convertMovedNewMap2buildTree B1W:i:"+i+"/remarkObjectsListByLevel:"+remarkObjectsListByLevel.toSource());
         	        					nextObjParentTrue.children.unshift(targetObjTrue);
-console.log("convertMovedNewMap2buildTree B1Z:i:"+i+"/remarkObjectsListByLevel:"+remarkObjectsListByLevel.toSource());
+//console.log("convertMovedNewMap2buildTree B1Z:i:"+i+"/remarkObjectsListByLevel:"+remarkObjectsListByLevel.toSource());
 
-console.log("convertMovedNewMap2buildTree B1bb:i:"+i+"/nextObjParentTrue:"+nextObjParentTrue.toSource()+"/targetObjTrue:"+targetObjTrue.toSource());
+//console.log("convertMovedNewMap2buildTree B1bb:i:"+i+"/nextObjParentTrue:"+nextObjParentTrue.toSource()+"/targetObjTrue:"+targetObjTrue.toSource());
         						}else{
         						    	var targetObjTrue =targetObjParentTrue.children.pop();
         	        					remarkObjectsListByLevel[targetObjTrue.indexID]=[targetObjTrue];
@@ -874,31 +894,31 @@ console.log("convertMovedNewMap2buildTree B1bb:i:"+i+"/nextObjParentTrue:"+nextO
                 					    	    nextObjParentTrue.children=[];
                     					    	}
         	        					nextObjParentTrue.children.unshift(targetObjTrue);//結局こいつらがあるから再度調整が必要
-console.log("convertMovedNewMap2buildTree B1c:i:"+i+"/nextObjParentTrue:"+nextObjParentTrue.toSource());
+//console.log("convertMovedNewMap2buildTree B1c:i:"+i+"/nextObjParentTrue:"+nextObjParentTrue.toSource());
         						}
-console.log("convertMovedNewMap2buildTree B1d:targetObjParent.indexID:"+targetObjParent.indexID+"/remarkObjectsParent:"+remarkObjectsParent.toSource());
+//console.log("convertMovedNewMap2buildTree B1d:targetObjParent.indexID:"+targetObjParent.indexID+"/remarkObjectsParent:"+remarkObjectsParent.toSource());
 	        					subject = nextObjParent.indexID;
         						levelListParent[n+1]=nextObjParent;
     						    	break;
         					    }
         					}
-console.log("convertMovedNewMap2buildTree B1A:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect);
+//console.log("convertMovedNewMap2buildTree B1A:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect);
         					remarkObjectsListByLevel["Level"+(func.level*1-1)]=levelListParent;
         				    }
-console.log("convertMovedNewMap2buildTree B1X:i:"+i+"/remarkObjectsListByLevel:"+remarkObjectsListByLevel.toSource());
-    console.log("convertMovedNewMap2buildTree B2:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect+"/subject:"+subject);
+//console.log("convertMovedNewMap2buildTree B1X:i:"+i+"/remarkObjectsListByLevel:"+remarkObjectsListByLevel.toSource());
+ //   console.log("convertMovedNewMap2buildTree B2:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect+"/subject:"+subject);
         				    return subject;
         				}else if(targetObj.parentIndexId!==undefined){
         				    
         				    //上位がある場合はもういちどたぐる※なんかここが動いていない？
         					var levelListParent = remarkObjectsListByLevel["Level"+(func.level*1-1)];
-console.log("convertMovedNewMap2buildTree B4a:i:"+i+"/func.level:"+func.level+"/remarkObjectsListByLevel:"+remarkObjectsListByLevel.toSource());
+//console.log("convertMovedNewMap2buildTree B4a:i:"+i+"/func.level:"+func.level+"/remarkObjectsListByLevel:"+remarkObjectsListByLevel.toSource());
         					
         					var levelListParentLength = levelListParent.length;
         					for(var indexParent in levelListParent){
         					    var parentObj = levelListParent[indexParent];
-console.log("convertMovedNewMap2buildTree B4b:i:"+i+"/indexParent:"+indexParent+"/index:"+index+"/diarect:"+diarect+"/parentObj.indexID:"+parentObj.indexID+"/"+targetObj.parentIndexId 
-	+"/levelListParentLength:"+levelListParentLength+"/"+(indexParent*1+1));
+//console.log("convertMovedNewMap2buildTree B4b:i:"+i+"/indexParent:"+indexParent+"/index:"+index+"/diarect:"+diarect+"/parentObj.indexID:"+parentObj.indexID+"/"+targetObj.parentIndexId 
+//	+"/levelListParentLength:"+levelListParentLength+"/"+(indexParent*1+1));
 	
         					    if(parentObj.indexID === targetObj.parentIndexId && indexParent*1+1< levelListParentLength){
                 					var remarkObjectsParent = remarkObjectsListByLevel[targetObj.parentIndexId];
@@ -919,7 +939,7 @@ console.log("convertMovedNewMap2buildTree B4b:i:"+i+"/indexParent:"+indexParent+
         					    }
         					    
         					}
-       console.log("convertMovedNewMap2buildTree B4:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect);
+  //     console.log("convertMovedNewMap2buildTree B4:i:"+i+"/indexId:"+indexId+"/index:"+index+"/diarect:"+diarect);
         				}
         				//そもそも最下位の場合は放置？
         			    }else{//うっぺｒ−
@@ -1247,12 +1267,14 @@ console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
 	initViewCursorObj:function(event){
 		var me= event.data.self;
 		var idIndex = event.data.idIndex;
+		var moveByKey = event.data.moveByKey;
 		var offsetY = event.data.offsetY===undefined?0:event.data.offsetY;
 		var scrolltop = $("body").scrollTop()*1;
 		var topToSet = 0;
 		var clientHeight = $("body").get(0).clientHeight;
 		var height = 0;
-		if(me.state.selected ===undefined || idIndex===me.state.selected ){
+		var offset = 20;
+		if(moveByKey===true || me.state.selected !==undefined && idIndex===me.state.selected ){
 			var target = me.getTweetBoxObj(me,idIndex);
 			if(target.length<1){return;}
 //console.log("aaaa  initViewCursorObj /id:"+id+"/target:"+target.length+"/me.cursor:"+me.cursor+"/clientHeight:"+clientHeight);
@@ -1270,13 +1292,28 @@ console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
 			$("#svgAreaArrow").css("top",topToSet).css("left",left);
 			me.cursor=MansikiMapUtil.getKey(me.tweetIdMap,idIndex);
 			me.showCursor(me);
+		}else{
+		    return ;
 		}
+console.log("bbbb top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+clientHeight+"/scrolltop:"+scrolltop+"/offsetY:"+offsetY
+			+"/idIndex:"+idIndex+"/"+me.state.selected+"/topToSet:"+topToSet);
 		if(topToSet < scrolltop){
-		    scrolltop = topToSet-20;
-		}else if (topToSet > clientHeight+scrolltop-20){
-		    scrolltop = topToSet - clientHeight +20 + height;
+		    scrolltop = topToSet-offset;
+console.log("aaaaA1 scrolltop:"+scrolltop);
+		}else if (topToSet > clientHeight+scrolltop-offset){
+		    scrolltop = topToSet - clientHeight +offset + height;
+console.log("aaaaA2 scrolltop:"+scrolltop);
+		}else if(top!==undefined){
+		    scrolltop = top - offset;
+		}else{
+		    //scrolltop = 0;
+console.log("aaaaA3 scrolltop:"+scrolltop);
 		}
-		$("body").scrollTop(scrolltop);
+		//alert("scrolltop:"+scrolltop);
+console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+clientHeight+"/scrolltop:"+scrolltop+"/offsetY:"+offsetY
+	+"/idIndex:"+idIndex+"/"+me.state.selected);
+		clearTimeout(me.timerScrollAtAll);
+		me.timerScrollAtAll = setTimeout(function(){$("body").scrollTop(scrolltop);},32);
 	},
 	clearTweet:function(event){
 		var me= event.data.self;
@@ -1346,6 +1383,7 @@ console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
 		scrolltop-= 120;
 		scrolltop = scrolltop>0 ?scrolltop:0;
 		me.tweetBoxParent.css("top",scrolltop);
+		//alert("doScroll");
 	},
 	buildTweetBox:function(event){
 		var me= event.data.self;
