@@ -206,8 +206,11 @@ MansikiTweetStyleEditor.prototype={
 			.css("background-color",buttonState["background-color"])
 			.css("font-weight","nomal");
 			var nowFunc = me.funcs.getFunc(id);
-			if(level!==undefined && level > nowFunc.level || level!==undefined && level+1 < nowFunc.level 
-				|| level===undefined && me.loadedFuncLevel !== undefined && me.loadedFuncLevel > nowFunc.level ){
+			if(level!==undefined && level > nowFunc.level 
+				|| level!==undefined && level+1 < nowFunc.level 
+				|| level===undefined && me.loadedFuncLevel !== undefined && me.loadedFuncLevel > nowFunc.level 
+				|| level===undefined && nowFunc.level > 1
+				){
 			    button.css("opacity","0.3");
 			    button.unbind("click");
 			}else{
@@ -1335,6 +1338,8 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+cli
 		if(func!==undefined){
 			$("#TMTweetType").text(func.nameLc+"/L:"+func.level);
 			$("#TMTweetType").css("background-color",func.color);
+
+			me.cmdButtonsHilight({data:{self:me,id:func.getFullId(),level:func.level}});
 		}else{
 			$("#TMTweetType").text("");
 			$("#TMTweetType").css("background-color","transparent");
