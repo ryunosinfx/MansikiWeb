@@ -31,6 +31,8 @@ const SUPERCOUNT = "superCount";
 const BY_SUPER_SUM = "bySuperSum";
 const PRIMARY = "primary";
 const UNDERBAR = "_";
+const BUTTON_ADD = "追加";
+const BUTTON_UPDATE = "更新";
 
 
 var MansikiModeConst={
@@ -86,7 +88,6 @@ var MansikiTweetStyleEditor= function(id, width,height,ancer){
 }
 MansikiTweetStyleEditor.prototype={
 	init:function(){
-		$("#LSclear").bind('click',MansikiMapUtil.clearLS);
 		this.tweetHideTextarea = $("#TWtweetHideTextarea");
 		this.field = $("form").eq(0);
 		this.viewList = $("#TMtweetList");
@@ -95,6 +96,10 @@ MansikiTweetStyleEditor.prototype={
 		this.clearButton= $("#TMclear");
 		this.twCmdAreaUpper = $("#TWcmdAreaUpper");
 		this.twCmdAreaUnder = $("#TWcmdAreaUnder");
+		this.SaveButton = $("#TMsaveButton");
+		this.LoadButton = $("#TMloadButton");
+		this.LoadButtonFile = $("#TMloadButtonFile");
+		this.LSclear = $("#LSclear");
 		this.initBinds(this);
 		this.showCursor(this);
 		this.initAndLoadLS();
@@ -116,21 +121,54 @@ MansikiTweetStyleEditor.prototype={
 			}
 			this.reloadAllTweets();
 			this.rebuildAll(this);
+		}else{
+			this.tweetsFuncsIds = {};
+			this.tweetIdMap = {};
+			this.tweets = {};
+			this.tweetIdCount = 0;
+			this.viewList.text("");
 		}
 	},
-	
 	//--------------------------------------------------------------
 	startDownload:function (event) {
-	        var text = document.getElementById("text").value;
-	        var blob = new Blob([text]);
-	        var url = window.URL.createObjectURL(blob);
-	        document.getElementById('TMsaveButton').href = url;
+		var me= event.data.self;
+		var loadedData = MansikiMapUtil.loadFromLS(me.keyMain);
+		if(loadedData !== null && me.isSaveButtonClicked!==true){
+		    	me.isSaveButtonClicked = true;
+        	        var text = JSON.stringify(loadedData);
+        	        var blob = new Blob([text]);
+        	        var url = window.URL.createObjectURL(blob);
+        	        var href = "data:application/octet-stream," + encodeURIComponent(text);
+        	        document.getElementById('TMsaveButton').href = href;
+        	        //me.SaveButton.click();
+        	        //alert("startDownload url:"+url);
+		}else{
+		    me.isSaveButtonClicked=false;
+		}
 	},
-	startLoad:function () {
-	        var text = document.getElementById("text").value;
-	        var blob = new Blob([text]);
-	        var url = window.URL.createObjectURL(blob);
-	        document.getElementById('TMsaveButton').href = url;
+	startLoad:function (event) {
+		var me= event.data.self;
+		
+		event.preventDefault();
+            // File オブジェクトを取得
+            var file = me.LoadButtonFile.get(0).files[0];
+            
+            // 中身を読み込む
+            var reader = new FileReader();                  // ファイルリーダー生成
+            // ロード関数登録
+            reader.onload = function(e) {
+                var loadedData = e.target.result;
+                MansikiMapUtil.saveToLSasPlane(me.keyMain,loadedData);
+                me.initAndLoadLS();
+            };
+            
+            // テキストとしてファイルを読み込む
+            reader.readAsText(file);
+	},
+	doClearLS:function(event){
+		var me= event.data.self;
+		MansikiMapUtil.clearLS();
+		me.initAndLoadLS();
 	},
 	//--------------------------------------------------------------
 	initBinds:function(me){
@@ -140,6 +178,9 @@ MansikiTweetStyleEditor.prototype={
 		me.MansikiTweetStyleKeyBind.setKeyEventField(me.tweetHideTextarea);
 		$("body").bind("mousemove",{self:me},me.onFocusToCmd);
 		me.cmdButtonsHilightInit();
+		me.SaveButton.bind("click",{self:me},me.startDownload);
+		me.LoadButton.bind("click",{self:me},me.startLoad);
+		me.LSclear.bind("click",{self:me},me.doClearLS);
 	}, 
 	cmdButtonsHilightInit:function(){
 		var buttons = $(".commands>div");
@@ -256,12 +297,14 @@ MansikiTweetStyleEditor.prototype={
 		var me= event.data.self;
 		me.isFormFocusd=true;
 		$("body").unbind("mousemove",me.onFocusToCmd);
+		me.addButton.text(BUTTON_UPDATE);
 	},
 	onBlur:function(event){
 		var me= event.data.self;
 		me.isFormFocusd=false;
 		$("body").bind("mousemove",{self:me},me.onFocusToCmd);
 		me.loadedFuncLevel = undefined; 
+		me.addButton.text(BUTTON_ADD);
 	},
 	//--------------------------------------------------------------------
 	//--------------------------------------------------------------------
@@ -345,6 +388,7 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 		var selectedFuncOnList = me.tweetsFuncs[me.state.lastSelected ];
 console.log("doInsertTweet AAA currentFunc:"+currentFunc+"/selectedFuncOnList:"+selectedFuncOnList);
 		if(me.cursor*1===0){
+console.log("doInsertTweet AA0 currentFunc:"+currentFunc+"/selectedFuncOnList:"+selectedFuncOnList);
 			if(me.viewList.children("div").length > 0){
 				me.viewList.children("div").eq(0).before(tweetBox);
 			}else{
@@ -375,7 +419,7 @@ console.log("doInsertTweet AAC currentFunc:"+currentFunc+"/selectedFuncOnList:"+
 			}else if(preFunc.level === func.level+2){
 				$("#"+preId).parent().parent().parent().parent().after(tweetBox);
 			}else if(preFunc.level === func.level+3){
-				$("#"+preId).parent().parent().parent().parent().parent().parent().parent().after(tweetBox);
+				$("#"+preId).parent().parent().parent().parent().parent().parent().after(tweetBox);
 			}
 		}
 		 
@@ -1237,6 +1281,7 @@ console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
 	    return upperIndexId;//OK
 	},
 	rebuildAll:function(me){
+		console.log("rebuildAll START");
 		me.analizer.fullAnalize();
 		var saveData = {};
 		me.tweetsFuncsIds={};
@@ -1251,9 +1296,10 @@ console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
 		saveData.tweetsFuncsIds = me.tweetsFuncsIds;
 		saveData.titleStates = me.analizer.titleStates;
 		MansikiMapUtil.saveToLS(me.keyMain,saveData);
-		
+		console.log("rebuildAll END");
 	},
 	reloadAllTweets:function(){
+		console.log("reloadAllTweets START"); 
 		var max=MansikiMapUtil.getMaxIndex(this.tweetIdMap)*1;
 		this.cursor=0;
 		for(var i = 0;i<= max;i++){
@@ -1266,6 +1312,7 @@ console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
 			this.cursor++;
 			this.initViewCursorObj({data:{self:this,idIndex:this.tweetIdMap[this.cursor],offsetY:999}});
 		}
+		console.log("reloadAllTweets END"); 
 	},
 	initViewCursorObj:function(event){
 		var me= event.data.self;
@@ -1571,6 +1618,9 @@ var MansikiMapUtil={
 	saveToLS:function(key ,target){
 		var value = JSON.stringify(target);
 		localStorage.setItem(key,value);
+	},
+	saveToLSasPlane:function(key ,target){
+		localStorage.setItem(key,target);
 	},
 	loadFromLS:function(key){
 		var joinStr = localStorage.getItem(key);
