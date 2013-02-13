@@ -6,12 +6,11 @@
 	
 }
 
-html,body,form ,.conteiner,.tweetBody{
+html,body,form {
 	height:100%;
 }
 .conteiner{
 	width:1030px;
-	height:100%;
 	margin-left:auto;
 	margin-right:auto;
 }
@@ -32,7 +31,6 @@ html,body,form ,.conteiner,.tweetBody{
 }
 .TMconteiner{
 	width:1030px;
-	height:160%;
 }
 ,.tweetBody{
 	width:900px;
@@ -62,6 +60,19 @@ html,body,form ,.conteiner,.tweetBody{
 	background-color:gray;
 	border-radius: 0.3em ; 
 	margin:1px;
+	border:solid 1px black;
+	cursor:pointer;
+}
+.TMtitleCommands input{
+	display:block;
+	width:90px;
+	height:25px;
+	padding:2px;
+	line-height:20px;
+	text-align:center;
+	background-color:gray;
+	margin:1px;
+	margin-left:-200px;
 	border:solid 1px black;
 	cursor:pointer;
 }
@@ -120,7 +131,7 @@ div.currentTab{
 .tweetInfo{
 	margin-left:0px;
 	height:100%;
-	width:80px;
+	width:105px;
 	background-color:#565672;
 	min-height:600px;
 	padding:0px;
