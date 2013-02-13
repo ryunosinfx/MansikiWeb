@@ -4,6 +4,7 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 	<link rel="stylesheet" type="text/css" href="mansikiEditTweetStyle.css" media="all" />
+	<link rel="stylesheet" type="text/css" href="mansikiEditTweetStyleIcons.css" media="all" />
 	<script src="js/jquery.js" type="text/javascript"></script>
 	<script src="js/bonsai-0.4.1.min.js" type="text/javascript"></script>
 	<script src="mansikiEditTweetStyleConsts.js" type="text/javascript"></script>
@@ -68,25 +69,25 @@
 						<div class="tweetSideArea">
 							<div class="tweetSide">
 								<div class="status">
-									<div class="TWTitleState" id="">
+									<div class="TWTitleState" id="TWTitleStateA">
 										頁送り<br/>
 										<label><input type="radio" id="TWPageDiarectL" value="left" name="TWPageDiarect" checked="checked"/>左</label>
 										<br />
 										<label><input type="radio" id="TWPageDiarectR"  value="" name="TWPageDiarect" />右</label>
 									</div>
-									<div class="TWTitleState" id="">
+									<div class="TWTitleState" id="TWTitleStateB">
 										頁始まり<br/>
 										<label><input type="radio" id="TWPageStartL"  value="" name="TWPageStart" checked="checked" />左</label>
 										<br />
 										<label><input type="radio" id="TWPageStartR"  value="" name="TWPageStart" />右</label>
 									</div>
-									<div class="TWTitleState" id="">
+									<div class="TWTitleState" id="TWTitleStateC">
 										文字行送り<br/>
 										<label><input type="radio" id="TWRowDiarectL"  value="" name="TWRowDiarect" checked="checked" />左</label>
 										<br />
 										<label><input type="radio" id="TWRowDiarectR"  value="" name="TWRowDiarect" />右</label>
 									</div>
-									<div class="TWTitleState" id="">
+									<div class="TWTitleState" id="TWTitleStateD">
 										縦横書き<br/>
 										<label><input type="radio" id="TWLetterDiarectV"  value="" name="TWLetterDiarect" checked="checked" />縦</label>
 										<br />
@@ -99,7 +100,7 @@
 								<div class="TWtweetBoxParent" id="TWtweetBoxParent">
 									<div class="commands" id="TWcmdAreaUpper">
 										<div class="MansikiCmdIcon" id="addPageIcon">
-											<div class="TWFuncIcon">  </div>
+											<div class="TWFuncIcon icon"><div class="home"></div></div>
 											<div class="TWFuncChar">頁</div>
 											<div class="TWFuncName"></div>
 											<div class="TWFuncCommand"></div>
@@ -209,7 +210,6 @@
 						</div>
 						<div class="tweetInfo" id="TMtweetInfo">
 						</div>
-						<p></p>
 					</div>
 				</div>
 			</div>

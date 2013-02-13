@@ -1,0 +1,46 @@
+@CHARSET "UTF-8";
+
+
+div.icon {
+    height: 16px;
+    width: 16px;
+    position: relative;
+    margin: 0px;
+    overflow: hidden;
+    display: inline-block;
+}
+
+
+/* Home */
+div.icon div.home {
+    height: 0px;
+    width: 0px;
+    border-width: 8px;
+    border-style: solid;
+    border-color: transparent transparent #333 transparent;
+    position: absolute;
+    bottom: 8px;
+    left: 0;
+}
+
+div.icon div.home:after {
+    content: '';
+    width: 3px;
+    height: 8px;
+    background-color: transparent;
+    position: absolute;
+    top: 8px;
+    right: -6px;
+    border-left: 5px solid #333;
+    border-right: 4px solid #333;
+}
+
+div.icon div.home:before {
+    content: '';
+    width: 5px;
+    height: 3px;
+    background-color: #333;
+    position: absolute;
+    top: 8px;
+    right: -3px;
+}

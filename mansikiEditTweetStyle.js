@@ -4,6 +4,16 @@ var MansikiModeConst={
 	,koma:{color:"#3C3C50"}
 
 }
+if(MansikiModeConst.toSource===undefined){
+    Object.defineProperty(Object.prototype, "toSource", { // 拡張
+        configurable: true, // false is immutable
+        enumerable: false,  // false is invisible
+        writable: true,     // false is read-only
+        value: function() {
+            return JSON.stringify(this);
+        }
+    });
+}
 var MansikiTweetStyleEditor= function(id, width,height,ancer){
 	this.keyMain="MansikiTweetStyleEditor_keyMain_"+id;
 	this.doc;
