@@ -110,13 +110,7 @@ MansikiTweetStyleKeyBind.prototype ={
 			me.eventField.focus();
 		}		
 console.log("doInputFormKeyEvent keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modifiers+"/event.ctrlKey:"+event.ctrlKey);
-		if(keyCode=="38" ){//up
-		}else if(keyCode=="40" ){//down
-		}else if(keyCode=="37" ){//left
-		}else if(keyCode=="39" ){//right
-		}else if(keyCode=="27" ){//escape
-			me.moveCursorToOuter();
-		}else if(isShiftKey===false && isCtrlKey===true ){
+		if(isShiftKey===false && isCtrlKey===true ){
 			if(keyCode=="85" ){//u 
 				me.undo();
 			}else if(keyCode=="82" ){//r 
@@ -160,6 +154,12 @@ console.log("doInputFormKeyEvent keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"
 			}else if(keyCode=="87" ){//w
 				me.callCmdButtonsHilight(FUKUSEN);
 			}
+		}else if(keyCode=="38" ){//up
+		}else if(keyCode=="40" ){//down
+		}else if(keyCode=="37" ){//left
+		}else if(keyCode=="39" ){//right
+		}else if(keyCode=="27" ){//escape
+			me.moveCursorToOuter();
 		}else if(isShiftKey===true && isCtrlKey===false ){
 			
 		}

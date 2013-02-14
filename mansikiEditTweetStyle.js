@@ -80,6 +80,8 @@ MansikiTweetStyleEditor.prototype={
 		this.initAndLoadLS();
 		this.onScroll({data:{self:this}});
 		this.onFocusToCmd({data:{self:this}});
+		var me = this;
+		setTimeout(function(){me.cursor =0;me.curosrMoveUp();},0);
 	},
 	initAndLoadLS:function(){
 		var loadedData = MansikiMapUtil.loadFromLS(this.keyMain);
@@ -377,7 +379,7 @@ console.log("doInsertTweet AAB currentFunc:"+currentFunc+"/selectedFuncOnList:"+
 			var preIdIndex=me.tweetIdMap[(me.cursor*1-1)];
 			var preId=me.constMap.tweetIdPrefix+preIdIndex;
 			var slot = $("#"+preId).children("div.tweetSlot").eq(0);
-			alert(slot.length+"/preId:"+preId+"/preIdIndex:"+preIdIndex+"/me.cursor:"+me.cursor);
+			//alert(slot.length+"/preId:"+preId+"/preIdIndex:"+preIdIndex+"/me.cursor:"+me.cursor);
 			slot.prepend(tweetBox);
 		}else{
 console.log("doInsertTweet AAC currentFunc:"+currentFunc+"/selectedFuncOnList:"+selectedFuncOnList);
