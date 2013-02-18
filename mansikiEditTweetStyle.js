@@ -192,7 +192,7 @@ MansikiTweetStyleEditor.prototype={
 		buttonState["border-style"]=button.css("border-style");
 //alert(button.length+"/i:"+0+"/id:"+id+"/"+button.css("background-color")+"/"+buttonState["border-style"]+"/"+width);
 		buttonState["color"]=button.css("color");
-		button.bind("click",{self:this,id:id},this.cmdButtonsHilight);
+		button.bind("click",{self:this,id:id,level:func.level},this.cmdButtonsHilight);
 		button.css("background-color",func.color);
 		buttonState["background-color"]=button.css("background-color");
 		var name = func.nameLc;
@@ -233,7 +233,7 @@ MansikiTweetStyleEditor.prototype={
 			    button.unbind("click");
 			}else{
 			    button.css("opacity","1");
-			    button.bind("click",{self:me,id:id},me.cmdButtonsHilight);
+			    button.bind("click",{self:me,id:id,level:nowFunc.level},me.cmdButtonsHilight);
 			}
 		}
 		var buttonState = me.cmdButtonsState[fullId];
