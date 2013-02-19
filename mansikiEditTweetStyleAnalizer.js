@@ -144,6 +144,7 @@ console.log("i:"+i+"idIndex:"+idIndex);
 			this.state[idIndex]={addMap:addMap,rowStat:rowStat};
 			preRowStat = MansikiMapUtil.deepCopyMap(rowStat);
 		}
+		MansikiMapUtil.overrideLS(this.editor.keyMain,"titleStates",this.titleStates);
 		preRowStat["isLastMap"]={last:true};
 	},
 	margeMap:function(addMap,preRowStat){

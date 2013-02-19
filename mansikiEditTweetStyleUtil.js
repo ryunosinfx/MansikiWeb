@@ -108,6 +108,13 @@ var MansikiMapUtil={
 	removeFromLS:function(key){
 		localStorage.removeItem(key);
 	},
+	overrideLS:function(primary,secondly,value){
+		var joinStr = localStorage.getItem(primary);
+		var json =  JSON.parse(joinStr);
+		json[secondly] = value;
+		var joinStrToSave = JSON.stringify(json);
+		localStorage.setItem(primary,joinStrToSave);
+	},
 	clearLS:function(){
 		localStorage.clear();
 	}
