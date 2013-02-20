@@ -120,9 +120,13 @@ MansikiTweetStateAnaliser.prototype ={
 	    me.titleStates["rowDiarect"] = me.rowDiarect;
 	    me.titleStates["letterDiarect"] = me.letterDiarect;
 	    me.fullAnalize();
+
+	    me.editor.reloadAllTweets();
+	    me.editor.rebuildAll(me.editor);
 	},
 	fullAnalize:function(){
 		this.state = {};
+		this.stateMap={};
 		var tweets = this.editor.tweets;
 		var tweetsFuncs = this.editor.tweetsFuncs;
 		var tweetIdMap = this.editor.tweetIdMap;
@@ -138,6 +142,11 @@ console.log("i:"+i+"idIndex:"+idIndex);
 			var rowStat = {};
 			var func = tweetsFuncs[idIndex];
 			var id = func.Id;
+			if(this.stateMap[id]===undefined){
+			    this.stateMap[id]=0;
+			}else{
+			    this.stateMap[id]++;
+			}
 			var addMap ={id:id,parent:func.parentId};
 			rowStat = this.margeMap(addMap,preRowStat);
 //console.log("fullAnalize:"+rowStat.toSource()+" / "+preRowStat.toSource());
@@ -146,6 +155,20 @@ console.log("i:"+i+"idIndex:"+idIndex);
 		}
 		MansikiMapUtil.overrideLS(this.editor.keyMain,"titleStates",this.titleStates);
 		preRowStat["isLastMap"]={last:true};
+		var ret ="";
+		for(var key in this.stateMap){
+		    if(key===PAGE){
+			ret+=this.stateMap[key]+"頁\n";
+		    }
+		    if(key===KOMA){
+			ret+=this.stateMap[key]+"コマ\n";
+		    }
+		    if(key===FUKIDASHI){
+			ret+=this.stateMap[key]+"台詞\n";
+		    }
+		    //ret+=key+"/";
+		}
+		$("#TWTitleStateTotal").text(ret);
 	},
 	margeMap:function(addMap,preRowStat){
 //console.log("margeMap:"+addMap.toSource()+"/"+preRowStat.toSource());
