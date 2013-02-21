@@ -121,7 +121,7 @@ MansikiTweetStateAnaliser.prototype ={
 	    me.titleStates["letterDiarect"] = me.letterDiarect;
 	    me.fullAnalize();
 
-	    me.editor.reloadAllTweets();
+	    //me.editor.reloadAllTweets();
 	    me.editor.rebuildAll(me.editor);
 	},
 	fullAnalize:function(){

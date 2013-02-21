@@ -115,6 +115,7 @@ console.log("create keyBindFuncLocal:"+keyBindFuncLocal);
 			var count = currentState.rowStat[this.Id];
 			info+="<div>"+count+"</div>";
 		}
+		this.currentState = currentState;
 		this.editor.setInfo(this.editor, this.idIndex,info);
 		this.editor.addText(this.editor, this.idIndex,"");//state[this.idIndex].toSource());
 //console.log("state.toSource():"+state[this.idIndex].toSource()+"/this.Id:"+this.Id);
@@ -360,6 +361,24 @@ console.log("AAAAAAAAAAAAAAAAAAAAAAAA"+"/this.idIndex:"+this.idIndex+"/"+(state[
 	this.addInfo = addInfo==="L"?"[左 ]":addInfo==="R"?"[ 右]":"";
 //console.log("AAAAAAAAAAAAAAAAAAAAAAAA"+(state[this.idIndex]===undefined?"":state[this.idIndex].toSource()));
     this.showStateExec();
+    
+    if(this.currentState!==undefined ){
+	var side = this.currentState[this.editor.analizer.pageSide];
+	var diarect= this.editor.analizer.pageDiarect;
+	var startSide = this.editor.analizer.pageStartSide;
+	var rowDiarect = this.editor.analizer.rowDiarect;
+	var letterDiarect = this.editor.analizer.letterDiarect;
+	var tweetBoxDomId = me.constMap.tweetIdPrefix+this.idIndex;
+	var tweetBox = $("#"+tweetBoxDomId);
+	if(side==="L"){
+	    if(diarect==="R"){
+		
+	    }else{
+		
+	    }
+	    
+	}
+    }
     this.showStatePost();
 };
 
