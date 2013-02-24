@@ -362,22 +362,41 @@ console.log("AAAAAAAAAAAAAAAAAAAAAAAA"+"/this.idIndex:"+this.idIndex+"/"+(state[
 //console.log("AAAAAAAAAAAAAAAAAAAAAAAA"+(state[this.idIndex]===undefined?"":state[this.idIndex].toSource()));
     this.showStateExec();
     
-    if(this.currentState!==undefined ){
-	var side = this.currentState[this.editor.analizer.pageSide];
+    if(currentState!==undefined ){
+	var side = currentState[this.editor.analizer.pageSide];
+	console.log("PAGE:::"+this.editor.analizer.pageSide+"/side:"+side);
 	var diarect= this.editor.analizer.pageDiarect;
 	var startSide = this.editor.analizer.pageStartSide;
 	var rowDiarect = this.editor.analizer.rowDiarect;
 	var letterDiarect = this.editor.analizer.letterDiarect;
-	var tweetBoxDomId = me.constMap.tweetIdPrefix+this.idIndex;
+	var tweetBoxDomId = this.editor.constMap.tweetIdPrefix+this.idIndex;
 	var tweetBox = $("#"+tweetBoxDomId);
+	var twbConteinerFlame = tweetBox.find(".twbConteinerFlame").eq(0);
+	twbConteinerFlame.removeClass("TweetPageDirRLSideL")
+		.removeClass("TweetPageDirRLSideR")
+		.removeClass("TweetPageDirLRSideL")
+		.removeClass("TweetPageDirLRSideR");
+	var width = tweetBox.width();
+	var height = tweetBox.height();
 	if(side==="L"){
 	    if(diarect==="R"){
-		
+		twbConteinerFlame.addClass("TweetPageDirLRSideL");
 	    }else{
-		
+		twbConteinerFlame.addClass("TweetPageDirRLSideL");
 	    }
-	    
+	}else{
+	    if(diarect==="R"){
+		twbConteinerFlame.addClass("TweetPageDirLRSideR");
+	    }else{
+		twbConteinerFlame.addClass("TweetPageDirRLSideR");
+	    }
 	}
+	var domTweetBox = document.getElementById(tweetBox.attr("id")).childNodes[0];
+	//alert(domTweetBox.toSource()+"/"+tweetBox.attr("id"));
+	var domAfter = document.defaultView.getComputedStyle(domTweetBox,":after");
+	//domAfter.height=height;
+	var domBefore = document.defaultView.getComputedStyle(domTweetBox,":before");
+	//domBefore.width=width;
     }
     this.showStatePost();
 };

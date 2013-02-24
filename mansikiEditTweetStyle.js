@@ -378,7 +378,7 @@ console.log("doInsertTweet AA0 currentFunc:"+currentFunc+"/selectedFuncOnList:"+
 console.log("doInsertTweet AAB currentFunc:"+currentFunc+"/selectedFuncOnList:"+selectedFuncOnList);
 			var preIdIndex=me.tweetIdMap[(me.cursor*1-1)];
 			var preId=me.constMap.tweetIdPrefix+preIdIndex;
-			var slot = $("#"+preId).children("div.tweetSlot").eq(0);
+			var slot = $("#"+preId).find("div.tweetSlot").eq(0);
 			//alert(slot.length+"/preId:"+preId+"/preIdIndex:"+preIdIndex+"/me.cursor:"+me.cursor);
 			slot.prepend(tweetBox);
 		}else{
@@ -388,18 +388,21 @@ console.log("doInsertTweet AAC currentFunc:"+currentFunc+"/selectedFuncOnList:"+
 			var preIdIndex=me.tweetIdMap[me.cursor-1];
 			var preFunc = me.tweetsFuncs[preIdIndex];
 			var preId=me.constMap.tweetIdPrefix+preIdIndex;
-			if(preFunc.level === func.level){
+			var parentLevelObj = $("#"+preId).parent().parent().parent().parent();
+			    //alert("aaaa level:"+func.level+"/pre:"+preFunc.level+"/cursor:"+me.cursor+"/preIdIndex:"+preIdIndex+"/"+me.tweetIdMap.toSource);
+			if(preFunc.level*1 === func.level*1){
 				$("#"+preId).after(tweetBox);
-			}else if(preFunc.level <func.level){
-				var slot = $("#"+preId).children("div.tweetSlot").eq(0);
-				//alert(slot.length);
+			}else if(preFunc.level*1 <func.level*1){
+				var slot = $("#"+preId).find("div.tweetSlot").eq(0);
+				//alert(slot.length+"/level:"+func.level+"/pre:"+preFunc.level);
 				slot.prepend(tweetBox);
-			}else if( preFunc.level === func.level+1){
-				$("#"+preId).parent().parent().after(tweetBox);
-			}else if(preFunc.level === func.level+2){
-				$("#"+preId).parent().parent().parent().parent().after(tweetBox);
-			}else if(preFunc.level === func.level+3){
-				$("#"+preId).parent().parent().parent().parent().parent().parent().after(tweetBox);
+			}else if( preFunc.level*1 === func.level*1+1){
+			    //alert($("#"+preId).parent().parent().parent().parent().find("div.twbConteinerFlame").eq(0).parent().attr("id"));
+			    parentLevelObj.find("div.twbConteinerFlame").eq(0).parent().parent().children("div:last").eq(0).after(tweetBox);
+			}else if(preFunc.level*1 === func.level*1+2){
+			    parentLevelObj.parent().parent().find("div.twbConteinerFlame").eq(0).parent().parent().children("div:last").eq(0).after(tweetBox);
+			}else if(preFunc.level*1 === func.level*1+3){
+			    parentLevelObj.parent().parent().parent().parent().parent().find("div.twbConteinerFlame").eq(0).parent().parent().children("div:last").eq(0).after(tweetBox);
 			}
 		}
 		 
@@ -434,7 +437,7 @@ console.log("doInsertTweet AAC currentFunc:"+currentFunc+"/selectedFuncOnList:"+
 		var isTweetBoxUpdated = me.updateFuncs(me,idIndex);
 		var tweetBox=me.getTweetBoxObj(me,idIndex);
 		if(isTweetBoxUpdated === false){
-			tweetBox.children(".tweetBoxText").eq(0).html(MansikiMapUtil.getFormatedTextCRLF(text));
+			tweetBox.find(".tweetBoxText").eq(0).html(MansikiMapUtil.getFormatedTextCRLF(text));
 		}else{
 			tweetBox.remove();
 			tweetBox = me.execBuildTweetBox(me,idIndex);
@@ -454,7 +457,7 @@ console.log("doInsertTweet AAC currentFunc:"+currentFunc+"/selectedFuncOnList:"+
 		}
 		me.tweetIdMap=MansikiMapUtil.del(me.tweetIdMap,idIndex);
 		me.cursor=MansikiMapUtil.getMaxIndex(me.tweetIdMap);
-		me.getTweetBoxObj(me,idIndex).parent().children("#"+id).eq(0).remove();
+		me.getTweetBoxObj(me,idIndex).parent().parent().find("#"+id).eq(0).remove();
 		me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor]}});
 //console.log("idIndex:"+idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.tweetIdMap.toSource());
 		me.rebuildAll(me);
@@ -489,8 +492,8 @@ console.log("moveTweet offset:"+offset);
 	},
 	//実際にDOM上で動かす。
 	moveExecute:function(me,idIndex,cursor,offset,direct,level,childCount){
+		
 console.log("moveExecute oldMap:"+me.tweetIdMap.toSource());
-	    var slotDomObjIndex=2;
 	    	//var subject = this.convertMovedNewMap(me,idIndex,cursor,offset,direct,level,childCount);
 	    	var subject = this.convertMovedNewMap2(me,idIndex,direct);
 console.log("moveExecute newMap:"+me.tweetIdMap.toSource()+"/subject:"+subject);
@@ -508,24 +511,24 @@ console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"
 			var subParentId = subParent.id;
 			me.cursor=cursor+offset;
 			var target = document.getElementById(id);
-			var parent = target.parentNode;
-			var parentId = parent.id;
+			var parentSlot = target.parentNode;
+			var parentId = parentSlot.id;
 			var targetCursor=MansikiMapUtil.getKey(me.tweetIdMap,idIndex);
-			if(parent.id===""){
-			    parentId = parent.parentNode.id;
+			if(parentSlot.id===""){
+			    parentId = parentSlot.parentNode.parentNode.id;
 			}
 			if(subParent.id===""){
 			    subParentId = subParent.parentNode.id;
 			}
-console.log("moveTweetA idIndex:"+idIndex+"/"+subject+"/subject:"+subParentId+"/"+subParent.id+"/parent.id:"+parentId+"/"+parent.id);
+console.log("moveTweetA idIndex:"+idIndex+"/"+subject+"/subject:"+subParentId+"/"+subParent.id+"/parent.id:"+parentId+"/"+parentSlot.id);
     			if(subParentId!=="" && subParentId===parentId){
         			var after = null;
         			var afterAfter = null;
         			var before = null;
         			var targetOrverd = false;
         			var count =0;
-        			for(var childIndex in parent.childNodes){
-        			    var child = parent.childNodes[childIndex];
+        			for(var childIndex in parentSlot.childNodes){
+        			    var child = parentSlot.childNodes[childIndex];
         			    if(after !==null && child.id!==undefined){
         				afterAfter = child;
         				break;
@@ -544,18 +547,18 @@ console.log("moveTweetA idIndex:"+idIndex+"/"+subject+"/subject:"+subParentId+"/
 	 +"/"+(afterAfter===null?"":afterAfter.id)+"/"+(afterAfter===null)+"/x "+direct);
         			}
         			if(direct==="up"){
-        			    parent.insertBefore(target,before);
+        			    parentSlot.insertBefore(target,before);
         			}else if(direct==="down"){
         			    console.log(afterAfter+"/"+(afterAfter===null));
         			    if((afterAfter===null)=="true"){
-            			    	parent.appendChild(target);
+        				parentSlot.appendChild(target);
         			    }else{
             			    	//parent.appendChild(target);
-            			    	parent.insertBefore(target,afterAfter);
+        				parentSlot.insertBefore(target,afterAfter);
         			    }
         			}
 			}else{//非対称の場合に限る,しかも越境に限るAfterは必ず上位
-console.log("moveTweetVVVVVS "+id+"/"+parentId+"/"+parent.getAttribute("class")+"/"+parent.childNodes+"/b:"+before+"/z"+(target.id)+"/af:"+(after===undefined||after===null?"null":after.id)
+console.log("moveTweetVVVVVS "+id+"/"+parentId+"/"+parentSlot.getAttribute("class")+"/"+parentSlot.childNodes+"/b:"+before+"/z"+(target.id)+"/af:"+(after===undefined||after===null?"null":after.id)
 					 +"/afaf:"+(afterAfter===undefined||afterAfter===null?"null":afterAfter.id)+"/"+(afterAfter===null)+"/x "+direct);
 
 				if(direct==="up"){//ここに来る時点でソートは終了している。
@@ -590,17 +593,16 @@ console.log("moveTweetVVVVUS targetFunc.level:"+targetFunc.level+"/max:"+max+"/o
         			    }else if(targetFunc.level > upperFunc.level){
 console.log("moveTweetVVVVUR targetFunc.level:"+targetFunc.level+"/max:"+max+"/offset:"+offset+"/upperFunc.level"+upperFunc.level+"/upperParentId:"+upperParentId+"/"+upperChildCount+"/idIndex:"+idIndex+"/upperParentIndexId:"+upperParentIndexId);
 
-        				var slot = upperParentObj.childNodes[slotDomObjIndex];upperParentIndexId
+        				var slot = me.getSlotObj(upperParentObj);//upperParentObj.childNodes[slotDomObjIndex];upperParentIndexId
         				slot.appendChild(target);
         			    }else{
 console.log("moveTweetVVVVUQ targetFunc.level:"+targetFunc.level+"/max:"+max+"/offset:"+offset+"/upperFunc.level"+upperFunc.level+"/upperParentId:"+upperParentId+"/"+upperChildCount+"/idIndex:"+idIndex+"/upperParentIndexId:"+upperParentIndexId);
-        				var slot = upperParentObj.childNodes[slotDomObjIndex];upperParentIndexId
+        				var slot = me.getSlotObj(upperParentObj);//upperParentObj.childNodes[slotDomObjIndex];upperParentIndexId
         				slot.appendChild(target);
         			    }
         			}else if(direct==="down"){//ここの計算が狂っている、ここに来る時点でソートは終了している。
         			    var afterIdIndex = max<=targetCursor*1+1?null:me.tweetIdMap[(targetCursor*1+1)];//一個手前を取得
 console.log("moveTweetVVVVVX afterIdIndex:"+afterIdIndex+"/max:"+max+"/targetCursor"+targetCursor);
-        			    
         			    if(afterIdIndex!==null){
     					    	var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
         					var afterAfter = document.getElementById(afterId);
@@ -657,15 +659,17 @@ console.log("moveTweetVVVVVI afterId:"+afterId+"/afterIdIndex"+afterIdIndex+"/id
 
 console.log("moveTweetVVVVVD afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	    
 						}else if(targetFunc.level===afterFunc.level){//slotの位置のよる
-        					    var parent = afterAfter.parentNode;
-        					    parent.insertBefore(target,afterAfter);
+        					    var parentSlot = afterAfter.parentNode;
+        					    parentSlot.insertBefore(target,afterAfter);
 console.log("moveTweetVVVVVE afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	
         					}else{//上位の場合は配置転換は終わっているので、一個上のものを取得
             	        			    var afterIdIndex = max===targetCursor*1+1?null:me.tweetIdMap[(targetCursor*1-1)];
         					    var afterId = me.constMap.tweetIdPrefix+afterIdIndex;//エラー発生！constMapがundefined
             					    var afterAfter = document.getElementById(afterId);
 console.log("moveTweetVVVVVW afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	
-        					    afterAfter.childNodes[slotDomObjIndex].appendChild(target);
+
+        					    //afterAfter.childNodes[slotDomObjIndex].appendChild(target);
+    					    		me.getSlotObj(afterAfter).appendChild(target);
         					}
     					}else if(max===targetCursor*1){//配置転換は終わっているので、一個上のものを取得
     	        			    var afterIdIndex = max===targetCursor*1+1?null:me.tweetIdMap[(targetCursor*1-1)];
@@ -694,7 +698,8 @@ console.log("moveTweetVVVVVG3 afterId:"+afterId+"/afterFunc.level:"+afterFunc.le
                                         	var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
     					    	var afterAfter = document.getElementById(afterId);
 console.log("moveTweetVVVVVZ afterAfter:"+afterAfter+"/afterFunc:"+afterFunc+"/afterId"+afterId);	//ここでafterAfterの階級考慮がない
-					    	afterAfter.childNodes[slotDomObjIndex].appendChild(target);
+					    	//afterAfter.childNodes[slotDomObjIndex].appendChild(target);
+					    	me.getSlotObj(afterAfter).appendChild(target);
                                             }
     					}else if(max===targetCursor*1+1 && max >=3){//
     					    var afterIdIndex = me.tweetIdMap[(targetCursor*1-1)];//一個手前を取得
@@ -709,7 +714,8 @@ console.log("moveTweetVVVVVE2 targetFunc.level:"+targetFunc.level+"/afterFunc.le
 						    if(targetFunc.level===1){
 							superParentNode = target.parentNode;;
 						    }else{
-							superParentNode = afterAfter.childNodes[slotDomObjIndex];
+							//superParentNode = afterAfter.childNodes[slotDomObjIndex];
+							superParentNode = me.getSlotObj(afterAfter);
 						    }
 						    //また後ろを取りに行く。子供数だけオフセットすると後ろが取れる。
 						    var afterIdIndex = max <= targetCursor*1+childCount+1 ?null :me.tweetIdMap[(targetCursor*1+childCount+1)];
@@ -729,12 +735,14 @@ console.log("moveTweetVVVVVG2 afterId:"+afterId+"/afterFunc.level:"+afterFunc.le
         					    var afterObj = document.getElementById(afterId);
 console.log("moveTweetVVVVVG4 afterId:"+afterId+"/afterFunc.level:"+afterFunc.level+"/afterIdIndex"+afterIdIndex+"/id:"+id+"/afterObj:"+afterObj+"/afterAfter:"+afterAfter+"/target:"+target);
 						    var superParentNode =afterAfter;
-						    superParentNode.childNodes[slotDomObjIndex].insertBefore(target,afterObj);
+						    //superParentNode.childNodes[slotDomObjIndex].insertBefore(target,afterObj);
+						    me.getSlotObj(superParentNode).insertBefore(target,afterObj);
                                             }else{
                                         	var afterId = me.constMap.tweetIdPrefix+afterIdIndex;
     					    	var afterAfter = document.getElementById(afterId);
 console.log("moveTweetVVVVVG3 afterId:"+afterId+"/afterFunc.level:"+afterFunc.level+"/afterAfter"+afterAfter+"/afterIdIndex:"+afterIdIndex);
-    					    	afterAfter.childNodes[slotDomObjIndex].appendChild(target);
+    					    	//afterAfter.childNodes[slotDomObjIndex].appendChild(target);
+    					    	me.getSlotObj(afterAfter).appendChild(target);
                                             }
     					}
         			}
@@ -742,6 +750,10 @@ console.log("moveTweetVVVVVG3 afterId:"+afterId+"/afterFunc.level:"+afterFunc.le
 		}
 		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
 		me.rebuildAll(me);
+	},
+	getSlotObj:function(domObj){
+	    var slotDomObjIndex=2;
+	    return domObj.childNodes[1].childNodes[slotDomObjIndex];
 	},
 	//ソートのアルゴリズムを変える。we-
 	convertMovedNewMap2:function(me,idIndex,direct){
@@ -1378,7 +1390,7 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+cli
 		var me= event.data.self;
 		var idIndex = event.data.idIndex;
 		var id = me.constMap.tweetIdPrefix+idIndex;
-		var target = me.getTweetBoxObj(me,idIndex).children(".tweetBoxCmdFrame").eq(0).children(".tweetBoxCmd").eq(0);
+		var target = me.getTweetBoxObj(me,idIndex).find(".tweetBoxCmdFrame").eq(0).find(".tweetBoxCmd").eq(0);
 		target.css("visibility","visible");
 		if(me.state.selected===idIndex){
 			me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
@@ -1390,7 +1402,7 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+cli
 	hideCmdBox:function(event){
 		var me= event.data.self;
 		var idIndex = event.data.idIndex;
-		var target = me.getTweetBoxObj(me,idIndex).children(".tweetBoxCmdFrame").eq(0).children(".tweetBoxCmd").eq(0);
+		var target = me.getTweetBoxObj(me,idIndex).find(".tweetBoxCmdFrame").eq(0).find(".tweetBoxCmd").eq(0);
 		target.css("visibility","hidden");
 		if(me.state.selected===idIndex){
 			me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
@@ -1443,18 +1455,22 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+cli
 		var twbButtonMoveUp= $("<div class='tweetBoxCmdButton'>▲</div>");
 		var twbButtonMoveDown= $("<div class='tweetBoxCmdButton'>▼</div>");
 		var twbButtonUnite= $("<div class='tweetBoxCmdButton'>＋</div>");
+		var twbConteinerFlame= $("<div class='twbConteinerFlame'></div>");
+		var twbSideBar= $("<div class='tweetBoxSideBar'></div>");
 		var twbConteiner= $("<div class='tweetBoxConteiner'></div>");
 		var tweetBoxInfo = $("<div class='tweetBoxInfo'>infoinfo</div>");
 		var tweetBoxInfoCover = $("<div class='tweetBoxInfoCover'></div>");
 		var tweetBoxtext = $("<div class='tweetBoxText'>"+MansikiMapUtil.getFormatedTextCRLF(text)+"</div>");
 		var tweetBoxSlot= $("<div class='tweetSlot'></div>");
 		tweetBoxButtonsFrame.append(tweetBoxButtons);
-		tweetBox.append(tweetBoxButtonsFrame);
+		tweetBox.append(twbSideBar);
+		tweetBox.append(twbConteinerFlame);
+		twbConteinerFlame.append(tweetBoxButtonsFrame);
 		twbConteiner.append(tweetBoxInfo);
 		twbConteiner.append(tweetBoxInfoCover);
 		twbConteiner.append(tweetBoxtext);
-		tweetBox.append(twbConteiner);
-		tweetBox.append(tweetBoxSlot);
+		twbConteinerFlame.append(twbConteiner);
+		twbConteinerFlame.append(tweetBoxSlot);
 		tweetBoxButtons.append(twbButtonMoveDown).append(twbButtonMoveUp).append(twbButtonDel).append(twbButtonUnite);
 		tweetBoxtext.bind("click",{self:me,idIndex:idIndex},me.loadTweet);
 		twbButtonDel.bind("click",{self:me,idIndex:idIndex},me.deleteTweet);
@@ -1476,14 +1492,14 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+cli
 		me.getTweetBoxInfo(tweetBox).html(info);
 	},
 	getTweetBoxInfo:function(tweetBox){
-		return tweetBox.children("div.tweetBoxConteiner").eq(0).children("div.tweetBoxInfo").eq(0);
+		return tweetBox.find("div.tweetBoxConteiner").eq(0).find("div.tweetBoxInfo").eq(0);
 	},
 	getTweetBoxInfoCover:function(tweetBox){
-		return tweetBox.children("div.tweetBoxConteiner").eq(0).children("div.tweetBoxInfoCover").eq(0);
+		return tweetBox.find("div.tweetBoxConteiner").eq(0).find("div.tweetBoxInfoCover").eq(0);
 	},
 	addText:function(me,idIndex,addtionalText){
 		var tweetBox = me.getTweetBoxObj(me,idIndex);
-		var textBox = tweetBox.children("div.tweetBoxConteiner").eq(0).children("div.tweetBoxText").eq(0);
+		var textBox = tweetBox.find("div.tweetBoxConteiner").eq(0).find("div.tweetBoxText").eq(0);
 		textBox.html(MansikiMapUtil.getFormatedTextCRLF(me.tweets[idIndex].text)+addtionalText);
 	},
 	getTweetBoxObj:function(me,idIndex){

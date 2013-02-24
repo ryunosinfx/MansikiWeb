@@ -123,7 +123,6 @@ div.currentTab{
 }
 .tweetList{
 	margin-left:0px;
-	height:100%;
 	width:624px;
 	background-color:#9D9DD0;
 	min-height:600px;
@@ -386,8 +385,8 @@ span#TMTweetCount{
 }
 
 div.tweetList {
+	float:left;
 	overflow-x:hidden;
-
 }
 
 /*---------TweetBox-----------------*/
@@ -406,8 +405,18 @@ div.tweetList {
 	border-left-width:20px;
 	z-index:510;
 	opacity:1;
+	d isplay: -moz-box; 
+	d isplay: -webkit-box;
+	display:block;
 }
-
+div.twbConteinerFlame{
+	margin-left: 5px;
+}
+div.tweetBoxSideBar{
+    width: 5px;
+    margin-right: -5px;
+    float: left;
+}
 .tweetBoxCmdFrame{
 	padding:0px;
 	display: -moz-box; 
@@ -543,6 +552,7 @@ span.TwcommandHliright{
 .indent1{
 	width:580px;
 	margin-left :2px;
+	
 }
 .indent2{
 	width:550px;
@@ -570,38 +580,147 @@ span.TwcommandHliright{
 }
 
 .indent2 .tweetBoxText {
-	width:510px;
+	width:505px;
 }
 
 .indent3 .tweetBoxText {
-	width:480px;
+	width:470px;
 }
 
 .indent4 .tweetBoxText {
-	width:450px;
+	width:435px;
 }
 
 .indent1 .tweetSlot {
-	width:582px;
+	width:577px;
 }
 
 .indent2 .tweetSlot {
-	width:552px;
+	width:542px;
 }
 
 .indent3 .tweetSlot {
-	width:522px;
+	width:507px;
 }
 
 .indent4 .tweetSlot {
-	width:492px;
+	width:472px;
 }
 
 .commentOut{
 	opacity:0.5;
 }
 
+/*---------------------------*/
+div.tweetList div.TweetPageDirRLSideL{
+		display: -webkit-box;　/* Safari,Google Chrome用 */
+		display: -moz-box;　/* Firefox用 */
+}
+div.tweetList div.TweetPageDirRLSideR{
+		display: -webkit-box;　/* Safari,Google Chrome用 */
+		display: -moz-box;　/* Firefox用 */
+}
 
+div.tweetList div.TweetPageDirLRSideL{
+		display: -webkit-box;　/* Safari,Google Chrome用 */
+		display: -moz-box;　/* Firefox用 */
+}
+
+div.tweetList div.TweetPageDirLRSideR{
+		display: -webkit-box;　/* Safari,Google Chrome用 */
+		display: -moz-box;　/* Firefox用 */
+}
+div.tweetList div.TweetPageDirRLSideL:before{
+    position: absolute;
+    content: ' NodeA<<<<<<<';
+    height: 16px;
+    text-align:left;
+    width:372px;
+    background: #999;
+    padding-left:210px;
+    margin:-2px 0px 0px 0px;
+    opacity:0.3;
+}
+div.tweetList div.TweetPageDirRLSideR:before{
+    position: absolute;
+    content: '>>>>>>>>>>NodeB ';
+    text-align:right;
+    height: 16px;
+    width:572px;
+    background: #999;
+    padding-right:10px;
+    margin:-2px 0px 0px 0px;
+    opacity:0.3;
+}
+div.tweetList div.TweetPageDirLRSideL:before{
+    position: absolute;
+    content: '>>>>>>>>>>NodeC ';
+    text-align:right;
+    height: 16px;
+    width:572px;
+    background: #999;
+    padding-right:10px;
+    margin:-2px 0px 0px 0px;
+    opacity:0.3;
+		
+}
+div.tweetList div.TweetPageDirLRSideR:before{
+    position: absolute;
+    content: ' NodeD<<<<<<';
+    text-align:left;
+    height: 16px;
+    width:372px;
+    background: #999;
+    padding-left:210px;
+    margin:-2px 0px 0px 0px;
+    opacity:0.3;
+}
+div.tweetList div.TweetPageDirRLSideL:afte r{
+    position: absolute;
+    content: ' ';
+	display: block;
+	height:100%;
+    width: 20px;
+    background: #999;
+    margin:-0%  0px 0px -20px;
+		background: -moz-linear-gradient(white, gray);
+		background: -webkit-gradient(linear, left top, left bottom, from(white), to(gray)); 
+}
+div.tweetList div.TweetPageDirRLSideR:afte r{
+    position: absolute;
+    content: ' ';
+	display: block;
+	height:100%;
+    width: 20px;
+    background: #999;
+    margin:-0%  0px 0px -20px;
+		background: -moz-linear-gradient(gray, white);
+		background: -webkit-gradient(linear, left top, left bottom, from(gray), to(white)); 
+}
+div.tweetList div.TweetPageDirLRSideL:afte r{
+    position: absolute;
+    content: ' ';
+	display: block;
+	height:100%;
+    width: 20px;
+    background: #999;
+    margin:-0%  0px 0px -20px;
+		background: -moz-linear-gradient(white, gray);
+		background: -webkit-gradient(linear, left top, left bottom, from(white), to(gray)); 
+		
+}
+div.tweetList div.TweetPageDirLRSideR:afte r{
+    position: absolute;
+    content: ' ';
+	display: block;
+	height:100%;
+    width: 20px;
+    background: #999;
+    margin:-0%  0px 0px -20px;
+		background: -moz-linear-gradient(gray, white);
+		background: -webkit-gradient(linear, left top, left bottom, from(gray), to(white)); 
+		
+}
 
 
 

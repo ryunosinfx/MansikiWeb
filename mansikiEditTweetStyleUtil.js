@@ -117,5 +117,16 @@ var MansikiMapUtil={
 	},
 	clearLS:function(){
 		localStorage.clear();
+	},
+	addCSSRule:function(selector, css) { 
+		var sheets = document.styleSheets, 
+		sheet = sheets[sheets.length - 1]; //?最後でいいのか？
+	   
+		if(sheet.insertRule) { 
+		    	sheet.insertRule(selector + '{' +  css + '}', sheet.cssRules.length); 
+		}else if(sheet.addRule) { 
+			sheet.addRule(selector, css, -1); 
+		} 
 	}
+	
 }
