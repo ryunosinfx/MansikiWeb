@@ -372,23 +372,33 @@ console.log("AAAAAAAAAAAAAAAAAAAAAAAA"+"/this.idIndex:"+this.idIndex+"/"+(state[
 	var tweetBoxDomId = this.editor.constMap.tweetIdPrefix+this.idIndex;
 	var tweetBox = $("#"+tweetBoxDomId);
 	var twbConteinerFlame = tweetBox.find(".twbConteinerFlame").eq(0);
+	var twbSidebar = tweetBox.find(".tweetBoxSideBar").eq(0);
 	twbConteinerFlame.removeClass("TweetPageDirRLSideL")
 		.removeClass("TweetPageDirRLSideR")
 		.removeClass("TweetPageDirLRSideL")
 		.removeClass("TweetPageDirLRSideR");
+	twbSidebar.removeClass("tweetBoxSideBarLRSideL")
+        	.removeClass("tweetBoxSideBarLRSideR")
+        	.removeClass("tweetBoxSideBarRLSideL")
+        	.removeClass("tweetBoxSideBarRLSideR");
 	var width = tweetBox.width();
 	var height = tweetBox.height();
+	twbSidebar.css("height",(height*1+4)).css("margin-top","-2");
 	if(side==="L"){
 	    if(diarect==="R"){
 		twbConteinerFlame.addClass("TweetPageDirLRSideL");
+		twbSidebar.addClass("tweetBoxSideBarLRSideL");
 	    }else{
 		twbConteinerFlame.addClass("TweetPageDirRLSideL");
+		twbSidebar.addClass("tweetBoxSideBarRLSideL");
 	    }
 	}else{
 	    if(diarect==="R"){
 		twbConteinerFlame.addClass("TweetPageDirLRSideR");
+		twbSidebar.addClass("tweetBoxSideBarLRSideR");
 	    }else{
 		twbConteinerFlame.addClass("TweetPageDirRLSideR");
+		twbSidebar.addClass("tweetBoxSideBarRLSideR");
 	    }
 	}
 	var domTweetBox = document.getElementById(tweetBox.attr("id")).childNodes[0];

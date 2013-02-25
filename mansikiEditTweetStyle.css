@@ -124,7 +124,7 @@ div.currentTab{
 .tweetList{
 	margin-left:0px;
 	width:624px;
-	background-color:#9D9DD0;
+	background-color:#000E30;
 	min-height:600px;
 	padding:10px;
 	f loat:left;
@@ -413,9 +413,12 @@ div.twbConteinerFlame{
 	margin-left: 5px;
 }
 div.tweetBoxSideBar{
-    width: 5px;
-    margin-right: -5px;
+    width: 7px;
+	margin-left: -2px;
+    margin-right: -0px;
+    background-color:red;
     float: left;
+    z-index:530;
 }
 .tweetBoxCmdFrame{
 	padding:0px;
@@ -612,33 +615,26 @@ span.TwcommandHliright{
 }
 
 /*---------------------------*/
-div.tweetList div.TweetPageDirRLSideL{
-		display: -webkit-box;　/* Safari,Google Chrome用 */
-		display: -moz-box;　/* Firefox用 */
-}
-div.tweetList div.TweetPageDirRLSideR{
-		display: -webkit-box;　/* Safari,Google Chrome用 */
-		display: -moz-box;　/* Firefox用 */
-}
-
-div.tweetList div.TweetPageDirLRSideL{
-		display: -webkit-box;　/* Safari,Google Chrome用 */
-		display: -moz-box;　/* Firefox用 */
+div.tweetList div.TweetPageDirRLSideL
+,div.tweetList div.TweetPageDirRLSideR
+,div.tweetList div.TweetPageDirLRSideL
+,div.tweetList div.TweetPageDirLRSideR{
+		margin-top:16px;
+		d isplay: -webkit-box;　/* Safari,Google Chrome用 */
+		d isplay: -moz-box;　/* Firefox用 */
 }
 
-div.tweetList div.TweetPageDirLRSideR{
-		display: -webkit-box;　/* Safari,Google Chrome用 */
-		display: -moz-box;　/* Firefox用 */
-}
 div.tweetList div.TweetPageDirRLSideL:before{
     position: absolute;
     content: ' NodeA<<<<<<<';
     height: 16px;
     text-align:left;
-    width:372px;
+    width:572px;
     background: #999;
-    padding-left:210px;
-    margin:-2px 0px 0px 0px;
+    padding-left:10px;
+    margin:-2px -16px 0px 0px;
+    -webkit-transform: rotate(0deg) scale(1) skew(0deg) translate(0px, -16px);
+    -moz-transform: rotate(0deg) scale(1) skew(0deg) translate(0px, -16px);
     opacity:0.3;
 }
 div.tweetList div.TweetPageDirRLSideR:before{
@@ -649,7 +645,9 @@ div.tweetList div.TweetPageDirRLSideR:before{
     width:572px;
     background: #999;
     padding-right:10px;
-    margin:-2px 0px 0px 0px;
+    margin:-2px -16px 0px 0px;
+    -webkit-transform: rotate(0deg) scale(1) skew(0deg) translate(0px, -16px);
+    -moz-transform: rotate(0deg) scale(1) skew(0deg) translate(0px, -16px);
     opacity:0.3;
 }
 div.tweetList div.TweetPageDirLRSideL:before{
@@ -660,7 +658,9 @@ div.tweetList div.TweetPageDirLRSideL:before{
     width:572px;
     background: #999;
     padding-right:10px;
-    margin:-2px 0px 0px 0px;
+    margin:-2px -16px 0px 0px;
+    -webkit-transform: rotate(0deg) scale(1) skew(0deg) translate(0px, -16px);
+    -moz-transform: rotate(0deg) scale(1) skew(0deg) translate(0px, -16px);
     opacity:0.3;
 		
 }
@@ -669,10 +669,12 @@ div.tweetList div.TweetPageDirLRSideR:before{
     content: ' NodeD<<<<<<';
     text-align:left;
     height: 16px;
-    width:372px;
+    width:572px;
     background: #999;
-    padding-left:210px;
-    margin:-2px 0px 0px 0px;
+    padding-left:10px;
+    margin:-2px -16px 0px 0px;
+    -webkit-transform: rotate(0deg) scale(1) skew(0deg) translate(0px, -16px);
+    -moz-transform: rotate(0deg) scale(1) skew(0deg) translate(0px, -16px);
     opacity:0.3;
 }
 div.tweetList div.TweetPageDirRLSideL:afte r{
@@ -722,7 +724,42 @@ div.tweetList div.TweetPageDirLRSideR:afte r{
 		
 }
 
+div.tweetList div.tweetBoxSideBarLRSideL{
+	display: block;
+	cle ar:both;
+	border:solid 16px #000;
+	border-width:16px 0 0 0 ;
+		background: -moz-linear-gradient(black ,white , white );
+		background: -webkit-gradient(linear, left top, left bottom, from(black), color-stop(0.5, white),to(white)); 
 
+}
+div.tweetList div.tweetBoxSideBarLRSideR{
+	display: block;
+	cle ar:both;
+	border:solid 16px #000;
+	border-width: 0 0 16px 0 ;
+		background: -moz-linear-gradient(white , white ,black);
+		background: -webkit-gradient(linear, left top, left bottom, from(white), color-stop(0.5, white),to(black)); 
+	
+}
+div.tweetList div.tweetBoxSideBarRLSideL{
+	display: block;
+	cle ar:both;
+	border:solid 16px #000;
+	border-width: 0 0 16px 0 ;
+		background: -moz-linear-gradient(white , white ,black);
+		background: -webkit-gradient(linear, left top, left bottom, from(white), color-stop(0.5, white),to(black)); 
+	
+}
+div.tweetList div.tweetBoxSideBarRLSideR{
+	display: block;
+	cle ar:both;
+	border:solid 16px #000;
+	border-width:16px 0 0 0 ;
+		background: -moz-linear-gradient(black ,white , white );
+		background: -webkit-gradient(linear, left top, left bottom, from(black), color-stop(0.5, white),to(white)); 
+	
+}
 
 
 

@@ -388,8 +388,9 @@ console.log("doInsertTweet AAC currentFunc:"+currentFunc+"/selectedFuncOnList:"+
 			var preIdIndex=me.tweetIdMap[me.cursor-1];
 			var preFunc = me.tweetsFuncs[preIdIndex];
 			var preId=me.constMap.tweetIdPrefix+preIdIndex;
-			var parentLevelObj = $("#"+preId).parent().parent().parent().parent();
-			    //alert("aaaa level:"+func.level+"/pre:"+preFunc.level+"/cursor:"+me.cursor+"/preIdIndex:"+preIdIndex+"/"+me.tweetIdMap.toSource);
+			var parentLevelObj = $("#"+preId).parent().parent().parent();
+			var topLevelId = "TMtweetList";
+			//alert("aaaa level:"+func.level+"/pre:"+preFunc.level+"/cursor:"+me.cursor+"/preIdIndex:"+preIdIndex+"/"+me.tweetIdMap.toSource());
 			if(preFunc.level*1 === func.level*1){
 				$("#"+preId).after(tweetBox);
 			}else if(preFunc.level*1 <func.level*1){
@@ -397,12 +398,23 @@ console.log("doInsertTweet AAC currentFunc:"+currentFunc+"/selectedFuncOnList:"+
 				//alert(slot.length+"/level:"+func.level+"/pre:"+preFunc.level);
 				slot.prepend(tweetBox);
 			}else if( preFunc.level*1 === func.level*1+1){
-			    //alert($("#"+preId).parent().parent().parent().parent().find("div.twbConteinerFlame").eq(0).parent().attr("id"));
-			    parentLevelObj.find("div.twbConteinerFlame").eq(0).parent().parent().children("div:last").eq(0).after(tweetBox);
+			    if(parentLevelObj.parent().attr("id") === topLevelId){
+				    parentLevelObj.find("div.twbConteinerFlame").eq(0).parent().eq(0).after(tweetBox);
+			    }else{
+				    parentLevelObj.parent().find("div.twbConteinerFlame").eq(0).parent().eq(0).after(tweetBox);
+			    }
 			}else if(preFunc.level*1 === func.level*1+2){
-			    parentLevelObj.parent().parent().find("div.twbConteinerFlame").eq(0).parent().parent().children("div:last").eq(0).after(tweetBox);
+			    if(parentLevelObj.parent().parent().parent().attr("id") === topLevelId){
+				    parentLevelObj.parent().parent().find("div.twbConteinerFlame").eq(0).parent().eq(0).after(tweetBox);
+			    }else{
+				    parentLevelObj.parent().parent().parent().find("div.twbConteinerFlame").eq(0).parent().eq(0).after(tweetBox);
+			    }
 			}else if(preFunc.level*1 === func.level*1+3){
-			    parentLevelObj.parent().parent().parent().parent().parent().find("div.twbConteinerFlame").eq(0).parent().parent().children("div:last").eq(0).after(tweetBox);
+			    if(parentLevelObj.parent().parent().parent().parent().parent().parent().attr("id") === topLevelId){
+				    parentLevelObj.parent().parent().parent().parent().parent().find("div.twbConteinerFlame").eq(0).parent().eq(0).after(tweetBox);
+			    }else{
+				    parentLevelObj.parent().parent().parent().parent().parent().parent().find("div.twbConteinerFlame").eq(0).parent().eq(0).after(tweetBox);
+			    }
 			}
 		}
 		 
@@ -506,7 +518,7 @@ console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"
 		    	var targetFunc = me.tweetsFuncs[idIndex];
 		    	//var subFunc = me.tweetsFuncs[subject];
 			var subjectId = me.constMap.tweetIdPrefix+subject;
-			var subObj = document.getElementById(subjectId);
+			var subObj = document.getElementById(subjectId);//TweetBox
 			var subParent = subObj.parentNode;
 			var subParentId = subParent.id;
 			me.cursor=cursor+offset;
@@ -518,7 +530,7 @@ console.log("moveTweet idIndex:"+idIndex+"/subject:"+subject+"/direct:"+direct+"
 			    parentId = parentSlot.parentNode.parentNode.id;
 			}
 			if(subParent.id===""){
-			    subParentId = subParent.parentNode.id;
+			    subParentId = subParent.parentNode.parentNode.id;
 			}
 console.log("moveTweetA idIndex:"+idIndex+"/"+subject+"/subject:"+subParentId+"/"+subParent.id+"/parent.id:"+parentId+"/"+parentSlot.id);
     			if(subParentId!=="" && subParentId===parentId){
