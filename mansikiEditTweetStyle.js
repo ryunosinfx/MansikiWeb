@@ -1302,6 +1302,14 @@ console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
 		saveData.tweetsFuncsIds = me.tweetsFuncsIds;
 		saveData.titleStates = me.analizer.titleStates;
 		MansikiMapUtil.saveToLS(me.keyMain,saveData);
+		setTimeout(function(){
+		    me.viewList.css("height","100%");
+        		var scrollHeight = me.viewList.get(0).scrollHeight;
+        		var height = me.viewList.height();
+        		if(scrollHeight > height){
+        		    me.viewList.css("height",scrollHeight);
+        		}
+		},0);
 		console.log("rebuildAll END");
 	},
 	reloadAllTweets:function(){

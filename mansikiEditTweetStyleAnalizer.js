@@ -143,7 +143,7 @@ console.log("i:"+i+"idIndex:"+idIndex);
 			var func = tweetsFuncs[idIndex];
 			var id = func.Id;
 			if(this.stateMap[id]===undefined){
-			    this.stateMap[id]=0;
+			    this.stateMap[id]=1;
 			}else{
 			    this.stateMap[id]++;
 			}

@@ -32,9 +32,10 @@ html,body,form {
 .TMconteiner{
 	width:1030px;
 }
-,.tweetBody{
-	width:900px;
-	margin-top:80px;
+div.tweetBody{
+	width:1000px;
+	margin-top:3px;
+	height:100%;
 }
 .TMtitleText{
 	font-size:24px;
@@ -107,9 +108,6 @@ div.currentTab{
 }
 .tweetTab{
 	width:100%;
-	display: -moz-box; 
-	display: -webkit-box; 
-	display: box; 
 	z-index:1;
 }
 .tweetSideArea{
@@ -119,25 +117,25 @@ div.currentTab{
 	background-color:#fff;
 	min-height:600px;
 	padding:0px;
-	f loat:left;
+	float:left;
 }
 .tweetList{
 	margin-left:0px;
-	width:624px;
+	width:600px;
 	background-color:#000E30;
 	min-height:600px;
 	padding:10px;
-	f loat:left;
 	z-index:10;
+	float:left;
 }
 .tweetInfo{
 	margin-left:0px;
-	height:100%;
-	width:80px;
+	width:40px;
 	background-color:#565672;
 	min-height:600px;
 	padding:0px;
-	f loat:left;
+	display:block;
+	float:left;
 }
 div.tweetTab p{
 	clear:both;
@@ -281,13 +279,11 @@ div.TWFuncName,div.TWFuncCommand{
 	padding:8px;
 	margin:0 2 2 2;
 	background-color:gray;
-	display: box; 
 }
 .inputArea textarea{
 	width:100%;
 	height:72px;
 	orverflow:hidden;
-	display: box; 
 	font-size:12px;
 }
 .TMinputInfo{
@@ -295,9 +291,6 @@ div.TWFuncName,div.TWFuncCommand{
 	height:20px;
 	text-align:right;
 	padding:2px;
-	display: -moz-box; 
-	display: -webkit-box; 
-	display: box; 
 }
 span#TMTweetMode{
 	display:block;
@@ -371,9 +364,6 @@ span#TMTweetCount{
 	cursor:pointer;
 }
 .footer{
-	display: -moz-box; 
-	display: -webkit-box; 
-	display: box; 
 	width:980px;
 	background-color:#47475E;
 	padding:5px 15px 5px 5px;
@@ -382,11 +372,13 @@ span#TMTweetCount{
 	border-radius: 0.5em 0.5em 0.5em 0.5em;
 	border-width:0px 0px 0px 30px;
 	height:20px;
+	clear: both;
 }
 
 div.tweetList {
-	float:left;
 	overflow-x:hidden;
+	display:block;
+	float:left;
 }
 
 /*---------TweetBox-----------------*/
@@ -405,26 +397,29 @@ div.tweetList {
 	border-left-width:20px;
 	z-index:510;
 	opacity:1;
-	d isplay: -moz-box; 
-	d isplay: -webkit-box;
-	display:block;
 }
+.TMtweetBox:after{
+    content: " "; 
+    display: block; 
+    height: 0; 
+    font-size:0;	
+    clear: both; 
+		visibility:hidden;
+	}
 div.twbConteinerFlame{
-	margin-left: 5px;
+	margin-left: 0px;
+    float:left;
 }
 div.tweetBoxSideBar{
     width: 7px;
 	margin-left: -2px;
     margin-right: -0px;
     background-color:red;
-    float: left;
     z-index:530;
+    float:left;
 }
 .tweetBoxCmdFrame{
 	padding:0px;
-	display: -moz-box; 
-	display: -webkit-box; 
-	display: box; 
 	background-color:black;
 	color:white;
 	text-align:right;
@@ -437,11 +432,7 @@ div.tweetBoxSideBar{
 	visibility:hidden;
 }
 .tweetBoxConteiner{
-	display: -moz-box; 
-	display: -webkit-box; 
-	display: box; 
 	top:-2px;
-	l eft:-467px;
 	position:relative;
 	width:600px;
 	min-height:20px;
@@ -450,7 +441,6 @@ div.tweetBoxSideBar{
 }
 .tweetBoxInfo , .tweetBoxInfoCover{
 	position:relative;
-	top:-2px;
 	min-height:20px;
 	width:40px;
 	padding:2px 2px;
@@ -460,11 +450,11 @@ div.tweetBoxSideBar{
 	background-color:white;
 	text-align:center;
 	color:gray;
+	float:left;
 }
  .tweetBoxInfoCover{
 	position:relative;
-	top:-2px;
-	left:-40px;
+	left:-0px;
 	margin-left:-40px;
 	width:40px;
 	padding:2px 2px;
@@ -475,22 +465,18 @@ div.tweetBoxSideBar{
 	cursor:pointer;
 }
 .tweetBoxText{
-	l eft:-40px;
 	position:relative;
 	min-height:20px;
 	padding:2px;
-	width:100%;
 	border:solid 0px red;
 	z-index:505;
 	word-break:break-all;
 	word-wrap:break-word;
+	float:left;
 }
 .tweetSlot{
 	left:-2px;
 	width:100%;
-	display: -moz-box; 
-	display: -webkit-box; 
-	display: box; 
 	min-height:1px;
 	padding:0px;
 	margin:0px 0px 0px -1px ;
@@ -498,6 +484,7 @@ div.tweetBoxSideBar{
 	border:solid 0px green;
 	background-color:rgba(0,0,255,0.1) ;
 	z-index:18;
+	clear:both;
 }
 .TwselectedBox{
 	border-color:black;
@@ -508,9 +495,6 @@ div.tweetBoxSideBar{
 	margin-left:250px;
 	margin-right:250px;
 	padding:2px;
-	display: -moz-box; 
-	display: -webkit-box; 
-	display: -webkit-box; 
 	background-color:black;
 	color:white;
 	text-align:right;
@@ -530,7 +514,7 @@ div.tweetBoxSideBar{
 }
 .TwcommandList span{
 	line-height:20px;
-	display:inline-box;
+	display:inline-block;
 	padding:1px 2px 1px 10px;
 	color:white;
 	font-weight:normal;
@@ -560,12 +544,12 @@ span.TwcommandHliright{
 .indent2{
 	width:550px;
 	margin-left :2px;
-	m:26px;
+	sm:26px;
 }
 .indent3{
 	width:520px;
 	margin-left :2px;
-	m:48px;
+	sm:48px;
 }
 .indent4{
 	width:490px;
@@ -578,20 +562,57 @@ span.TwcommandHliright{
 	
 }
 
+.indent1 div.tweetBoxConteiner {
+	width:580px;
+}
+
+.indent2 div.tweetBoxConteiner {
+	width:545px;
+}
+
+.indent3 div.tweetBoxConteiner {
+	width:510px;
+}
+
+.indent4 div.tweetBoxConteiner {
+	width:475px;
+}
+
+.indent1 div.twbConteinerFlame {
+	width:580px !important;
+	margin-right:-164px;
+}
+
+.indent2 div.twbConteinerFlame {
+	width:545px !important;
+	margin-right:-164px;
+}
+
+.indent3 div.twbConteinerFlame {
+	width:510px !important;
+	margin-right:-164px;
+}
+
+.indent4 div.twbConteinerFlame {
+	width:475px !important;
+	margin-right:-164px;
+}
+
+
 .indent1 .tweetBoxText {
-	width:540px;
+	width:500px;
 }
 
 .indent2 .tweetBoxText {
-	width:505px;
+	width:465px;
 }
 
 .indent3 .tweetBoxText {
-	width:470px;
+	width:430px;
 }
 
 .indent4 .tweetBoxText {
-	width:435px;
+	width:395px;
 }
 
 .indent1 .tweetSlot {
@@ -620,8 +641,6 @@ div.tweetList div.TweetPageDirRLSideL
 ,div.tweetList div.TweetPageDirLRSideL
 ,div.tweetList div.TweetPageDirLRSideR{
 		margin-top:16px;
-		d isplay: -webkit-box;　/* Safari,Google Chrome用 */
-		d isplay: -moz-box;　/* Firefox用 */
 }
 
 div.tweetList div.TweetPageDirRLSideL:before{

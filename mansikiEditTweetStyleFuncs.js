@@ -18,9 +18,10 @@ var ManikiFunctions=function(editor,idIndex,keyBindFunc){
 	this.indentClassPrefix="indent";
 	this.infoMap={};
 	this.addInfo="";
+	this.className="";
 	this.isFormFocusd=false;
 	this.keyBindFunc = keyBindFunc;
-console.log("ManikiFunctions:keyBindFunc:"+keyBindFunc);
+console.log("ManikiFunclassNamections:keyBindFunc:"+keyBindFunc);
 	this.init();
 }
 
@@ -108,6 +109,9 @@ console.log("create keyBindFuncLocal:"+keyBindFuncLocal);
 		return this.idPrefix+this.Id+this.idSufix;
 	},
 	showStateExec:function(){
+		var tweetBoxDomId = this.editor.constMap.tweetIdPrefix+this.idIndex;
+		$("#"+tweetBoxDomId).removeClass(this.className).addClass(this.className);
+		
 		var state=this.editor.analizer.state;
 		var currentState = state[this.idIndex];
 		var info= this.nameLc+this.addInfo;
@@ -331,6 +335,7 @@ var ManikiFuncTitle=function(editor,idIndex,keyBindFunc){
 	this.level =0;
 	this.parentId="WORK";
 	this.infoMap={Diarect:"right"};
+	this.className="ManikiFuncTitle";
 }
 ManikiFuncTitle.prototype = new ManikiFunctions();
 //ManikiFuncPage.prototype.
@@ -347,6 +352,7 @@ var ManikiFuncPage=function(editor,idIndex,keyBindFunc){
 	this.level =1;
 	this.parentId="Title";
 	this.infoMap={side:"right"};
+	this.className="ManikiFuncPage";
 }
 ManikiFuncPage.prototype = new ManikiFunctions();
 //ManikiFuncPage.prototype.
@@ -383,7 +389,7 @@ console.log("AAAAAAAAAAAAAAAAAAAAAAAA"+"/this.idIndex:"+this.idIndex+"/"+(state[
         	.removeClass("tweetBoxSideBarRLSideR");
 	var width = tweetBox.width();
 	var height = tweetBox.height();
-	twbSidebar.css("height",(height*1+4)).css("margin-top","-2");
+	twbSidebar.css("height",(height*1+4)).css("margin-top","-2").css("margin-bottom","-4");
 	if(side==="L"){
 	    if(diarect==="R"){
 		twbConteinerFlame.addClass("TweetPageDirLRSideL");
@@ -420,12 +426,17 @@ var ManikiFuncKoma=function(editor,idIndex,keyBindFunc){
 	this.level =2;
 	this.parentId=PAGE;
 	this.infoMap={};
+	this.className="ManikiFuncKoma";
 }
 ManikiFuncKoma.prototype = new ManikiFunctions();
 //ManikiFuncPage.prototype.
 ManikiFuncKoma.prototype.create=function(idIndex,keyBindFunc){
 	return new ManikiFuncKoma(this.editor,idIndex,keyBindFunc);
 }
+ManikiFuncKoma.prototype.showState=function(){
+    this.showStateExec();
+    this.showStatePost();
+};
 
 
 var ManikiFuncFukidashi=function(editor,idIndex,keyBindFunc){
@@ -437,12 +448,17 @@ var ManikiFuncFukidashi=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
+	this.className="ManikiFuncFukidashi";
 }
 ManikiFuncFukidashi.prototype = new ManikiFunctions();
 //ManikiFuncPage.prototype.
 ManikiFuncFukidashi.prototype.create=function(idIndex,keyBindFunc){
 	return new ManikiFuncFukidashi(this.editor,idIndex,keyBindFunc);
 }
+ManikiFuncFukidashi.prototype.showState=function(){
+    this.showStateExec();
+    this.showStatePost();
+};
 
 
 var ManikiFuncSetting=function(editor,idIndex,keyBindFunc){
@@ -454,12 +470,17 @@ var ManikiFuncSetting=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
+	this.className="ManikiFuncSetting";
 }
 ManikiFuncSetting.prototype = new ManikiFunctions();
 //ManikiFuncSetting.prototype.
 ManikiFuncSetting.prototype.create=function(idIndex,keyBindFunc){
 	return new ManikiFuncSetting(this.editor,idIndex,keyBindFunc);
 }
+ManikiFuncSetting.prototype.showState=function(){
+    this.showStateExec();
+    this.showStatePost();
+};
 
 
 var ManikiFuncActor=function(editor,idIndex,keyBindFunc){
@@ -471,12 +492,17 @@ var ManikiFuncActor=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
+	this.className="ManikiFuncActor";
 }
 ManikiFuncActor.prototype = new ManikiFunctions();
 //ManikiFuncActor.prototype.
 ManikiFuncActor.prototype.create=function(idIndex,keyBindFunc){
 	return new ManikiFuncActor(this.editor,idIndex,keyBindFunc);
 }
+ManikiFuncActor.prototype.showState=function(){
+    this.showStateExec();
+    this.showStatePost();
+};
 
 
 var ManikiFuncObject=function(editor,idIndex,keyBindFunc){
@@ -488,12 +514,17 @@ var ManikiFuncObject=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
+	this.className="ManikiFuncObject";
 }
 ManikiFuncObject.prototype = new ManikiFunctions();
 //ManikiFuncObject.prototype.
 ManikiFuncObject.prototype.create=function(idIndex,keyBindFunc){
 	return new ManikiFuncObject(this.editor,idIndex,keyBindFunc);
 }
+ManikiFuncObject.prototype.showState=function(){
+    this.showStateExec();
+    this.showStatePost();
+};
 
 
 var ManikiFuncBackground=function(editor,idIndex,keyBindFunc){
@@ -505,12 +536,17 @@ var ManikiFuncBackground=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
+	this.className="ManikiFuncBackground";
 }
 ManikiFuncBackground.prototype = new ManikiFunctions();
 //ManikiFuncBackground.prototype.
 ManikiFuncBackground.prototype.create=function(idIndex,keyBindFunc){
 	return new ManikiFuncBackground(this.editor,idIndex,keyBindFunc);
 }
+ManikiFuncBackground.prototype.showState=function(){
+    this.showStateExec();
+    this.showStatePost();
+};
 
 
 var ManikiFuncSound=function(editor,idIndex,keyBindFunc){
@@ -522,12 +558,17 @@ var ManikiFuncSound=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
+	this.className="ManikiFuncSound";
 }
 ManikiFuncSound.prototype = new ManikiFunctions();
 //ManikiFuncSound.prototype.
 ManikiFuncSound.prototype.create=function(idIndex,keyBindFunc){
 	return new ManikiFuncSound(this.editor,idIndex,keyBindFunc);
 }
+ManikiFuncSound.prototype.showState=function(){
+    this.showStateExec();
+    this.showStatePost();
+};
 
 
 var ManikiFuncEffect=function(editor,idIndex,keyBindFunc){
@@ -539,12 +580,17 @@ var ManikiFuncEffect=function(editor,idIndex,keyBindFunc){
 	this.level =4;
 	this.parentId=KOMA;
 	this.infoMap={};
+	this.className="ManikiFuncEffect";
 }
 ManikiFuncEffect.prototype = new ManikiFunctions();
 //ManikiFuncEffect.prototype.
 ManikiFuncEffect.prototype.create=function(idIndex,keyBindFunc){
 	return new ManikiFuncEffect(this.editor,idIndex,keyBindFunc);
 }
+ManikiFuncEffect.prototype.showState=function(){
+    this.showStateExec();
+    this.showStatePost();
+};
 
 
 var ManikiFuncNalation=function(editor,idIndex,keyBindFunc){
@@ -556,12 +602,17 @@ var ManikiFuncNalation=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
+	this.className="ManikiFuncNalation";
 }
 ManikiFuncNalation.prototype = new ManikiFunctions();
 //ManikiFuncNalation.prototype.
 ManikiFuncNalation.prototype.create=function(idIndex,keyBindFunc){
 	return new ManikiFuncNalation(this.editor,idIndex,keyBindFunc);
 }
+ManikiFuncNalation.prototype.showState=function(){
+    this.showStateExec();
+    this.showStatePost();
+};
 
 
 var ManikiFuncQuote=function(editor,idIndex,keyBindFunc){
@@ -573,12 +624,17 @@ var ManikiFuncQuote=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
+	this.className="ManikiFuncQuote";
 }
 ManikiFuncQuote.prototype = new ManikiFunctions();
 //ManikiFuncQuote.prototype.
 ManikiFuncQuote.prototype.create=function(idIndex,keyBindFunc){
 	return new ManikiFuncQuote(this.editor,idIndex,keyBindFunc);
 }
+ManikiFuncQuote.prototype.showState=function(){
+    this.showStateExec();
+    this.showStatePost();
+};
 
 
 var ManikiFuncSean=function(editor,idIndex,keyBindFunc){
@@ -590,12 +646,17 @@ var ManikiFuncSean=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
+	this.className="ManikiFuncSean";
 }
 ManikiFuncSean.prototype = new ManikiFunctions();
 //ManikiFuncSean.prototype.
 ManikiFuncSean.prototype.create=function(idIndex,keyBindFunc){
 	return new ManikiFuncSean(this.editor,idIndex,keyBindFunc);
 }
+ManikiFuncSean.prototype.showState=function(){
+    this.showStateExec();
+    this.showStatePost();
+};
 
 
 var ManikiFuncFukusen=function(editor,idIndex,keyBindFunc){
@@ -607,10 +668,15 @@ var ManikiFuncFukusen=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=SUBTITEL;
 	this.infoMap={};
+	this.className="ManikiFuncFukusen";
 }
 ManikiFuncFukusen.prototype = new ManikiFunctions();
 //ManikiFuncFukusen.prototype.
 ManikiFuncFukusen.prototype.create=function(idIndex,keyBindFunc){
 	return new ManikiFuncFukusen(this.editor,idIndex,keyBindFunc);
 }
+ManikiFuncFukusen.prototype.showState=function(){
+    this.showStateExec();
+    this.showStatePost();
+};
 
