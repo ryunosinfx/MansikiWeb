@@ -41,23 +41,24 @@ var MansikiTweetStyleEditor= function(id, width,height,ancer){
 	this.scrollTimer;
 	this.MansikiTweetStyleKeyBind= new MansikiTweetStyleKeyBind(this);
 	$(document).bind("scroll",{self:this},this.onScroll);
-	this.funcs=new ManikiFunctions(this,0,this.MansikiTweetStyleKeyBind);
-	this.funcs.add2Funcs(new ManikiFuncPage(this,0,this.MansikiTweetStyleKeyBind));
-	this.funcs.add2Funcs(new ManikiFuncKoma(this,0,this.MansikiTweetStyleKeyBind));
-	this.funcs.add2Funcs(new ManikiFuncFukidashi(this,0,this.MansikiTweetStyleKeyBind));
-	this.funcs.add2Funcs(new ManikiFuncSetting(this,0,this.MansikiTweetStyleKeyBind));
-	this.funcs.add2Funcs(new ManikiFuncActor(this,0,this.MansikiTweetStyleKeyBind));
-	this.funcs.add2Funcs(new ManikiFuncObject(this,0,this.MansikiTweetStyleKeyBind));
-	this.funcs.add2Funcs(new ManikiFuncBackground(this,0,this.MansikiTweetStyleKeyBind));
-	this.funcs.add2Funcs(new ManikiFuncSound(this,0,this.MansikiTweetStyleKeyBind));
-	this.funcs.add2Funcs(new ManikiFuncEffect(this,0,this.MansikiTweetStyleKeyBind));
-	this.funcs.add2Funcs(new ManikiFuncNalation(this,0,this.MansikiTweetStyleKeyBind));
-	this.funcs.add2Funcs(new ManikiFuncQuote(this,0,this.MansikiTweetStyleKeyBind));
-	this.funcs.add2Funcs(new ManikiFuncSean(this,0,this.MansikiTweetStyleKeyBind));
-	this.funcs.add2Funcs(new ManikiFuncFukusen(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs=new MansikiFunctions(this,0,this.MansikiTweetStyleKeyBind);
+	this.funcs.add2Funcs(new MansikiFuncPage(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new MansikiFuncKoma(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new MansikiFuncFukidashi(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new MansikiFuncSetting(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new MansikiFuncActor(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new MansikiFuncObject(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new MansikiFuncBackground(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new MansikiFuncSound(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new MansikiFuncEffect(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new MansikiFuncNalation(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new MansikiFuncQuote(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new MansikiFuncSean(this,0,this.MansikiTweetStyleKeyBind));
+	this.funcs.add2Funcs(new MansikiFuncFukusen(this,0,this.MansikiTweetStyleKeyBind));
 	this.funcs.makeInputArea();
 	this.currentFuncId="";
 	this.isFormFocusd=true;
+	this.lastCursorLevel=1;
 	this.analizer= new MansikiTweetStateAnaliser(this);
 }
 MansikiTweetStyleEditor.prototype={
@@ -65,6 +66,7 @@ MansikiTweetStyleEditor.prototype={
 		this.tweetHideTextarea = $("#TWtweetHideTextarea");
 		this.field = $("form").eq(0);
 		this.viewList = $("#TMtweetList");
+		this.InfoList = $("#TMtweetInfo");
 		this.bredgeArea= $("#TMtweetInput");
 		this.propInput= $("#TMinputProp");
 		this.addButton= $("#TMadd");
@@ -75,6 +77,7 @@ MansikiTweetStyleEditor.prototype={
 		this.LoadButton = $("#TMloadButton");
 		this.LoadButtonFile = $("#TMloadButtonFile");
 		this.LSclear = $("#LSclear");
+		this.twTitleInput = $("#TMtitleTextInput");
 		this.initBinds(this);
 		this.showCursor(this);
 		this.initAndLoadLS();
@@ -92,6 +95,8 @@ MansikiTweetStyleEditor.prototype={
 			this.tweetIdCount = loadedData.tweetIdCount*1;
 
 			this.analizer.loadTitleStates(loadedData.titleStates);;
+			this.twTitleInput.val(loadedData.titleName);
+			
 			for(var idIndex in this.tweetsFuncsIds){
 				var funcId = this.tweetsFuncsIds[idIndex];
 				this.buildFuncs(this,idIndex,funcId);
@@ -192,7 +197,8 @@ MansikiTweetStyleEditor.prototype={
 		buttonState["border-style"]=button.css("border-style");
 //alert(button.length+"/i:"+0+"/id:"+id+"/"+button.css("background-color")+"/"+buttonState["border-style"]+"/"+width);
 		buttonState["color"]=button.css("color");
-		button.bind("click",{self:this,id:id,level:func.level},this.cmdButtonsHilight);
+		button.unbind("click");
+		button.bind("click",{self:this,id:id},this.cmdButtonsHilight);
 		button.css("background-color",func.color);
 		buttonState["background-color"]=button.css("background-color");
 		var name = func.nameLc;
@@ -208,6 +214,9 @@ MansikiTweetStyleEditor.prototype={
 		var level= event.data.level;
 		var bottons = $(".commands>div");
 		if(level!==undefined){
+			me.loadedFuncLevel = level;
+		}else{
+		    level=me.lastCursorLevel;
 			me.loadedFuncLevel = level;
 		}
 		for(var i=0;i<bottons.length;i++){
@@ -233,7 +242,8 @@ MansikiTweetStyleEditor.prototype={
 			    button.unbind("click");
 			}else{
 			    button.css("opacity","1");
-			    button.bind("click",{self:me,id:id,level:nowFunc.level},me.cmdButtonsHilight);
+			    button.unbind("click");
+			    button.bind("click",{self:me,id:id},me.cmdButtonsHilight);
 			}
 		}
 		var buttonState = me.cmdButtonsState[fullId];
@@ -1301,6 +1311,7 @@ console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
 		saveData.tweetIdMap = me.tweetIdMap;
 		saveData.tweetsFuncsIds = me.tweetsFuncsIds;
 		saveData.titleStates = me.analizer.titleStates;
+		saveData.titleName = me.twTitleInput.val();
 		MansikiMapUtil.saveToLS(me.keyMain,saveData);
 		setTimeout(function(){
 		    me.viewList.css("height","100%");
@@ -1308,6 +1319,9 @@ console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
         		var height = me.viewList.height();
         		if(scrollHeight > height){
         		    me.viewList.css("height",scrollHeight);
+        		    me.InfoList.css("height",scrollHeight);
+        		}else{
+        		    me.InfoList.css("height",height);
         		}
 		},0);
 		console.log("rebuildAll END");
@@ -1401,6 +1415,7 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+cli
 			$("#TMTweetType").css("background-color",func.color);
 
 			me.cmdButtonsHilight({data:{self:me,id:func.getFullId(),level:func.level}});
+			me.lastCursorLevel=func.level;
 		}else{
 			$("#TMTweetType").text("");
 			$("#TMTweetType").css("background-color","transparent");
@@ -1504,6 +1519,7 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+cli
 		if(func!==undefined){
 			func.initBindEventToTweetBox(tweetBox);
 		}
+		me.lastCursorLevel=func.level;
 		func.addIndentClass(tweetBox);
 		return tweetBox;
 	},

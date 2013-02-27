@@ -44,6 +44,15 @@ div.tweetBody{
 	float:left;
 	line-height:32px;
 }
+.TMtitleText input{
+	
+	font-size:24px;
+	width:500px;
+	background-color:#FEFFD8;
+	border-radius: 0.3em ; 
+	border:solid 3px black;
+	height:32px;
+}
 .TMtitleCommands{
 	float:right;
 	width:100px;
@@ -121,21 +130,22 @@ div.currentTab{
 }
 .tweetList{
 	margin-left:0px;
-	width:600px;
+	width:605px;
 	background-color:#000E30;
-	min-height:600px;
+	min-height:620px;
 	padding:10px;
 	z-index:10;
 	float:left;
 }
 .tweetInfo{
 	margin-left:0px;
-	width:40px;
+	width:75px;
 	background-color:#565672;
 	min-height:600px;
 	padding:0px;
 	display:block;
 	float:left;
+	padding-bottom: 20px;
 }
 div.tweetTab p{
 	clear:both;
@@ -441,7 +451,8 @@ div.tweetBoxSideBar{
 }
 .tweetBoxInfo , .tweetBoxInfoCover{
 	position:relative;
-	min-height:20px;
+	min-height:19px;
+	margin-top:1px;
 	width:40px;
 	padding:2px 2px;
 	min-height:24px;
@@ -449,8 +460,11 @@ div.tweetBoxSideBar{
 	z-index:505;
 	background-color:white;
 	text-align:center;
+	font-size:8px;
 	color:gray;
 	float:left;
+	background-color:rgba(0,0,0,0.1) ;
+	border-radius: 0.5em 0.5em 0.5em 0.5em;
 }
  .tweetBoxInfoCover{
 	position:relative;
@@ -473,22 +487,23 @@ div.tweetBoxSideBar{
 	word-break:break-all;
 	word-wrap:break-word;
 	float:left;
+	cursor:pointer;
 }
 .tweetSlot{
 	left:-2px;
 	width:100%;
-	min-height:1px;
+	min-height:0px;
 	padding:0px;
 	margin:0px 0px 0px -1px ;
 	display:block;
 	border:solid 0px green;
-	background-color:rgba(0,0,255,0.1) ;
 	z-index:18;
 	clear:both;
 }
 .TwselectedBox{
 	border-color:black;
 }
+
 
 .tweetBoxCmd{
 	width:250px;
@@ -547,12 +562,12 @@ span.TwcommandHliright{
 	sm:26px;
 }
 .indent3{
-	width:520px;
+	width:500px;
 	margin-left :2px;
 	sm:48px;
 }
 .indent4{
-	width:490px;
+	width:470px;
 	margin-left :2px;
 	m:70px;
 }
@@ -571,11 +586,11 @@ span.TwcommandHliright{
 }
 
 .indent3 div.tweetBoxConteiner {
-	width:510px;
+	width:500px;
 }
 
 .indent4 div.tweetBoxConteiner {
-	width:475px;
+	width:465px;
 }
 
 .indent1 div.twbConteinerFlame {
@@ -589,12 +604,12 @@ span.TwcommandHliright{
 }
 
 .indent3 div.twbConteinerFlame {
-	width:510px !important;
+	width:480px !important;
 	margin-right:-164px;
 }
 
 .indent4 div.twbConteinerFlame {
-	width:475px !important;
+	width:445px !important;
 	margin-right:-164px;
 }
 
@@ -624,11 +639,11 @@ span.TwcommandHliright{
 }
 
 .indent3 .tweetSlot {
-	width:507px;
+	width:477px;
 }
 
 .indent4 .tweetSlot {
-	width:472px;
+	width:442px;
 }
 
 .commentOut{
@@ -781,9 +796,178 @@ div.tweetList div.tweetBoxSideBarRLSideR{
 }
 
 
+/*Elements*/
+div.MansikiFuncTitle{
+	
+	
+}
+div.MansikiFuncPage{
+	
+	
+}
+div.MansikiFuncKoma{
+	border:solid 4px #000;
+	border-radius: 0em;
+	margin:6px;
+	margin-left:16px;
+}
+div.MansikiFuncKoma > div.tweetBoxSideBar{
+	
+		border:solid 10px gray;
+		border-width:0 15px 0 0 ;
+		hight:100%;
+		min-height:34px;
+		width:0px;
+	margin-top:-2px;
+	cursor:pointer;
 
+	}
+div.MansikiFuncKoma > div.tweetBoxSideBar:before{
+    position:absolute;
+    content: ' ';
+		border:solid 1px black;
+		border-width:5px 5px 0 0 ;
+		width:5px;
+		height:5px;
+		margin-top:0;
+		margin-left:0px;
+		transform: rotate(45deg) scale(1) skew(0deg) translate(8px,8px);
+-webkit-transform: rotate(45deg) scale(1) skew(0deg) translate(8px,8px);
+-moz-transform: rotate(45deg) scale(1) skew(0deg) translate(8px,8px);
+}
+div.MansikiFuncFukidashi{
+	
+	border:solid 2px #000;
+	padding-left:18px;
+	border-radius: 2em;
+	min-height:30px;
+	margin-left:6px;
+}
+div.MansikiFuncFukidashi:before{
+    position:absolute;
+    content: ' ';
+		border:solid 4px black;
+		border-width:10px 10px 0 0 ;
+		border-top-color:transparent;
+		width:1px;
+		height:1px;
+		margin-top:-8px;
+		margin-left:-335px;
+		transform: rotate(325deg) scale(1) skew(1deg) translate(0px);
+-webkit-transform: rotate(325deg) scale(1) skew(1deg) translate(0px);
+-moz-transform: rotate(325deg) scale(1) skew(1deg) translate(0px);
+}
+div.MansikiFuncSetting{
 
+	color:#999;
+	margin-top:6px;
+	margin-left:16px;
+	border:solid 0px #000;
+	-moz-box-shadow: 0px 0px 10px #7FFF35;
+	-webkit-box-shadow: 0px 0px 10px #7FFF35;
+	box-shadow: 0px 0px 10px #7FFF35;
+	background:rgba(127,255,53,0.5) !important
+}
+div.MansikiFuncActor{
 
+	color:#333;
+	margin-top:6px;
+	margin-left:16px;
+	border:solid 0px #000;
+	-moz-box-shadow: 0px 0px 10px #CDFF34;
+	-webkit-box-shadow: 0px 0px 10px #CDFF34;
+	box-shadow: 0px 0px 10px #CDFF34;
+	background:rgba(205,255,52,0.5) !important
+}
+div.MansikiFuncObject{
+
+	color:#333;
+	margin-top:6px;
+	margin-left:16px;
+	border:solid 0px #000;
+	-moz-box-shadow: 0px 0px 10px #FFEF34;
+	-webkit-box-shadow: 0px 0px 10px #FFEF34;
+	box-shadow: 0px 0px 10px #FFEF34;
+	background:rgba(255,239,52,0.5) !important
+}
+div.MansikiFuncBackground{
+
+	color:#333;
+	margin-top:6px;
+	margin-left:16px;
+	border:solid 0px #000;
+	-moz-box-shadow: 0px 0px 10px  #FFBF34;
+	-webkit-box-shadow: 0px 0px 10px  #FFBF34;
+	box-shadow: 0px 0px 10px  #FFBF34;
+	background:rgba(255,191,52,0.5) !important
+}
+div.MansikiFuncSound{
+
+	color:#333;
+	margin-top:6px;
+	margin-left:16px;
+	border:solid 0px #000;
+	-moz-box-shadow: 0px 0px 10px #7FFF35;
+	-webkit-box-shadow: 0px 0px 10px #7FFF35;
+	box-shadow: 0px 0px 10px #7FFF35;
+	background:rgba(255,126,52,0.5) !important
+}
+div.MansikiFuncEffect{
+
+	color:#333;
+	margin-top:6px;
+	margin-left:16px;
+	border:solid 0px #000;
+	-moz-box-shadow: 0px 0px 10px #FF7E34;
+	-webkit-box-shadow: 0px 0px 10px #FF7E34;
+	box-shadow: 0px 0px 10px #FF7E34;
+	background:rgba(255,126,52,0.5) !important
+}
+div.MansikiFuncNalation{
+
+	color:#3A6108;
+	margin-left:16px;
+	border:solid 0px #000;
+	-moz-box-shadow: 0px 0px 10px #30FF64;
+	-webkit-box-shadow: 0px 0px 10px #30FF64;
+	box-shadow: 0px 0px 10px #30FF64;
+	background:rgba(48,255,100,0.5) !important
+}
+div.MansikiFuncQuote{
+	color:#FF337A;
+	margin-top:6px;
+	margin-left:16px;
+	border:solid 0px #000;
+	-moz-box-shadow: 0px 0px 10px #FF337A;
+	-webkit-box-shadow: 0px 0px 10px #FF337A;
+	box-shadow: 0px 0px 10px #FF337A;
+	background:rgba(255,51,122,0.5) !important
+}
+div.MansikiFuncSean{
+	color:#FF31F5;
+	margin-top:6px;
+	margin-left:16px;
+	border:solid 0px #000;
+	-moz-box-shadow: 0px 0px 10px #FF31F5;
+	-webkit-box-shadow: 0px 0px 10px #FF31F5;
+	box-shadow: 0px 0px 10px #FF31F5;
+	background:rgba(255,49,245,0.5) !important
+}
+div.MansikiFuncFukusen{
+	color:#BA2FFF;
+	margin-top:6px;
+	margin-left:16px;
+	border:solid 0px #000;
+	-moz-box-shadow: 0px 0px 10px #BA2FFF;
+	-webkit-box-shadow: 0px 0px 10px #BA2FFF;
+	box-shadow: 0px 0px 10px #BA2FFF;
+	background:rgba(186,47,255,0.5) !important
+}
+
+.TwselectedBox > div.twbConteinerFlame  > div.tweetBoxConteiner > div.tweetBoxInfo{
+	color:white;
+	background-color:black;
+}
 
 
 

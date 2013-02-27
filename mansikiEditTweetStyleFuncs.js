@@ -1,5 +1,5 @@
 
-var ManikiFunctions=function(editor,idIndex,keyBindFunc){
+var MansikiFunctions=function(editor,idIndex,keyBindFunc){
 	this.editor = editor;
 	this.frame="";
 	this.nameLc="日本語名";
@@ -21,11 +21,11 @@ var ManikiFunctions=function(editor,idIndex,keyBindFunc){
 	this.className="";
 	this.isFormFocusd=false;
 	this.keyBindFunc = keyBindFunc;
-console.log("ManikiFunclassNamections:keyBindFunc:"+keyBindFunc);
+console.log("MansikiFunclassNamections:keyBindFunc:"+keyBindFunc);
 	this.init();
 }
 
-ManikiFunctions.prototype={
+MansikiFunctions.prototype={
 	add2Funcs:function(func){
 		this.Funcs[this.idPrefix+func.Id+this.idSufix]=func;
 	},
@@ -53,7 +53,7 @@ ManikiFunctions.prototype={
 		this.keyBindFunc = this.keyBindFunc===undefined?this.editor.MansikiTweetStyleKeyBind:this.keyBindFunc;
 		var keyBindFuncLocal = keyBindFunc===undefined?this.keyBindFunc:keyBindFunc;
 console.log("create keyBindFuncLocal:"+keyBindFuncLocal);
-		return new ManikiFunctions(this.editor,idIndex,keyBindFuncLocal);
+		return new MansikiFunctions(this.editor,idIndex,keyBindFuncLocal);
 	},
 	autoResize:function(event){
 		var me= event.data.self;
@@ -92,10 +92,10 @@ console.log("create keyBindFuncLocal:"+keyBindFuncLocal);
 	},
 	addTweet:function(){
 		var text = this.tweetArea.val();
-		this.bridgeArea.val(this.convertTextToManikiSyntax(text));
+		this.bridgeArea.val(this.convertTextToMansikiSyntax(text));
 		this.tweetArea.focus();
 	},
-	convertTextToManikiSyntax:function(text){
+	convertTextToMansikiSyntax:function(text){
 		return text;
 	},
 	getPureText:function(value){
@@ -326,8 +326,8 @@ console.log("doDrag top:"+top+"/y:"+y+"/start:"+start+"/diff:"+diff+"/height:"+h
 	}
 }
 
-var ManikiFuncTitle=function(editor,idIndex,keyBindFunc){
-	ManikiFunctions.apply(this, arguments);
+var MansikiFuncTitle=function(editor,idIndex,keyBindFunc){
+	MansikiFunctions.apply(this, arguments);
 	this.nameLc="作品";
 	this.nameEn="Title";
 	this.color="#35FF";
@@ -335,31 +335,31 @@ var ManikiFuncTitle=function(editor,idIndex,keyBindFunc){
 	this.level =0;
 	this.parentId="WORK";
 	this.infoMap={Diarect:"right"};
-	this.className="ManikiFuncTitle";
+	this.className="MansikiFuncTitle";
 }
-ManikiFuncTitle.prototype = new ManikiFunctions();
-//ManikiFuncPage.prototype.
-ManikiFuncTitle.prototype.create=function(idIndex,keyBindFunc){
-	return new ManikiFuncTitle(this.editor,idIndex,keyBindFunc);
+MansikiFuncTitle.prototype = new MansikiFunctions();
+//MansikiFuncPage.prototype.
+MansikiFuncTitle.prototype.create=function(idIndex,keyBindFunc){
+	return new MansikiFuncTitle(this.editor,idIndex,keyBindFunc);
 }
 
-var ManikiFuncPage=function(editor,idIndex,keyBindFunc){
-	ManikiFunctions.apply(this, arguments);
+var MansikiFuncPage=function(editor,idIndex,keyBindFunc){
+	MansikiFunctions.apply(this, arguments);
 	this.nameLc="頁";
 	this.nameEn="Page";
-	this.color="#35FFDA";
+	this.color="#B4FFF5";//"#35FFDA";
 	this.Id =PAGE;
 	this.level =1;
 	this.parentId="Title";
 	this.infoMap={side:"right"};
-	this.className="ManikiFuncPage";
+	this.className="MansikiFuncPage";
 }
-ManikiFuncPage.prototype = new ManikiFunctions();
-//ManikiFuncPage.prototype.
-ManikiFuncPage.prototype.create=function(idIndex,keyBindFunc){
-	return new ManikiFuncPage(this.editor,idIndex,keyBindFunc);
+MansikiFuncPage.prototype = new MansikiFunctions();
+//MansikiFuncPage.prototype.
+MansikiFuncPage.prototype.create=function(idIndex,keyBindFunc){
+	return new MansikiFuncPage(this.editor,idIndex,keyBindFunc);
 };
-ManikiFuncPage.prototype.showState=function(){
+MansikiFuncPage.prototype.showState=function(){
 	var state=this.editor.analizer.state;
 console.log("AAAAAAAAAAAAAAAAAAAAAAAA"+"/this.idIndex:"+this.idIndex+"/"+(state[this.idIndex]===undefined?"":state[this.idIndex].toSource()));
 	var currentState = state[this.idIndex].rowStat;
@@ -389,22 +389,27 @@ console.log("AAAAAAAAAAAAAAAAAAAAAAAA"+"/this.idIndex:"+this.idIndex+"/"+(state[
         	.removeClass("tweetBoxSideBarRLSideR");
 	var width = tweetBox.width();
 	var height = tweetBox.height();
+	tweetBox.css("margin-top","2").css("margin-bottom","2");
 	twbSidebar.css("height",(height*1+4)).css("margin-top","-2").css("margin-bottom","-4");
 	if(side==="L"){
 	    if(diarect==="R"){
 		twbConteinerFlame.addClass("TweetPageDirLRSideL");
 		twbSidebar.addClass("tweetBoxSideBarLRSideL");
+		tweetBox.css("margin-bottom","10");
 	    }else{
 		twbConteinerFlame.addClass("TweetPageDirRLSideL");
 		twbSidebar.addClass("tweetBoxSideBarRLSideL");
+		tweetBox.css("margin-top","10");
 	    }
 	}else{
 	    if(diarect==="R"){
 		twbConteinerFlame.addClass("TweetPageDirLRSideR");
 		twbSidebar.addClass("tweetBoxSideBarLRSideR");
+		tweetBox.css("margin-top","10");
 	    }else{
 		twbConteinerFlame.addClass("TweetPageDirRLSideR");
 		twbSidebar.addClass("tweetBoxSideBarRLSideR");
+		tweetBox.css("margin-bottom","10");
 	    }
 	}
 	var domTweetBox = document.getElementById(tweetBox.attr("id")).childNodes[0];
@@ -417,30 +422,30 @@ console.log("AAAAAAAAAAAAAAAAAAAAAAAA"+"/this.idIndex:"+this.idIndex+"/"+(state[
     this.showStatePost();
 };
 
-var ManikiFuncKoma=function(editor,idIndex,keyBindFunc){
-	ManikiFunctions.apply(this, arguments);
+var MansikiFuncKoma=function(editor,idIndex,keyBindFunc){
+	MansikiFunctions.apply(this, arguments);
 	this.nameLc="コマ";
 	this.nameEn="koma";
-	this.color="#33FF7E";
+	this.color="#eee";//"#33FF7E";
 	this.Id =KOMA;
 	this.level =2;
 	this.parentId=PAGE;
 	this.infoMap={};
-	this.className="ManikiFuncKoma";
+	this.className="MansikiFuncKoma";
 }
-ManikiFuncKoma.prototype = new ManikiFunctions();
-//ManikiFuncPage.prototype.
-ManikiFuncKoma.prototype.create=function(idIndex,keyBindFunc){
-	return new ManikiFuncKoma(this.editor,idIndex,keyBindFunc);
+MansikiFuncKoma.prototype = new MansikiFunctions();
+//MansikiFuncPage.prototype.
+MansikiFuncKoma.prototype.create=function(idIndex,keyBindFunc){
+	return new MansikiFuncKoma(this.editor,idIndex,keyBindFunc);
 }
-ManikiFuncKoma.prototype.showState=function(){
+MansikiFuncKoma.prototype.showState=function(){
     this.showStateExec();
     this.showStatePost();
 };
 
 
-var ManikiFuncFukidashi=function(editor,idIndex,keyBindFunc){
-	ManikiFunctions.apply(this, arguments);
+var MansikiFuncFukidashi=function(editor,idIndex,keyBindFunc){
+	MansikiFunctions.apply(this, arguments);
 	this.nameLc="噴出";
 	this.nameEn="Baloon";
 	this.color="#33FF3D";
@@ -448,21 +453,21 @@ var ManikiFuncFukidashi=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
-	this.className="ManikiFuncFukidashi";
+	this.className="MansikiFuncFukidashi";
 }
-ManikiFuncFukidashi.prototype = new ManikiFunctions();
-//ManikiFuncPage.prototype.
-ManikiFuncFukidashi.prototype.create=function(idIndex,keyBindFunc){
-	return new ManikiFuncFukidashi(this.editor,idIndex,keyBindFunc);
+MansikiFuncFukidashi.prototype = new MansikiFunctions();
+//MansikiFuncPage.prototype.
+MansikiFuncFukidashi.prototype.create=function(idIndex,keyBindFunc){
+	return new MansikiFuncFukidashi(this.editor,idIndex,keyBindFunc);
 }
-ManikiFuncFukidashi.prototype.showState=function(){
+MansikiFuncFukidashi.prototype.showState=function(){
     this.showStateExec();
     this.showStatePost();
 };
 
 
-var ManikiFuncSetting=function(editor,idIndex,keyBindFunc){
-	ManikiFunctions.apply(this, arguments);
+var MansikiFuncSetting=function(editor,idIndex,keyBindFunc){
+	MansikiFunctions.apply(this, arguments);
 	this.nameLc="設定";
 	this.nameEn="Settings";
 	this.color="#7FFF35";
@@ -470,21 +475,21 @@ var ManikiFuncSetting=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
-	this.className="ManikiFuncSetting";
+	this.className="MansikiFuncSetting";
 }
-ManikiFuncSetting.prototype = new ManikiFunctions();
-//ManikiFuncSetting.prototype.
-ManikiFuncSetting.prototype.create=function(idIndex,keyBindFunc){
-	return new ManikiFuncSetting(this.editor,idIndex,keyBindFunc);
+MansikiFuncSetting.prototype = new MansikiFunctions();
+//MansikiFuncSetting.prototype.
+MansikiFuncSetting.prototype.create=function(idIndex,keyBindFunc){
+	return new MansikiFuncSetting(this.editor,idIndex,keyBindFunc);
 }
-ManikiFuncSetting.prototype.showState=function(){
+MansikiFuncSetting.prototype.showState=function(){
     this.showStateExec();
     this.showStatePost();
 };
 
 
-var ManikiFuncActor=function(editor,idIndex,keyBindFunc){
-	ManikiFunctions.apply(this, arguments);
+var MansikiFuncActor=function(editor,idIndex,keyBindFunc){
+	MansikiFunctions.apply(this, arguments);
 	this.nameLc="役者";
 	this.nameEn="Actor";
 	this.color="#CDFF34";
@@ -492,21 +497,21 @@ var ManikiFuncActor=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
-	this.className="ManikiFuncActor";
+	this.className="MansikiFuncActor";
 }
-ManikiFuncActor.prototype = new ManikiFunctions();
-//ManikiFuncActor.prototype.
-ManikiFuncActor.prototype.create=function(idIndex,keyBindFunc){
-	return new ManikiFuncActor(this.editor,idIndex,keyBindFunc);
+MansikiFuncActor.prototype = new MansikiFunctions();
+//MansikiFuncActor.prototype.
+MansikiFuncActor.prototype.create=function(idIndex,keyBindFunc){
+	return new MansikiFuncActor(this.editor,idIndex,keyBindFunc);
 }
-ManikiFuncActor.prototype.showState=function(){
+MansikiFuncActor.prototype.showState=function(){
     this.showStateExec();
     this.showStatePost();
 };
 
 
-var ManikiFuncObject=function(editor,idIndex,keyBindFunc){
-	ManikiFunctions.apply(this, arguments);
+var MansikiFuncObject=function(editor,idIndex,keyBindFunc){
+	MansikiFunctions.apply(this, arguments);
 	this.nameLc="小道具";
 	this.nameEn="Object";
 	this.color="#FFEF34";
@@ -514,21 +519,21 @@ var ManikiFuncObject=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
-	this.className="ManikiFuncObject";
+	this.className="MansikiFuncObject";
 }
-ManikiFuncObject.prototype = new ManikiFunctions();
-//ManikiFuncObject.prototype.
-ManikiFuncObject.prototype.create=function(idIndex,keyBindFunc){
-	return new ManikiFuncObject(this.editor,idIndex,keyBindFunc);
+MansikiFuncObject.prototype = new MansikiFunctions();
+//MansikiFuncObject.prototype.
+MansikiFuncObject.prototype.create=function(idIndex,keyBindFunc){
+	return new MansikiFuncObject(this.editor,idIndex,keyBindFunc);
 }
-ManikiFuncObject.prototype.showState=function(){
+MansikiFuncObject.prototype.showState=function(){
     this.showStateExec();
     this.showStatePost();
 };
 
 
-var ManikiFuncBackground=function(editor,idIndex,keyBindFunc){
-	ManikiFunctions.apply(this, arguments);
+var MansikiFuncBackground=function(editor,idIndex,keyBindFunc){
+	MansikiFunctions.apply(this, arguments);
 	this.nameLc="背景";
 	this.nameEn="Background";
 	this.color="#FFBF34";
@@ -536,21 +541,21 @@ var ManikiFuncBackground=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
-	this.className="ManikiFuncBackground";
+	this.className="MansikiFuncBackground";
 }
-ManikiFuncBackground.prototype = new ManikiFunctions();
-//ManikiFuncBackground.prototype.
-ManikiFuncBackground.prototype.create=function(idIndex,keyBindFunc){
-	return new ManikiFuncBackground(this.editor,idIndex,keyBindFunc);
+MansikiFuncBackground.prototype = new MansikiFunctions();
+//MansikiFuncBackground.prototype.
+MansikiFuncBackground.prototype.create=function(idIndex,keyBindFunc){
+	return new MansikiFuncBackground(this.editor,idIndex,keyBindFunc);
 }
-ManikiFuncBackground.prototype.showState=function(){
+MansikiFuncBackground.prototype.showState=function(){
     this.showStateExec();
     this.showStatePost();
 };
 
 
-var ManikiFuncSound=function(editor,idIndex,keyBindFunc){
-	ManikiFunctions.apply(this, arguments);
+var MansikiFuncSound=function(editor,idIndex,keyBindFunc){
+	MansikiFunctions.apply(this, arguments);
 	this.nameLc="擬音";
 	this.nameEn="Sound";
 	this.color="#FFBF34";
@@ -558,21 +563,21 @@ var ManikiFuncSound=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
-	this.className="ManikiFuncSound";
+	this.className="MansikiFuncSound";
 }
-ManikiFuncSound.prototype = new ManikiFunctions();
-//ManikiFuncSound.prototype.
-ManikiFuncSound.prototype.create=function(idIndex,keyBindFunc){
-	return new ManikiFuncSound(this.editor,idIndex,keyBindFunc);
+MansikiFuncSound.prototype = new MansikiFunctions();
+//MansikiFuncSound.prototype.
+MansikiFuncSound.prototype.create=function(idIndex,keyBindFunc){
+	return new MansikiFuncSound(this.editor,idIndex,keyBindFunc);
 }
-ManikiFuncSound.prototype.showState=function(){
+MansikiFuncSound.prototype.showState=function(){
     this.showStateExec();
     this.showStatePost();
 };
 
 
-var ManikiFuncEffect=function(editor,idIndex,keyBindFunc){
-	ManikiFunctions.apply(this, arguments);
+var MansikiFuncEffect=function(editor,idIndex,keyBindFunc){
+	MansikiFunctions.apply(this, arguments);
 	this.nameLc="効果";
 	this.nameEn="Effect";
 	this.color="#FF7E34";
@@ -580,21 +585,21 @@ var ManikiFuncEffect=function(editor,idIndex,keyBindFunc){
 	this.level =4;
 	this.parentId=KOMA;
 	this.infoMap={};
-	this.className="ManikiFuncEffect";
+	this.className="MansikiFuncEffect";
 }
-ManikiFuncEffect.prototype = new ManikiFunctions();
-//ManikiFuncEffect.prototype.
-ManikiFuncEffect.prototype.create=function(idIndex,keyBindFunc){
-	return new ManikiFuncEffect(this.editor,idIndex,keyBindFunc);
+MansikiFuncEffect.prototype = new MansikiFunctions();
+//MansikiFuncEffect.prototype.
+MansikiFuncEffect.prototype.create=function(idIndex,keyBindFunc){
+	return new MansikiFuncEffect(this.editor,idIndex,keyBindFunc);
 }
-ManikiFuncEffect.prototype.showState=function(){
+MansikiFuncEffect.prototype.showState=function(){
     this.showStateExec();
     this.showStatePost();
 };
 
 
-var ManikiFuncNalation=function(editor,idIndex,keyBindFunc){
-	ManikiFunctions.apply(this, arguments);
+var MansikiFuncNalation=function(editor,idIndex,keyBindFunc){
+	MansikiFunctions.apply(this, arguments);
 	this.nameLc="説明";
 	this.nameEn="Settings";
 	this.color="#30FF64";
@@ -602,21 +607,21 @@ var ManikiFuncNalation=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
-	this.className="ManikiFuncNalation";
+	this.className="MansikiFuncNalation";
 }
-ManikiFuncNalation.prototype = new ManikiFunctions();
-//ManikiFuncNalation.prototype.
-ManikiFuncNalation.prototype.create=function(idIndex,keyBindFunc){
-	return new ManikiFuncNalation(this.editor,idIndex,keyBindFunc);
+MansikiFuncNalation.prototype = new MansikiFunctions();
+//MansikiFuncNalation.prototype.
+MansikiFuncNalation.prototype.create=function(idIndex,keyBindFunc){
+	return new MansikiFuncNalation(this.editor,idIndex,keyBindFunc);
 }
-ManikiFuncNalation.prototype.showState=function(){
+MansikiFuncNalation.prototype.showState=function(){
     this.showStateExec();
     this.showStatePost();
 };
 
 
-var ManikiFuncQuote=function(editor,idIndex,keyBindFunc){
-	ManikiFunctions.apply(this, arguments);
+var MansikiFuncQuote=function(editor,idIndex,keyBindFunc){
+	MansikiFunctions.apply(this, arguments);
 	this.nameLc="注釈";
 	this.nameEn="Quote";
 	this.color="#FF337A";
@@ -624,21 +629,21 @@ var ManikiFuncQuote=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
-	this.className="ManikiFuncQuote";
+	this.className="MansikiFuncQuote";
 }
-ManikiFuncQuote.prototype = new ManikiFunctions();
-//ManikiFuncQuote.prototype.
-ManikiFuncQuote.prototype.create=function(idIndex,keyBindFunc){
-	return new ManikiFuncQuote(this.editor,idIndex,keyBindFunc);
+MansikiFuncQuote.prototype = new MansikiFunctions();
+//MansikiFuncQuote.prototype.
+MansikiFuncQuote.prototype.create=function(idIndex,keyBindFunc){
+	return new MansikiFuncQuote(this.editor,idIndex,keyBindFunc);
 }
-ManikiFuncQuote.prototype.showState=function(){
+MansikiFuncQuote.prototype.showState=function(){
     this.showStateExec();
     this.showStatePost();
 };
 
 
-var ManikiFuncSean=function(editor,idIndex,keyBindFunc){
-	ManikiFunctions.apply(this, arguments);
+var MansikiFuncSean=function(editor,idIndex,keyBindFunc){
+	MansikiFunctions.apply(this, arguments);
 	this.nameLc="場所";
 	this.nameEn="Sean";
 	this.color="#FF31F5";
@@ -646,21 +651,21 @@ var ManikiFuncSean=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=KOMA;
 	this.infoMap={};
-	this.className="ManikiFuncSean";
+	this.className="MansikiFuncSean";
 }
-ManikiFuncSean.prototype = new ManikiFunctions();
-//ManikiFuncSean.prototype.
-ManikiFuncSean.prototype.create=function(idIndex,keyBindFunc){
-	return new ManikiFuncSean(this.editor,idIndex,keyBindFunc);
+MansikiFuncSean.prototype = new MansikiFunctions();
+//MansikiFuncSean.prototype.
+MansikiFuncSean.prototype.create=function(idIndex,keyBindFunc){
+	return new MansikiFuncSean(this.editor,idIndex,keyBindFunc);
 }
-ManikiFuncSean.prototype.showState=function(){
+MansikiFuncSean.prototype.showState=function(){
     this.showStateExec();
     this.showStatePost();
 };
 
 
-var ManikiFuncFukusen=function(editor,idIndex,keyBindFunc){
-	ManikiFunctions.apply(this, arguments);
+var MansikiFuncFukusen=function(editor,idIndex,keyBindFunc){
+	MansikiFunctions.apply(this, arguments);
 	this.nameLc="伏線";
 	this.nameEn="Settings";
 	this.color="#BA2FFF";
@@ -668,14 +673,14 @@ var ManikiFuncFukusen=function(editor,idIndex,keyBindFunc){
 	this.level =3;
 	this.parentId=SUBTITEL;
 	this.infoMap={};
-	this.className="ManikiFuncFukusen";
+	this.className="MansikiFuncFukusen";
 }
-ManikiFuncFukusen.prototype = new ManikiFunctions();
-//ManikiFuncFukusen.prototype.
-ManikiFuncFukusen.prototype.create=function(idIndex,keyBindFunc){
-	return new ManikiFuncFukusen(this.editor,idIndex,keyBindFunc);
+MansikiFuncFukusen.prototype = new MansikiFunctions();
+//MansikiFuncFukusen.prototype.
+MansikiFuncFukusen.prototype.create=function(idIndex,keyBindFunc){
+	return new MansikiFuncFukusen(this.editor,idIndex,keyBindFunc);
 }
-ManikiFuncFukusen.prototype.showState=function(){
+MansikiFuncFukusen.prototype.showState=function(){
     this.showStateExec();
     this.showStatePost();
 };

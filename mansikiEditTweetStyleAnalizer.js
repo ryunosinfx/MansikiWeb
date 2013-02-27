@@ -158,17 +158,18 @@ console.log("i:"+i+"idIndex:"+idIndex);
 		var ret ="";
 		for(var key in this.stateMap){
 		    if(key===PAGE){
-			ret+=this.stateMap[key]+"頁\n";
+			ret+="<span>"+this.stateMap[key]+"</span>頁<br>";
 		    }
 		    if(key===KOMA){
-			ret+=this.stateMap[key]+"コマ\n";
+			ret+="<span>"+this.stateMap[key]+"</span>コマ<br>";
 		    }
 		    if(key===FUKIDASHI){
-			ret+=this.stateMap[key]+"台詞\n";
+			ret+="<span>"+this.stateMap[key]+"</span>台詞<br>";
 		    }
 		    //ret+=key+"/";
 		}
-		$("#TWTitleStateTotal").text(ret);
+		ret +="";
+		$("#TWTitleStateTotal").html(ret);
 	},
 	margeMap:function(addMap,preRowStat){
 //console.log("margeMap:"+addMap.toSource()+"/"+preRowStat.toSource());
