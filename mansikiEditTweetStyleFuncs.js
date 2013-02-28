@@ -336,6 +336,7 @@ var MansikiFuncTitle=function(editor,idIndex,keyBindFunc){
 	this.parentId="WORK";
 	this.infoMap={Diarect:"right"};
 	this.className="MansikiFuncTitle";
+	this.tweetBoxDomId = editor.constMap.tweetIdPrefix+idIndex;
 }
 MansikiFuncTitle.prototype = new MansikiFunctions();
 //MansikiFuncPage.prototype.
@@ -353,6 +354,7 @@ var MansikiFuncPage=function(editor,idIndex,keyBindFunc){
 	this.parentId="Title";
 	this.infoMap={side:"right"};
 	this.className="MansikiFuncPage";
+	this.tweetBoxDomId = editor.constMap.tweetIdPrefix+idIndex;
 }
 MansikiFuncPage.prototype = new MansikiFunctions();
 //MansikiFuncPage.prototype.
@@ -375,8 +377,7 @@ console.log("AAAAAAAAAAAAAAAAAAAAAAAA"+"/this.idIndex:"+this.idIndex+"/"+(state[
 	var startSide = this.editor.analizer.pageStartSide;
 	var rowDiarect = this.editor.analizer.rowDiarect;
 	var letterDiarect = this.editor.analizer.letterDiarect;
-	var tweetBoxDomId = this.editor.constMap.tweetIdPrefix+this.idIndex;
-	var tweetBox = $("#"+tweetBoxDomId);
+	var tweetBox = $("#"+this.tweetBoxDomId);
 	var twbConteinerFlame = tweetBox.find(".twbConteinerFlame").eq(0);
 	var twbSidebar = tweetBox.find(".tweetBoxSideBar").eq(0);
 	twbConteinerFlame.removeClass("TweetPageDirRLSideL")
@@ -387,10 +388,13 @@ console.log("AAAAAAAAAAAAAAAAAAAAAAAA"+"/this.idIndex:"+this.idIndex+"/"+(state[
         	.removeClass("tweetBoxSideBarLRSideR")
         	.removeClass("tweetBoxSideBarRLSideL")
         	.removeClass("tweetBoxSideBarRLSideR");
-	var width = tweetBox.width();
-	var height = tweetBox.height();
 	tweetBox.css("margin-top","2").css("margin-bottom","2");
-	twbSidebar.css("height",(height*1+4)).css("margin-top","-2").css("margin-bottom","-4");
+	setTimeout(function(){
+		var width = tweetBox.width();
+		
+		var height = tweetBox.children("div.twbConteinerFlame").height();
+		twbSidebar.css("height",(height*1+4)).css("margin-top","-2").css("margin-bottom","-2");
+	},0);
 	if(side==="L"){
 	    if(diarect==="R"){
 		twbConteinerFlame.addClass("TweetPageDirLRSideL");
@@ -432,6 +436,7 @@ var MansikiFuncKoma=function(editor,idIndex,keyBindFunc){
 	this.parentId=PAGE;
 	this.infoMap={};
 	this.className="MansikiFuncKoma";
+	this.tweetBoxDomId = editor.constMap.tweetIdPrefix+idIndex;
 }
 MansikiFuncKoma.prototype = new MansikiFunctions();
 //MansikiFuncPage.prototype.
@@ -440,6 +445,14 @@ MansikiFuncKoma.prototype.create=function(idIndex,keyBindFunc){
 }
 MansikiFuncKoma.prototype.showState=function(){
     this.showStateExec();
+	var tweetBox = $("#"+this.tweetBoxDomId);
+	var twbConteinerFlame = tweetBox.find(".twbConteinerFlame").eq(0);
+	var twbSidebar = tweetBox.find(".tweetBoxSideBar").eq(0);
+	setTimeout(function(){
+		var width = tweetBox.width();
+		var height = twbConteinerFlame.height();
+		twbSidebar.css("height",(height*1+4)).css("margin-top","-2").css("margin-bottom","-2");
+	},0);
     this.showStatePost();
 };
 

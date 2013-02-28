@@ -111,6 +111,7 @@ var MansikiMapUtil={
 	overrideLS:function(primary,secondly,value){
 		var joinStr = localStorage.getItem(primary);
 		var json =  JSON.parse(joinStr);
+		if(json === null )json ={};
 		json[secondly] = value;
 		var joinStrToSave = JSON.stringify(json);
 		localStorage.setItem(primary,joinStrToSave);

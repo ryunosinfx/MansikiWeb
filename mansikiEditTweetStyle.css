@@ -14,7 +14,16 @@ html,body,form {
 	margin-left:auto;
 	margin-right:auto;
 }
-
+div.shadowBack{
+	position:fixed;
+	top:0px;
+	left:0px;
+	display:none;
+	height:100%;
+	width:100%;
+	background-color:rgba(0,0,0,0.6);
+	z-index:500;
+}
 .header{
 	width:100%;
 	height:120px;
@@ -134,7 +143,6 @@ div.currentTab{
 	background-color:#000E30;
 	min-height:620px;
 	padding:10px;
-	z-index:10;
 	float:left;
 }
 .tweetInfo{
@@ -389,15 +397,18 @@ div.tweetList {
 	overflow-x:hidden;
 	display:block;
 	float:left;
+	position:relative;
 }
 
 /*---------TweetBox-----------------*/
 .TWtweetBoxParent{
 	position:relative;
 	top:0;
+	z-index:500;
 }
 .TMtweetBox{
 	width:580px;
+	position: relative;
 	padding:2px;
 	background-color:white;
 	border:solid 1px #C5FFF1;
@@ -405,7 +416,7 @@ div.tweetList {
 	margin :2px;
 	font-size:12px;
 	border-left-width:20px;
-	z-index:510;
+	
 	opacity:1;
 }
 .TMtweetBox:after{
@@ -419,6 +430,7 @@ div.tweetList {
 div.twbConteinerFlame{
 	margin-left: 0px;
     float:left;
+    margin-bottom:-4px;
 }
 div.tweetBoxSideBar{
     width: 7px;
@@ -453,6 +465,7 @@ div.tweetBoxSideBar{
 	position:relative;
 	min-height:19px;
 	margin-top:1px;
+	margin-left:1px;
 	width:40px;
 	padding:2px 2px;
 	min-height:24px;
@@ -502,13 +515,14 @@ div.tweetBoxSideBar{
 }
 .TwselectedBox{
 	border-color:black;
+	z-index:1000;
 }
 
 
 .tweetBoxCmd{
 	width:250px;
 	margin-left:250px;
-	margin-right:250px;
+	margin-right:0px;
 	padding:2px;
 	background-color:black;
 	color:white;
@@ -594,23 +608,23 @@ span.TwcommandHliright{
 }
 
 .indent1 div.twbConteinerFlame {
-	width:580px !important;
-	margin-right:-164px;
+	width:570px !important;
+	margin-right:-0px;
 }
 
 .indent2 div.twbConteinerFlame {
-	width:545px !important;
-	margin-right:-164px;
+	width:535px !important;
+	margin-right:-0px;
 }
 
 .indent3 div.twbConteinerFlame {
-	width:480px !important;
-	margin-right:-164px;
+	width:470px !important;
+	margin-right:-0px;
 }
 
 .indent4 div.twbConteinerFlame {
-	width:445px !important;
-	margin-right:-164px;
+	width:435px !important;
+	margin-right:-0px;
 }
 
 
@@ -809,10 +823,10 @@ div.MansikiFuncKoma{
 	border:solid 4px #000;
 	border-radius: 0em;
 	margin:6px;
-	margin-left:16px;
+	margin-left:12px;
+	color:#999;
 }
 div.MansikiFuncKoma > div.tweetBoxSideBar{
-	
 		border:solid 10px gray;
 		border-width:0 15px 0 0 ;
 		hight:100%;
@@ -837,6 +851,7 @@ div.MansikiFuncKoma > div.tweetBoxSideBar:before{
 }
 div.MansikiFuncFukidashi{
 	
+	color:#000;
 	border:solid 2px #000;
 	padding-left:18px;
 	border-radius: 2em;
@@ -852,7 +867,7 @@ div.MansikiFuncFukidashi:before{
 		width:1px;
 		height:1px;
 		margin-top:-8px;
-		margin-left:-335px;
+		margin-left:-489px;
 		transform: rotate(325deg) scale(1) skew(1deg) translate(0px);
 -webkit-transform: rotate(325deg) scale(1) skew(1deg) translate(0px);
 -moz-transform: rotate(325deg) scale(1) skew(1deg) translate(0px);

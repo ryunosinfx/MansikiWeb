@@ -65,6 +65,7 @@ MansikiTweetStyleEditor.prototype={
 	init:function(){
 		this.tweetHideTextarea = $("#TWtweetHideTextarea");
 		this.field = $("form").eq(0);
+		this.shadowBack = $("#TWshadowBack");
 		this.viewList = $("#TMtweetList");
 		this.InfoList = $("#TMtweetInfo");
 		this.bredgeArea= $("#TMtweetInput");
@@ -78,12 +79,19 @@ MansikiTweetStyleEditor.prototype={
 		this.LoadButtonFile = $("#TMloadButtonFile");
 		this.LSclear = $("#LSclear");
 		this.twTitleInput = $("#TMtitleTextInput");
+		this.tweetArea = $("#TMtweetTextarea");
 		this.initBinds(this);
 		this.showCursor(this);
 		this.initAndLoadLS();
 		this.onScroll({data:{self:this}});
 		this.onFocusToCmd({data:{self:this}});
 		var me = this;
+		this.twTitleInput.unbind("focus");
+		this.twTitleInput.unbind("blur");
+		this.twTitleInput.unbind("change");
+		this.twTitleInput.bind("focus",{self:this},this.onFocus);
+		this.twTitleInput.bind("blur",{self:this},this.onBlur);
+		this.twTitleInput.bind("change",{self:this},this.onChangeTitle);
 		setTimeout(function(){me.cursor =0;me.curosrMoveUp();},0);
 	},
 	initAndLoadLS:function(){
@@ -148,9 +156,11 @@ MansikiTweetStyleEditor.prototype={
             reader.readAsText(file);
 	},
 	doClearLS:function(event){
+	    if(confirm("削除していい？")){
 		var me= event.data.self;
 		MansikiMapUtil.clearLS();
 		me.initAndLoadLS();
+	    }
 	},
 	//--------------------------------------------------------------
 	initBinds:function(me){
@@ -271,6 +281,7 @@ MansikiTweetStyleEditor.prototype={
 			$("#TMTweetMode").text(me.constMap.modCursor);
 //console.log("focus :"+me.tweetHideTextarea.val());
 			me.tweetHideTextarea.val("");
+			me.tweetArea.val("");
 			if(me.state.selected !==undefined)me.state.lastSelected = me.state.selected ;
 			me.state.selected=undefined;
 			for(var cursor in me.tweetIdMap){
@@ -278,6 +289,7 @@ MansikiTweetStyleEditor.prototype={
 				$("#"+tmpId).removeClass("TwselectedBox");
 			}
 			me.MansikiTweetStyleKeyBind.buidCmdAreaMain();
+			me.blurFromTweet(me);
 		}
 	},
 	onFocus:function(event){
@@ -313,6 +325,11 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 		}
 		return false;
 	},
+	//--------------------------------------------------------------------
+        onChangeTitle:function(event){
+		var me= event.data.self;
+		me.rebuildAll(me);
+        },
 	//--------------------------------------------------------------------
 	curosrMoveUp:function(){
 		if(this.state.selected!==undefined){
@@ -351,12 +368,20 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 				me.tweetIdCount++;
 				event.data.idIndex=me.tweetIdCount;
 //console.log("addTweet idIndex:"+event.data.idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.tweetIdMap.toSource());
-				if( selectedFuncOnList!==undefined && currentFunc.level > selectedFuncOnList.level)me.cursor++;
+				if( selectedFuncOnList!==undefined && currentFunc.level > selectedFuncOnList.level){
+				    me.cursor++;
+				}else if(selectedFuncOnList===undefined){
+				    me.cursor=me.cursor*1+(currentFunc.level*1-1);
+				}
 				//alert("addTweet AAA currentFunc:"+currentFunc+"/selectedFuncOnList:"+selectedFuncOnList+"/me.state.lastSelected :"+me.state.lastSelected );
 				me.insertTweet(event);
-				me.cursor++;
 				me.bredgeArea.val("");
 				me.funcs.clearTweet();
+				if(selectedFuncOnList===undefined){
+				    me.state.lastSelected = me.tweetIdMap[me.cursor];
+				}else{
+				    me.cursor++;
+				}
 				me.showCursor(me);
 				me.state.selected = undefined;
 			}else{//update
@@ -376,8 +401,9 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 	doInsertTweet:function(me,tweetBox){
 		var currentFunc =me.funcs.getFunc(me.currentFuncId);
 		var selectedFuncOnList = me.tweetsFuncs[me.state.lastSelected ];
+		var tweetBoxLevel = tweetBox.attr("level");
 console.log("doInsertTweet AAA currentFunc:"+currentFunc+"/selectedFuncOnList:"+selectedFuncOnList);
-		if(me.cursor*1===0){
+		if(me.cursor*1===0 ){
 console.log("doInsertTweet AA0 currentFunc:"+currentFunc+"/selectedFuncOnList:"+selectedFuncOnList);
 			if(me.viewList.children("div").length > 0){
 				me.viewList.children("div").eq(0).before(tweetBox);
@@ -398,11 +424,13 @@ console.log("doInsertTweet AAC currentFunc:"+currentFunc+"/selectedFuncOnList:"+
 			var preIdIndex=me.tweetIdMap[me.cursor-1];
 			var preFunc = me.tweetsFuncs[preIdIndex];
 			var preId=me.constMap.tweetIdPrefix+preIdIndex;
-			var parentLevelObj = $("#"+preId).parent().parent().parent();
+			var parentLevelObj = me.getParentLevelTweetBox(me,$("#"+preId));
+//alert(me.tweetIdMap.toSource()+"/me.cursor:"+me.cursor+"/idIndex:"+idIndex);
 			var topLevelId = "TMtweetList";
 			//alert("aaaa level:"+func.level+"/pre:"+preFunc.level+"/cursor:"+me.cursor+"/preIdIndex:"+preIdIndex+"/"+me.tweetIdMap.toSource());
 			if(preFunc.level*1 === func.level*1){
 				$("#"+preId).after(tweetBox);
+				//alert("/level:"+func.level+"/pre:"+preFunc.level);
 			}else if(preFunc.level*1 <func.level*1){
 				var slot = $("#"+preId).find("div.tweetSlot").eq(0);
 				//alert(slot.length+"/level:"+func.level+"/pre:"+preFunc.level);
@@ -411,7 +439,8 @@ console.log("doInsertTweet AAC currentFunc:"+currentFunc+"/selectedFuncOnList:"+
 			    if(parentLevelObj.parent().attr("id") === topLevelId){
 				    parentLevelObj.find("div.twbConteinerFlame").eq(0).parent().eq(0).after(tweetBox);
 			    }else{
-				    parentLevelObj.parent().find("div.twbConteinerFlame").eq(0).parent().eq(0).after(tweetBox);
+				//alert(parentLevelObj.parent().parent().parent().attr("class"));
+				    parentLevelObj.after(tweetBox);
 			    }
 			}else if(preFunc.level*1 === func.level*1+2){
 			    if(parentLevelObj.parent().parent().parent().attr("id") === topLevelId){
@@ -429,14 +458,15 @@ console.log("doInsertTweet AAC currentFunc:"+currentFunc+"/selectedFuncOnList:"+
 		}
 		 
 	},
+	getParentLevelTweetBox:function(me,target){
+	    return target.parent().parent().parent();
+	},
 	loadTweet:function(event){
 		var me= event.data.self;
 		var idIndex = event.data.idIndex;
 		var tweetBox=me.getTweetBoxObj(me,idIndex);
-		for(var cursor in me.tweetIdMap){
-			var tmpId = me.constMap.tweetIdPrefix+me.tweetIdMap[cursor];
-			$("#"+tmpId).removeClass("TwselectedBox");
-		}
+		me.focusToTweet(me,idIndex);
+		$("div.TMtweetBox").removeClass("TwselectedBox");
 		tweetBox.addClass("TwselectedBox");
 		var tweet= me.tweets[idIndex];
 		var func = me.tweetsFuncs[idIndex];
@@ -449,6 +479,15 @@ console.log("doInsertTweet AAC currentFunc:"+currentFunc+"/selectedFuncOnList:"+
 		$("#TMTweetMode").text(me.constMap.modUpdate);
 		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
 		me.MansikiTweetStyleKeyBind.buidCmdAreaInput();
+	},
+	focusToTweet:function(me,idIndex){
+	    var width=$(document).width();
+	    var height=$(document).height();
+	    this.shadowBack.css("display","block").css("width",width).css("height",height);
+	},
+	blurFromTweet:function(me){
+	    this.shadowBack.css("display","none");
+	    $("div.TMtweetBox").removeClass("TwselectedBox");
 	},
 	updateTweet:function(event){
 		var me = event.data.self;
@@ -485,6 +524,14 @@ console.log("doInsertTweet AAC currentFunc:"+currentFunc+"/selectedFuncOnList:"+
 		me.rebuildAll(me);
 	},
 	unionTweet:function(event){
+		var me= event.data.self;
+		me.rebuildAll(me);
+	},
+	cutTweet:function(event){//未実装Ctl+K
+		var me= event.data.self;
+		me.rebuildAll(me);
+	},
+	pastTweet:function(event){//未実装Ctl+U
 		var me= event.data.self;
 		me.rebuildAll(me);
 	},
@@ -1346,18 +1393,29 @@ console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
 		var me= event.data.self;
 		var idIndex = event.data.idIndex;
 		var moveByKey = event.data.moveByKey;
+		var func = me.tweetsFuncs[idIndex];
 		var offsetY = event.data.offsetY===undefined?0:event.data.offsetY;
 		var scrolltop = $("body").scrollTop()*1;
 		var topToSet = 0;
 		var clientHeight = $("body").get(0).clientHeight;
 		var height = 0;
-		var offset = 20;
+		var offset = 10;
+		var offsetTop = 5;
+		var offsetLeft = 25;
 		if(moveByKey===true || me.state.selected !==undefined && idIndex===me.state.selected ){
+			var topBase = me.viewList.position().top*1;
+			var leftBase = me.viewList.position().left*1;
 			var target = me.getTweetBoxObj(me,idIndex);
+			var parent=target;
+			for(var i = 1;i<func.level;i++){
+			    parent = me.getParentLevelTweetBox(me,parent);
+			    topBase += parent.position().top*1+offsetTop;
+			    leftBase += parent.position().left*1+offsetLeft;
+			}
 			if(target.length<1){return;}
 //console.log("aaaa  initViewCursorObj /id:"+id+"/target:"+target.length+"/me.cursor:"+me.cursor+"/clientHeight:"+clientHeight);
-			var top = target.position().top;
-			var left = target.position().left;
+			var top = target.position().top+topBase;
+			var left = target.position().left+leftBase;
 			height = target.css("height").replace("px","")*1;
 			if(offsetY===999){
 				//height=height;
@@ -1390,8 +1448,10 @@ console.log("aaaaA3 scrolltop:"+scrolltop);
 		//alert("scrolltop:"+scrolltop);
 console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+clientHeight+"/scrolltop:"+scrolltop+"/offsetY:"+offsetY
 	+"/idIndex:"+idIndex+"/"+me.state.selected);
-		clearTimeout(me.timerScrollAtAll);
-		me.timerScrollAtAll = setTimeout(function(){$("body").scrollTop(scrolltop);},32);
+		if(moveByKey===true){
+			clearTimeout(me.timerScrollAtAll);
+			me.timerScrollAtAll = setTimeout(function(){$("body").scrollTop(scrolltop);},32);
+		}
 	},
 	clearTweet:function(event){
 		var me= event.data.self;
@@ -1517,6 +1577,7 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+cli
 		tweetBox.bind("mouseout",{self:me,idIndex:idIndex},me.hideCmdBox);
 		var func = me.tweetsFuncs[idIndex];
 		if(func!==undefined){
+			tweetBox.attr("idIndex",idIndex).attr("level",func.level);
 			func.initBindEventToTweetBox(tweetBox);
 		}
 		me.lastCursorLevel=func.level;
