@@ -74,6 +74,8 @@ MansikiTweetStyleEditor.prototype={
 		this.clearButton= $("#TMclear");
 		this.twCmdAreaUpper = $("#TWcmdAreaUpper");
 		this.twCmdAreaUnder = $("#TWcmdAreaUnder");
+		this.buttonUp = $("#TWcmdButtonUp");
+		this.buttonDown = $("#TWcmdButtonDown");
 		this.SaveButton = $("#TMsaveButton");
 		this.LoadButton = $("#TMloadButton");
 		this.LoadButtonFile = $("#TMloadButtonFile");
@@ -89,9 +91,13 @@ MansikiTweetStyleEditor.prototype={
 		this.twTitleInput.unbind("focus");
 		this.twTitleInput.unbind("blur");
 		this.twTitleInput.unbind("change");
+		this.buttonUp.unbind("click");
+		this.buttonDown.unbind("click");
 		this.twTitleInput.bind("focus",{self:this},this.onFocus);
 		this.twTitleInput.bind("blur",{self:this},this.onBlur);
 		this.twTitleInput.bind("change",{self:this},this.onChangeTitle);
+		this.buttonUp.bind("click",{self:this},this.curosrMoveUp);
+		this.buttonDown.bind("click",{self:this},this.curosrMoveDown);
 		setTimeout(function(){me.cursor =0;me.curosrMoveUp();},0);
 	},
 	initAndLoadLS:function(){
@@ -331,26 +337,28 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 		me.rebuildAll(me);
         },
 	//--------------------------------------------------------------------
-	curosrMoveUp:function(){
-		if(this.state.selected!==undefined){
+	curosrMoveUp:function(event){
+		var me= event!==undefined?event.data.self:this;
+		if(me.state.selected!==undefined){
 			return ;
 		}
-		this.cursor--;
-		if(this.cursor <0){
-			this.cursor=0;
+		me.cursor--;
+		if(me.cursor <0){
+		    me.cursor=0;
 		}
-		this.initViewCursorObj({data:{self:this,idIndex:this.tweetIdMap[this.cursor],offsetY:0,moveByKey:true}});
+		me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor],offsetY:0,moveByKey:true}});
 	},
-	curosrMoveDown:function(){
-		if(this.state.selected!==undefined){
+	curosrMoveDown:function(event){
+		var me= event!==undefined?event.data.self:this;
+		if(me.state.selected!==undefined){
 			return ;
 		}
-		this.cursor++;
-		var max=MansikiMapUtil.getMaxIndex(this.tweetIdMap);
-		if(this.cursor> max){
-			this.cursor = max;
+		me.cursor++;
+		var max=MansikiMapUtil.getMaxIndex(me.tweetIdMap);
+		if(me.cursor> max){
+		    me.cursor = max;
 		}
-		this.initViewCursorObj({data:{self:this,idIndex:this.tweetIdMap[this.cursor],offsetY:0,moveByKey:true}});
+		me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor],offsetY:0,moveByKey:true}});
 	},
 	//--------------------------------------------------------------------
 	addTweet:function(event){

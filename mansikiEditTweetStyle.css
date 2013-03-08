@@ -359,17 +359,25 @@ span#TMTweetCount{
 }
 .commandWindows{
 	float:left;
-	width:116px;
+	width:50px;
 	line-height:22px;
-
+	padding:5px;
 }
 .commandWindows input{
 	float:right;
-	width:50px;
+	width:10px;
+}
+div.TWDesideIcon{
+	float:left;
+	width:25px;
+	height:25px;
+	padding:3px;
+	background-color:rgba(255,255,255,0.6);
+	cursor:pointer;
 }
 .buttons{
 	float:left;
-	width:180px;
+	width:174px;
 }
 .buttons div{
 	border-radius: 0.5em;
@@ -377,7 +385,7 @@ span#TMTweetCount{
 	margin:2 2 2 2;
 	float:left;
 	font-size:12px;
-	padding:5px 15px;
+	padding:5px 10px;
 	background-color:#C0C0FF;
 	cursor:pointer;
 }
@@ -533,13 +541,18 @@ div.tweetBoxSideBar{
 	display:inline-block;
 }
 .TwcommandList{
-	width:290px;
+	position:fixed;
+	bottom:0px;
+	max-width:1000px;
+	min-width:1000px;
 	display:block;
-	margin-top:30px;
+	margin-top:0px;
 	margin-left:-2px;
+	margin-mottom:0px;
 	word-wrap:break-word;
 	background-color:#1B3428;
 	padding :5px;
+	z-index:1000;
 }
 .TwcommandList span{
 	line-height:20px;
@@ -588,7 +601,7 @@ span.TwcommandHliright{
 
 #svgAreaArrow{
 	position:absolute;
-	
+	z-index:1001;
 }
 
 .indent1 div.tweetBoxConteiner {

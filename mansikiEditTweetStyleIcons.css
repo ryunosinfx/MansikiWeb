@@ -675,3 +675,67 @@ div.icon div.key_squares:before {
     top: 4px;
     left: 4px;
 }
+
+
+
+
+
+
+/* ArrowRight */
+div.icon div.ArroeNext {
+    height: 0px;
+    width: 0px;
+    border-width: 14px;
+    border-style: solid;
+    border-color: transparent transparent transparent #333;
+    position: absolute;
+    bottom: 2px;
+    left: 12px;
+}
+
+div.icon div.ArroeNext:after {
+    content: '';
+    width: 0px;
+    height: 12px;
+    background-color: transparent;
+    position: absolute;
+    top: -6px;
+    left: -28px;
+    border-left: 5px solid #333;
+    border-right: 10px solid #333;
+}
+
+div.icon div.ArroeNext:before {
+    content: '';
+}
+
+
+
+
+/* ArrowRight */
+div.icon div.ArroePrev {
+    height: 0px;
+    width: 0px;
+    border-width: 14px;
+    border-style: solid;
+    border-color: transparent #333 transparent transparent  ;
+    position: absolute;
+    bottom: 2px;
+    left: -10px;
+}
+
+div.icon div.ArroePrev:after {
+    content: '';
+    width: 0px;
+    height: 12px;
+    background-color: transparent;
+    position: absolute;
+    top: -6px;
+    right: -28px;
+    border-left: 5px solid #333;
+    border-right: 10px solid #333;
+}
+
+div.icon div.ArroePrev:before {
+    content: '';
+}
