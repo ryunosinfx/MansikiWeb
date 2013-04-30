@@ -94,6 +94,7 @@ var MansikiMapUtil={
 		copyMap = JSON.parse(json);
 		return copyMap;
 	},
+	//----------------------------------------------------
 	saveToLS:function(key ,target){
 		var value = JSON.stringify(target);
 		localStorage.setItem(key,value);
@@ -119,6 +120,7 @@ var MansikiMapUtil={
 	clearLS:function(){
 		localStorage.clear();
 	},
+	//----------------------------------------------------
 	addCSSRule:function(selector, css) { 
 		var sheets = document.styleSheets, 
 		sheet = sheets[sheets.length - 1]; //?最後でいいのか？
@@ -131,3 +133,22 @@ var MansikiMapUtil={
 	}
 	
 }
+/*
+Object.defineProperty(MansikiDataUtil, "saveToLS", { value : 
+    function(key ,target){},
+    writable : false }
+);
+Object.defineProperty(MansikiDataUtil, "executeSQL", { value : 
+    function(schema,target,sql){
+    	if (window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB) {
+    	    var indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.moz_indexedDB;
+    	    var request = indexedDB.open(schema, target);
+    	    
+	} else {
+	  alert("Can't Use IndexedDB On Your Browser!");
+	}
+    
+},
+    writable : false }
+);
+*/

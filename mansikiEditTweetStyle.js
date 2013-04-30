@@ -60,9 +60,24 @@ var MansikiTweetStyleEditor= function(id, width,height,ancer){
 	this.isFormFocusd=true;
 	this.lastCursorLevel=1;
 	this.analizer= new MansikiTweetStateAnaliser(this);
+	
+	////////////////////////////////////////////////////////////////
+	this.mainDataTable = "Mansiki-data";
+	//this.idbUtil = new MansikiIndexedDBUtil("mansikiIDB");
+	
+	////////////////////////////////////////////////////////////////
+	
 }
 MansikiTweetStyleEditor.prototype={
 	init:function(){
+
+	    //alert("init!");
+	    var me = this;
+	    //this.idbUtil.init(MansikiEditInitData.ddls).then(me.initExec.bind(me));
+	    me.initExec.bind(me)();
+	},
+	initExec:function(){
+	    //alert("aaaa");
 		this.tweetHideTextarea = $("#TWtweetHideTextarea");
 		this.field = $("form").eq(0);
 		this.shadowBack = $("#TWshadowBack");
@@ -84,10 +99,11 @@ MansikiTweetStyleEditor.prototype={
 		this.tweetArea = $("#TMtweetTextarea");
 		this.initBinds(this);
 		this.showCursor(this);
-		this.initAndLoadLS();
 		this.onScroll({data:{self:this}});
 		this.onFocusToCmd({data:{self:this}});
+		this.initAndLoadLS();
 		var me = this;
+		this.tweetBoxParent.bind("mousemove",{self:me},function() {return false;});
 		this.twTitleInput.unbind("focus");
 		this.twTitleInput.unbind("blur");
 		this.twTitleInput.unbind("change");
@@ -103,27 +119,41 @@ MansikiTweetStyleEditor.prototype={
 	initAndLoadLS:function(){
 		var loadedData = MansikiMapUtil.loadFromLS(this.keyMain);
 		if(loadedData !== null){
-			this.tweetsFuncsIds = loadedData.tweetsFuncsIds;
-			this.tweetIdMap = loadedData.tweetIdMap;
-			this.tweets = loadedData.tweets;
-			this.tweetIdCount = loadedData.tweetIdCount*1;
+			this.tweetsFuncsIds = loadedData.tweetsFuncsIds===undefined?{}:loadedData.tweetsFuncsIds;
+			this.tweetIdMap = loadedData.tweetIdMap===undefined?{}:loadedData.tweetIdMap;
+			this.tweets = loadedData.tweets===undefined?{}:loadedData.tweets;
+			this.tweetIdCount = loadedData.tweetIdCount===undefined?0:loadedData.tweetIdCount*1;
 
-			this.analizer.loadTitleStates(loadedData.titleStates);;
-			this.twTitleInput.val(loadedData.titleName);
+			this.analizer.loadTitleStates(loadedData.titleStates===undefined?{}:loadedData.titleStates);;
+			this.twTitleInput.val(loadedData.titleName===undefined?"":loadedData.titleName);
 			
 			for(var idIndex in this.tweetsFuncsIds){
 				var funcId = this.tweetsFuncsIds[idIndex];
 				this.buildFuncs(this,idIndex,funcId);
 			}
 			this.reloadAllTweets();
-			this.rebuildAll(this);
+			this.rebuildAll(this);//データ保管も兼ねる
+			////////////////////////////////////////////////////////////////
+			this.mainDataTable;
+			var retIns = {};
+			//this.idbUtil.getData(this.mainDataTable,retIns).then(function(){alert(retIns.result);});
+			////////////////////////////////////////////////////////////////
 		}else{
 			this.tweetsFuncsIds = {};
 			this.tweetIdMap = {};
 			this.tweets = {};
 			this.tweetIdCount = 0;
+			console.log("initAndLoadLS:"+this.viewList);
 			this.viewList.text("");
+			////////////////////////////////////////////////////////////////
+			
+			////////////////////////////////////////////////////////////////
 		}
+		//alert("initAndLoadLS");
+		////////////////////////////////////////////////////////////////
+		
+		////////////////////////////////////////////////////////////////
+		
 	},
 	//--------------------------------------------------------------
 	startDownload:function (event) {
@@ -135,6 +165,8 @@ MansikiTweetStyleEditor.prototype={
         	        var blob = new Blob([text]);
         	        var url = window.URL.createObjectURL(blob);
         	        var href = "data:application/octet-stream," + encodeURIComponent(text);
+        	        var download = me.twTitleInput.val()+".txt";
+        	        document.getElementById('TMsaveButton').download = download;
         	        document.getElementById('TMsaveButton').href = href;
         	        //me.SaveButton.click();
         	        //alert("startDownload url:"+url);
@@ -155,7 +187,21 @@ MansikiTweetStyleEditor.prototype={
             reader.onload = function(e) {
                 var loadedData = e.target.result;
                 MansikiMapUtil.saveToLSasPlane(me.keyMain,loadedData);
-                me.initAndLoadLS();
+		////////////////////////////////////////////////////////////////////////
+                var dataRows =[];
+                for(var key in loadedData){
+                    var row = {};
+                    row["key"] = key
+                    row["value"] = loadedData[key];
+                    dataRows.push(row);
+                }
+                console.log(" startLoad  dataRows:"+dataRows.toSource());
+                console.log(" startLoad  me.viewList:"+me.viewList);
+                
+                //me.idbUtil.addData(me.mainDataTable,dataRows).then(me.initAndLoadLS.bind(me));
+                me.initAndLoadLS.bind(me);
+		////////////////////////////////////////////////////////////////////////
+                //me.initAndLoadLS();
             };
             
             // テキストとしてファイルを読み込む
@@ -165,6 +211,9 @@ MansikiTweetStyleEditor.prototype={
 	    if(confirm("削除していい？")){
 		var me= event.data.self;
 		MansikiMapUtil.clearLS();
+		////////////////////////////////////////////////////////////////
+		//me.idbUtil.delDataAll(me.mainDataTable);
+		////////////////////////////////////////////////////////////////
 		me.initAndLoadLS();
 	    }
 	},
@@ -1368,6 +1417,21 @@ console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
 		saveData.titleStates = me.analizer.titleStates;
 		saveData.titleName = me.twTitleInput.val();
 		MansikiMapUtil.saveToLS(me.keyMain,saveData);
+
+		////////////////////////////////////////////////////////////////////////
+                var dataRows =[];
+                for(var key in saveData){
+                    var row = {};
+                    row["dataId"] = key
+                    row["value"] = saveData[key];
+                    dataRows.push(row);
+                }
+                //alert(me.toSource());
+                console.log(" rebuildAll ##############################################################################");
+                console.log(" rebuildAll dataRows: "+dataRows.toSource());
+                //me.idbUtil.addData(me.mainDataTable,dataRows);//.then(me.initAndLoadLS.bind(me));
+		
+		////////////////////////////////////////////////////////////////////////
 		setTimeout(function(){
 		    me.viewList.css("height","100%");
         		var scrollHeight = me.viewList.get(0).scrollHeight;
@@ -1402,6 +1466,9 @@ console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
 		var idIndex = event.data.idIndex;
 		var moveByKey = event.data.moveByKey;
 		var func = me.tweetsFuncs[idIndex];
+		if(func===undefined){
+		    return;
+		}
 		var offsetY = event.data.offsetY===undefined?0:event.data.offsetY;
 		var scrolltop = $("body").scrollTop()*1;
 		var topToSet = 0;
