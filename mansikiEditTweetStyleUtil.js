@@ -12,18 +12,16 @@ var MansikiMapUtil={
 		newMap[index] = value;
 		return newMap;
 	},
-	after:function(map,index,value){
+	after:function(map,index,value,funcMap){//子持ちノード選択して作った場合の配慮が抜けております。
 		var oldMap = map;
 		var newMap ={};
-		var hasProp =false;
-//console.log("after index:"+index+"/value:"+value);
+console.log("after index:"+index+"/value:"+value);
 		for(var tmpCursor in oldMap){
 			var offset = 0;
-//console.log("after index:"+index+"/tmpCursor:"+tmpCursor);
+console.log("after index:"+index+"/tmpCursor:"+tmpCursor);
 			if(tmpCursor*1>=index){
 				offset = 1;
 			}
-			hasProp=true;
 			newMap[(tmpCursor*1+offset)] = oldMap [tmpCursor];
 		}
 		newMap[(index*1)] = value;
@@ -77,7 +75,7 @@ var MansikiMapUtil={
 		}
 		return ++count;
 	}
-	,getKey:function(map,value){
+	,getKey:function(map,value){//idIndexからcoursorを引っ張り出します。
 		for(var key in map){ 
 //console.log("getKey key:"+key+"/idIndex:"+value);
 			if(map[key]===value){

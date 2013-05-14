@@ -4,11 +4,11 @@ MansikiTweetStyleKeyBind=function(editor){
 	this.id=editor.id+"MansikiTweetStyleKeyBind";
 	this.eventField ;
 	this.nowTime = new Date().getTime();
-	this.escapeKeyInput=["key27","key9","key116","ctl13","ctl8","ctl38","ctl40","ctl77","ctl82","ctl85"];
+	this.escapeKeyInput=["key27","key78","key9","key116","ctl13","ctl8","ctl38","ctl40","ctl77","ctl82","ctl85"];
 	this.escapeKeyMain=["key116"];
 	
 	this.keyBindViewInput={MOVEUP:"Ctrl+up",MOVEDOWN:"Ctrl+down",UPDATE:"Ctrl+Entr",FOCUSOUT:"Esc",CLEAR:"Ctrl+E"};
-	this.keyBindViewMain={UP:"up",DOWN:"down",LOAD:"space",CLEAR:"Ctrl+E",DELETE:"Ctrl+Del"};
+	this.keyBindViewMain={UP:"up",DOWN:"down",LOAD:"space",CLEAR:"Ctrl+E",DELETE:"Ctrl+Del",ADD:"n"};
 	this.keyBindViewFuncs ={};
 	this.keyBindViewFuncs[SUBTITEL] = "Ctl+<";
 	this.keyBindViewFuncs[NONBLE] = "Ctl+>";
@@ -165,6 +165,7 @@ console.log("doInputFormKeyEvent keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"
 		}
 	}
 	,doMainKeyEvent:function(event){
+console.log("doMainKeyEvent START");
 		var me = event.data.self;
 		var nowTime = new Date().getTime();
 		me.eventField.css("cursor","wait");//  
@@ -187,9 +188,11 @@ console.log("doMainKeyEvent keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modi
 			me.cursorDown();
 		}else if(keyCode=="37" ){//left
 		}else if(keyCode=="39" ){//right
-		}else if(keyCode=="32" ){//space
+		}else if(keyCode=="32" || keyCode=="229" ){//space?229?
 			me.cursorSelect();
-			
+		}else if(keyCode=="78" ){//n
+			setTimeout(function(){me.cursorAddAsNew();},0);
+			return ;
 		}else if(isShiftKey===false && isCtrlKey===true ){
 			if(keyCode=="85" ){//z 
 				me.undo();
@@ -238,6 +241,9 @@ console.log("doMainKeyEvent keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modi
 			}
 		}else if(isShiftKey===true && isCtrlKey===false ){
 			
+		}else{
+		    
+		    
 		}
 		
 		/**
@@ -269,7 +275,13 @@ console.log("doMainKeyEvent keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modi
 		console.log("cursorSelect cursor:"+this.editor.cursor);
 		var idIndex =this.editor.getCurrentIdIndexByCousor();
 		this.editor.loadTweet({data:{self:this.editor,idIndex:idIndex}});
-		this.hilightCmd("DELETE");
+		this.hilightCmd("LOAD");
+	}
+	,cursorAddAsNew:function(){
+		console.log("cursorAddAsNew cursor:"+this.editor.cursor);
+		var idIndex =this.editor.getCurrentIdIndexByCousor();
+		this.editor.focusForAddTweet({data:{self:this.editor,idIndex:idIndex}});
+		this.hilightCmd("ADD");
 	}
 	,clear:function(){
 		console.log("clear cursor:"+this.editor.cursor);

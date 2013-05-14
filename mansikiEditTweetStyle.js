@@ -87,6 +87,7 @@ MansikiTweetStyleEditor.prototype={
 		this.propInput= $("#TMinputProp");
 		this.addButton= $("#TMadd");
 		this.clearButton= $("#TMclear");
+		this.resetButton= $("#TMreset");
 		this.twCmdAreaUpper = $("#TWcmdAreaUpper");
 		this.twCmdAreaUnder = $("#TWcmdAreaUnder");
 		this.buttonUp = $("#TWcmdButtonUp");
@@ -395,7 +396,8 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 		if(me.cursor <0){
 		    me.cursor=0;
 		}
-		me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor],offsetY:0,moveByKey:true}});
+		me.state.lastSelected = me.tweetIdMap[me.cursor];
+		me.initViewCursorObj({data:{self:me,idIndex:me.state.lastSelected ,offsetY:0,moveByKey:true,caller:"curosrMoveUp"}});
 	},
 	curosrMoveDown:function(event){
 		var me= event!==undefined?event.data.self:this;
@@ -407,7 +409,8 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 		if(me.cursor> max){
 		    me.cursor = max;
 		}
-		me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor],offsetY:0,moveByKey:true}});
+		me.state.lastSelected = me.tweetIdMap[me.cursor];
+		me.initViewCursorObj({data:{self:me,idIndex:me.state.lastSelected ,offsetY:0,moveByKey:true,caller:"curosrMoveDown"}});
 	},
 	//--------------------------------------------------------------------
 	addTweet:function(event){
@@ -419,47 +422,53 @@ console.log("buildFuncs funcId:"+funcId+"/"+me.funcs.getFunc(funcId)+"/"+me.Mans
 			event.data.text=text;
 			event.data.prop=prop;
 			var currentFunc =me.funcs.getFunc(me.currentFuncId);
-			if(me.state.selected !==undefined)me.state.lastSelected = me.state.selected ;
+			if(me.state.selected !== undefined)me.state.lastSelected = me.state.selected ;
 			var selectedFuncOnList = me.tweetsFuncs[me.state.lastSelected ];
-			if(me.state.selected === undefined || selectedFuncOnList!==undefined && currentFunc.level > selectedFuncOnList.level){//add
+			//add Tweet
+			if(me.state.selected === undefined || selectedFuncOnList!==undefined && currentFunc.level > selectedFuncOnList.level){
 				me.tweetIdCount++;
-				event.data.idIndex=me.tweetIdCount;
-//console.log("addTweet idIndex:"+event.data.idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.tweetIdMap.toSource());
-				if( selectedFuncOnList!==undefined && currentFunc.level > selectedFuncOnList.level){
+				event.data.idIndex = me.tweetIdCount;
+				event.data.isAdd = true;
+//console.log("★addTweet idIndex:"+event.data.idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.tweetIdMap.toSource()+"/currentFunc.level:"+currentFunc.level +"/selectedFuncOnList.level:"+selectedFuncOnList.level);
+				if( selectedFuncOnList !== undefined && currentFunc.level > selectedFuncOnList.level){
 				    me.cursor++;
-				}else if(selectedFuncOnList===undefined){
-				    me.cursor=me.cursor*1+(currentFunc.level*1-1);
+				    alert("※me.cursor:"+me.cursor);
+				}else if(selectedFuncOnList === undefined){
+				    me.cursor = me.cursor*1+(currentFunc.level*1-1);
+				}else if(selectedFuncOnList !== undefined && currentFunc.level === selectedFuncOnList.level){
+				    me.cursor++;
 				}
 				//alert("addTweet AAA currentFunc:"+currentFunc+"/selectedFuncOnList:"+selectedFuncOnList+"/me.state.lastSelected :"+me.state.lastSelected );
 				me.insertTweet(event);
 				me.bredgeArea.val("");
 				me.funcs.clearTweet();
-				if(selectedFuncOnList===undefined){
-				    me.state.lastSelected = me.tweetIdMap[me.cursor];
-				}else{
-				    me.cursor++;
-				}
-				me.showCursor(me);
+				me.state.lastSelected = me.tweetIdMap[me.cursor];
+				me.initViewCursorObj({data:{self:me,idIndex:me.state.lastSelected ,offsetY:-0,moveByKey:true,caller:"addTweet"}});
 				me.state.selected = undefined;
 			}else{//update
 				event.data.idIndex=me.state.selected;
 				me.updateTweet(event);
 			}
 			me.rebuildAll(me);
+			//これで解除
+			//me.clearTweet({data:{self:me}});
+			me.onFocusToCmd({data:{self:me}});
 		}
 		me.MansikiTweetStyleKeyBind.buidCmdAreaInput();
 	},
-	insertTweet:function(event){
+	insertTweet:function(event){//Insert Wrapper
 		var me= event.data.self;
+		var isAdd = event.data.isAdd;
 		var tweetBox=me.buildTweetBox(event);
-		me.doInsertTweet(me,tweetBox);
-		me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor],offsetY:999}});
+		me.doInsertTweet(me,tweetBox,isAdd);
+		//me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor],offsetY:999}});
 	},
-	doInsertTweet:function(me,tweetBox){
+	doInsertTweet:function(me,tweetBox,isAdd){//TweetBox Is New!
 		var currentFunc =me.funcs.getFunc(me.currentFuncId);
 		var selectedFuncOnList = me.tweetsFuncs[me.state.lastSelected ];
 		var tweetBoxLevel = tweetBox.attr("level");
-console.log("doInsertTweet AAA currentFunc:"+currentFunc+"/selectedFuncOnList:"+selectedFuncOnList);
+		var idIndex=me.tweetIdMap[me.cursor];
+console.log("doInsertTweet AAA currentFunc:"+currentFunc+"/selectedFuncOnList:"+selectedFuncOnList+"/isAdd:"+isAdd+"/"+me.tweetIdMap[me.cursor+2]+"/"+idIndex);
 		if(me.cursor*1===0 ){
 console.log("doInsertTweet AA0 currentFunc:"+currentFunc+"/selectedFuncOnList:"+selectedFuncOnList);
 			if(me.viewList.children("div").length > 0){
@@ -475,44 +484,51 @@ console.log("doInsertTweet AAB currentFunc:"+currentFunc+"/selectedFuncOnList:"+
 			//alert(slot.length+"/preId:"+preId+"/preIdIndex:"+preIdIndex+"/me.cursor:"+me.cursor);
 			slot.prepend(tweetBox);
 		}else{
-console.log("doInsertTweet AAC currentFunc:"+currentFunc+"/selectedFuncOnList:"+selectedFuncOnList);
-			var idIndex=me.tweetIdMap[me.cursor];
+console.log("doInsertTweet AAC currentFunc:"+currentFunc+"/selectedFuncOnList:"+selectedFuncOnList+"/me.tweetIdMap:"+me.tweetIdMap.toSource());
 			var func = me.tweetsFuncs[idIndex];
 			var preIdIndex=me.tweetIdMap[me.cursor-1];
 			var preFunc = me.tweetsFuncs[preIdIndex];
 			var preId=me.constMap.tweetIdPrefix+preIdIndex;
 			var parentLevelObj = me.getParentLevelTweetBox(me,$("#"+preId));
-//alert(me.tweetIdMap.toSource()+"/me.cursor:"+me.cursor+"/idIndex:"+idIndex);
 			var topLevelId = "TMtweetList";
 			//alert("aaaa level:"+func.level+"/pre:"+preFunc.level+"/cursor:"+me.cursor+"/preIdIndex:"+preIdIndex+"/"+me.tweetIdMap.toSource());
 			if(preFunc.level*1 === func.level*1){
 				$("#"+preId).after(tweetBox);
-				//alert("/level:"+func.level+"/pre:"+preFunc.level);
+				//alert("V"+"/level:"+func.level+"/pre:"+preFunc.level+"/idIndex:"+idIndex);
 			}else if(preFunc.level*1 <func.level*1){
 				var slot = $("#"+preId).find("div.tweetSlot").eq(0);
-				//alert(slot.length+"/level:"+func.level+"/pre:"+preFunc.level);
+				//alert("W "+slot.length+"/length:"+slot.children().length+"/level:"+func.level+"/pre:"+preFunc.level);
 				slot.prepend(tweetBox);
 			}else if( preFunc.level*1 === func.level*1+1){
 			    if(parentLevelObj.parent().attr("id") === topLevelId){
-				    parentLevelObj.find("div.twbConteinerFlame").eq(0).parent().eq(0).after(tweetBox);
+				parentLevelObj.find("div.twbConteinerFlame").eq(0).parent().eq(0).after(tweetBox);
+				//alert("Z"+parentLevelObj.parent().parent().parent().attr("class"));
 			    }else{
-				//alert(parentLevelObj.parent().parent().parent().attr("class"));
-				    parentLevelObj.after(tweetBox);
+				//alert("Y"+parentLevelObj.parent().parent().parent().attr("class"));
+				parentLevelObj.after(tweetBox);
 			    }
 			}else if(preFunc.level*1 === func.level*1+2){
 			    if(parentLevelObj.parent().parent().parent().attr("id") === topLevelId){
 				    parentLevelObj.parent().parent().find("div.twbConteinerFlame").eq(0).parent().eq(0).after(tweetBox);
+				//alert("U"+parentLevelObj.parent().parent().parent().attr("class"));
 			    }else{
 				    parentLevelObj.parent().parent().parent().find("div.twbConteinerFlame").eq(0).parent().eq(0).after(tweetBox);
+				//alert("T"+parentLevelObj.parent().parent().parent().attr("class"));
 			    }
 			}else if(preFunc.level*1 === func.level*1+3){
 			    if(parentLevelObj.parent().parent().parent().parent().parent().parent().attr("id") === topLevelId){
 				    parentLevelObj.parent().parent().parent().parent().parent().find("div.twbConteinerFlame").eq(0).parent().eq(0).after(tweetBox);
+				//alert("S"+parentLevelObj.parent().parent().parent().attr("class"));
 			    }else{
 				    parentLevelObj.parent().parent().parent().parent().parent().parent().find("div.twbConteinerFlame").eq(0).parent().eq(0).after(tweetBox);
+				//alert("R"+parentLevelObj.parent().parent().parent().attr("class"));
 			    }
+			}else{
+			    //alert("P"+parentLevelObj.parent().parent().parent().attr("class"));
 			}
 		}
+		
+		//me.initViewCursorObj({data:{self:me,idIndex:(isAdd===true?me.tweetIdMap[me.cursor+2]:idIndex),offsetY:10,moveByKey:true,caller:"doInsertTweet"}});
 		 
 	},
 	getParentLevelTweetBox:function(me,target){
@@ -534,7 +550,18 @@ console.log("doInsertTweet AAC currentFunc:"+currentFunc+"/selectedFuncOnList:"+
 		me.state.selected = idIndex;
 		if(me.state.selected !==undefined)me.state.lastSelected = me.state.selected ;
 		$("#TMTweetMode").text(me.constMap.modUpdate);
-		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
+		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0,caller:"loadTweet"}});
+		me.MansikiTweetStyleKeyBind.buidCmdAreaInput();
+	},
+	focusForAddTweet:function(event){
+		var me= event.data.self;
+		var idIndex = event.data.idIndex;
+		$("div.TMtweetBox").removeClass("TwselectedBox");
+		var func = me.tweetsFuncs[idIndex];
+		me.funcs.focusAsAdd();
+		me.cmdButtonsHilight({data:{self:me,id:func.getFullId(),level:func.level}});
+		$("#TMTweetMode").text(me.constMap.modAdd);
+		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0,caller:"focusForAddTweet"}});
 		me.MansikiTweetStyleKeyBind.buidCmdAreaInput();
 	},
 	focusToTweet:function(me,idIndex){
@@ -573,12 +600,25 @@ console.log("doInsertTweet AAC currentFunc:"+currentFunc+"/selectedFuncOnList:"+
 			me.clearTweet(event);
 			me.state.selected = undefined;
 		}
+		var cursor = MansikiMapUtil.getKey(me.tweetIdMap,idIndex);
+		var preIndex = me.tweetIdMap[cursor-1];
+		var postIndex = me.tweetIdMap[cursor+1];
 		me.tweetIdMap=MansikiMapUtil.del(me.tweetIdMap,idIndex);
 		me.cursor=MansikiMapUtil.getMaxIndex(me.tweetIdMap);
 		me.getTweetBoxObj(me,idIndex).parent().parent().find("#"+id).eq(0).remove();
-		me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor]}});
-//console.log("idIndex:"+idIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.tweetIdMap.toSource());
+		//me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor],caller:"deleteTweet"}});
+console.log("deleteTweet idIndex:"+idIndex+"/preIndex:"+preIndex+"/me.cursor:"+me.cursor+"/me.tweetIdMap:"+me.tweetIdMap.toSource()+"/:"+MansikiMapUtil.getKey(me.tweetIdMap,me.state.lastSelected));
 		me.rebuildAll(me);
+		
+		//カーソル位置調整
+		if(0< cursor  && cursor < MansikiMapUtil.getKey(me.tweetIdMap,me.state.lastSelected)
+			|| me.state.lastSelected===idIndex
+		){
+		    me.state.lastSelected = preIndex;
+		}else if(0===cursor && postIndex!==undefined){
+		    me.state.lastSelected = postIndex;
+		}
+		me.initViewCursorObj({data:{self:me,idIndex:me.state.lastSelected ,offsetY:-0,moveByKey:true,caller:"deleteTweet"}});
 	},
 	unionTweet:function(event){
 		var me= event.data.self;
@@ -874,7 +914,7 @@ console.log("moveTweetVVVVVG3 afterId:"+afterId+"/afterFunc.level:"+afterFunc.le
         			}
 			}
 		}
-		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
+		me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0,caller:"moveExecute"}});
 		me.rebuildAll(me);
 	},
 	getSlotObj:function(domObj){
@@ -1457,7 +1497,7 @@ console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
 			var tweetBox = this.execBuildTweetBox(this,idIndex);
 			this.doInsertTweet(this,tweetBox);
 			this.cursor++;
-			this.initViewCursorObj({data:{self:this,idIndex:this.tweetIdMap[this.cursor],offsetY:999}});
+			this.initViewCursorObj({data:{self:this,idIndex:this.tweetIdMap[this.cursor],offsetY:999,caller:"reloadAllTweets"}});
 		}
 		console.log("reloadAllTweets END"); 
 	},
@@ -1467,8 +1507,10 @@ console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
 		var moveByKey = event.data.moveByKey;
 		var func = me.tweetsFuncs[idIndex];
 		if(func===undefined){
+		    //alert("idIndex:"+idIndex);
 		    return;
 		}
+		//alert("initViewCursorObj:"+func);
 		var offsetY = event.data.offsetY===undefined?0:event.data.offsetY;
 		var scrolltop = $("body").scrollTop()*1;
 		var topToSet = 0;
@@ -1487,8 +1529,9 @@ console.log("getUpperParentIndexId upperIndexId:"+upperIndexId+"");
 			    topBase += parent.position().top*1+offsetTop;
 			    leftBase += parent.position().left*1+offsetLeft;
 			}
+console.log("hoshiHOSHIHH  initViewCursorObj /idIndex:"+idIndex+"/target:"+target+"/me.cursor:"+me.cursor+"/clientHeight:"+clientHeight+"/caller:"+event.data.caller);
 			if(target.length<1){return;}
-//console.log("aaaa  initViewCursorObj /id:"+id+"/target:"+target.length+"/me.cursor:"+me.cursor+"/clientHeight:"+clientHeight);
+console.log("hoshiHOSHI  initViewCursorObj /idIndex:"+idIndex+"/target:"+target+"/me.cursor:"+me.cursor+"/clientHeight:"+clientHeight);
 			var top = target.position().top+topBase;
 			var left = target.position().left+leftBase;
 			height = target.css("height").replace("px","")*1;
@@ -1538,7 +1581,7 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+cli
 		me.bredgeArea.val("");
 		me.funcs.clearTweet();
 		$("#TMTweetMode").text(me.constMap.modAdd);
-		me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor],offsetY:20}});
+		me.initViewCursorObj({data:{self:me,idIndex:me.tweetIdMap[me.cursor],offsetY:20,caller:"clearTweet"}});
 		me.MansikiTweetStyleKeyBind.buidCmdAreaInput();
 	},
 	showCursor:function(me){
@@ -1563,9 +1606,9 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+cli
 		var target = me.getTweetBoxObj(me,idIndex).find(".tweetBoxCmdFrame").eq(0).find(".tweetBoxCmd").eq(0);
 		target.css("visibility","visible");
 		if(me.state.selected===idIndex){
-			me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
+			me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0,caller:"showCmdBox1"}});
 		}else{
-			me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:20}});
+			me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:20,caller:"showCmdBox2"}});
 		}
 		return false;
 	},
@@ -1575,9 +1618,9 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+cli
 		var target = me.getTweetBoxObj(me,idIndex).find(".tweetBoxCmdFrame").eq(0).find(".tweetBoxCmd").eq(0);
 		target.css("visibility","hidden");
 		if(me.state.selected===idIndex){
-			me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0}});
+			me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:0,caller:"hideCmdBox"}});
 		}else{
-			me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:20}});
+			me.initViewCursorObj({data:{self:me,idIndex:idIndex,offsetY:20,caller:"hideCmdBox"}});
 		}
 	},
 	calcStringLength:function(event){
@@ -1607,7 +1650,9 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+cli
 		var text= event.data.text;
 		var prop = event.data.prop;
 		var idIndex= event.data.idIndex;
+		var oldmap = me.tweetIdMap;
 		me.tweetIdMap = MansikiMapUtil.after(me.tweetIdMap,me.cursor,idIndex);
+		console.log("buildTweetBox:oldmap:"+oldmap.toSource()+"/me.tweetIdMap:"+me.tweetIdMap.toSource());		
 		me.tweets[idIndex]={text:text,prop:prop};
 		me.buildFuncs(me,idIndex);
 		return me.execBuildTweetBox(me,idIndex);
@@ -1624,7 +1669,9 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+cli
 		var twbButtonDel= $("<div class='tweetBoxCmdButton'>☓</div>");
 		var twbButtonMoveUp= $("<div class='tweetBoxCmdButton'>▲</div>");
 		var twbButtonMoveDown= $("<div class='tweetBoxCmdButton'>▼</div>");
-		var twbButtonUnite= $("<div class='tweetBoxCmdButton'>＋</div>");
+		var twbButtonUniteToUp= $("<div class='tweetBoxCmdButton'>＋U</div>");
+		var twbButtonUniteToDown= $("<div class='tweetBoxCmdButton'>＋D</div>");
+		var twbButtonSeparateParent= $("<div class='tweetBoxCmdButton'>Sp</div>");
 		var twbConteinerFlame= $("<div class='twbConteinerFlame'></div>");
 		var twbSideBar= $("<div class='tweetBoxSideBar'></div>");
 		var twbConteiner= $("<div class='tweetBoxConteiner'></div>");
@@ -1641,12 +1688,16 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+cli
 		twbConteiner.append(tweetBoxtext);
 		twbConteinerFlame.append(twbConteiner);
 		twbConteinerFlame.append(tweetBoxSlot);
-		tweetBoxButtons.append(twbButtonMoveDown).append(twbButtonMoveUp).append(twbButtonDel).append(twbButtonUnite);
+		tweetBoxButtons.append(twbButtonMoveDown).append(twbButtonMoveUp).append(twbButtonDel).append(twbButtonUniteToUp)
+		.append(twbButtonUniteToDown).append(twbButtonSeparateParent);
 		tweetBoxtext.bind("click",{self:me,idIndex:idIndex},me.loadTweet);
+		tweetBoxInfo.bind("click",{self:me,idIndex:idIndex},me.loadTweet);
 		twbButtonDel.bind("click",{self:me,idIndex:idIndex},me.deleteTweet);
 		twbButtonMoveUp.bind("click",{self:me,idIndex:idIndex,direct:"up"},me.moveTweet);
 		twbButtonMoveDown.bind("click",{self:me,idIndex:idIndex,direct:"down"},me.moveTweet);
-		twbButtonUnite.bind("click",{self:me,idIndex:idIndex},me.unionTweet);
+		twbButtonUniteToUp.bind("click",{self:me,idIndex:idIndex},me.unionTweet);
+		twbButtonUniteToDown.bind("click",{self:me,idIndex:idIndex},me.unionTweet);
+		twbButtonSeparateParent.bind("click",{self:me,idIndex:idIndex},me.unionTweet);
 		tweetBox.bind("click",{self:me,idIndex:idIndex,offsetY:20},me.initViewCursorObj);
 		tweetBox.bind("mouseover",{self:me,idIndex:idIndex},me.showCmdBox);
 		tweetBox.bind("mouseout",{self:me,idIndex:idIndex},me.hideCmdBox);

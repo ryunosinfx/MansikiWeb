@@ -87,6 +87,10 @@ console.log("create keyBindFuncLocal:"+keyBindFuncLocal);
 		this.tweetArea.val(text);
 		this.tweetArea.focus();
 	},
+	focusAsAdd:function(){
+		this.tweetArea.val("");
+		this.tweetArea.focus();
+	},
 	addIndentClass:function(tweetBox){
 		tweetBox.addClass(this.indentClassPrefix+this.level);
 	},
