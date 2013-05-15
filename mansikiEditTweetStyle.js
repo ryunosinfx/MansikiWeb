@@ -1651,7 +1651,9 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+cli
 		var prop = event.data.prop;
 		var idIndex= event.data.idIndex;
 		var oldmap = me.tweetIdMap;
-		me.tweetIdMap = MansikiMapUtil.after(me.tweetIdMap,me.cursor,idIndex);
+		var retAfter= MansikiMapUtil.after(me.tweetIdMap,me.cursor,idIndex,me.tweetsFuncs);
+		me.tweetIdMap = retAfter.newMap;
+		me.cursor += retAfter.offset;
 		console.log("buildTweetBox:oldmap:"+oldmap.toSource()+"/me.tweetIdMap:"+me.tweetIdMap.toSource());		
 		me.tweets[idIndex]={text:text,prop:prop};
 		me.buildFuncs(me,idIndex);

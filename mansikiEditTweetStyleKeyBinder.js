@@ -181,18 +181,18 @@ console.log("doMainKeyEvent START");
 			me.blockBubbleEvent(event);
 			me.eventField.focus();
 		}
-console.log("doMainKeyEvent keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modifiers+"/event.ctrlKey:"+event.ctrlKey);
+console.log("doMainKeyEvent keyCode:"+keyCode+"/wicth:"+wicth+"/modifiers:"+modifiers+"/event.ctrlKey:"+event.ctrlKey+"/isShiftKey:"+isShiftKey+"/");
 		if(keyCode=="38" ){//up
 			me.cursorUp();
 		}else if(keyCode=="40" ){//down
 			me.cursorDown();
 		}else if(keyCode=="37" ){//left
 		}else if(keyCode=="39" ){//right
-		}else if(keyCode=="32" || keyCode=="229" ){//space?229?
-			me.cursorSelect();
-		}else if(keyCode=="78" ){//n
+		}else if(keyCode=="78" || keyCode == "229" && isShiftKey === true){//n
 			setTimeout(function(){me.cursorAddAsNew();},0);
 			return ;
+		}else if(keyCode=="32" || keyCode=="229" ){//space?229?
+			me.cursorSelect();
 		}else if(isShiftKey===false && isCtrlKey===true ){
 			if(keyCode=="85" ){//z 
 				me.undo();

@@ -15,18 +15,43 @@ var MansikiMapUtil={
 	after:function(map,index,value,funcMap){//子持ちノード選択して作った場合の配慮が抜けております。
 		var oldMap = map;
 		var newMap ={};
-console.log("after index:"+index+"/value:"+value);
-		for(var tmpCursor in oldMap){
+		var idIndex = oldMap[index-1];
+		var func = funcMap[idIndex];
+		if(func===undefined){
+		    oldMap[(index*1)] = value;
+		    return oldMap;
+		}
+		var level = func.level;
+		var list = [];
+console.log("after index:"+index+"/value:"+value+"/level:"+level+"/func:"+func+"/idIndex:"+idIndex);
+
+                for(var tmpCursor in oldMap){
+                    list.push(tmpCursor);
+                }
+                list.sort();//順番を保証
+                var isAfterSameLevel = false;
+                var afterOffset = 0;
+		for(var indexSorted in list){
+		    	var cusror = list[indexSorted];
 			var offset = 0;
-console.log("after index:"+index+"/tmpCursor:"+tmpCursor);
-			if(tmpCursor*1>=index){
+			var idIndexTemp = oldMap [cusror];
+			var tempFunc = funcMap[idIndexTemp];
+			var tempLevel = tempFunc.level;
+console.log("after index:"+index+"/cusror:"+cusror+"/tempLevel:"+tempLevel+"/level:"+level);
+			if(cusror*1>=index && tempLevel===level){
+			    isAfterSameLevel=true;
+			}
+			if(cusror*1>=index && isAfterSameLevel===false){
+			    afterOffset++;
+			}
+			if(cusror*1>=index && isAfterSameLevel===true){
 				offset = 1;
 			}
-			newMap[(tmpCursor*1+offset)] = oldMap [tmpCursor];
+			newMap[(cusror*1+offset)] = oldMap [cusror];
 		}
-		newMap[(index*1)] = value;
+		newMap[(index*1)+afterOffset] = value;
 		
-		return newMap;
+		return {newMap:newMap,offset:afterOffset};
 	},
 	del:function(map,value){
 		var oldMap = map;
