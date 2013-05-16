@@ -635,6 +635,7 @@ console.log("deleteTweet idIndex:"+idIndex+"/preIndex:"+preIndex+"/me.cursor:"+m
 	moveTweet:function(event){
 		var me= event.data.self;
 		var direct= event.data.direct;
+		var caller= event.data.caller;
 		var idIndex = event.data.idIndex;
 		var cursor = MansikiMapUtil.getKey(me.tweetIdMap,idIndex*1)*1;
 		var offset = 0;
@@ -642,19 +643,23 @@ console.log("deleteTweet idIndex:"+idIndex+"/preIndex:"+preIndex+"/me.cursor:"+m
 		var childCount = func.getChildCount() ;
 		if(direct==="up"){
 		    var upperTarget =  func.getUpperMovableCursor();
-console.log("moveTweet up upperTarget:"+upperTarget+"/cursor:"+cursor);
+console.log("★moveTweet up upperTarget:"+upperTarget+"/cursor:"+cursor);
 		    offset= upperTarget>0 ? upperTarget - cursor :-1;
 		}else if(direct==="down"){
 		    var downerTarget =  func.getDownerMovableCursor();
-console.log("moveTweet down downerTarget:"+downerTarget+"/cursor:"+cursor);
+console.log("★moveTweet down downerTarget:"+downerTarget+"/cursor:"+cursor);
 		    offset= downerTarget>0 ? downerTarget - cursor:1;
 		}
-console.log("moveTweet offset:"+offset);
+console.log("★moveTweet offset:"+offset+"/direct:"+direct+"/idIndex:"+idIndex);
 		if(offset===0){
+		    alert("moveTweet:offset:0");
 		    return ;
 		}
 		me.moveExecute(me,idIndex,cursor,offset,direct,func.level,childCount);
 		me.hideCmdBox(event);
+		if(caller!=="doDrag"){
+			me.initViewCursorObj({data:{self:me,idIndex:idIndex ,offsetY:-0,moveByKey:true,caller:"moveTweet"}});
+		}
 	},
 	//実際にDOM上で動かす。
 	moveExecute:function(me,idIndex,cursor,offset,direct,level,childCount){
@@ -1643,7 +1648,6 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+cli
 		scrolltop-= 120;
 		scrolltop = scrolltop>0 ?scrolltop:0;
 		me.tweetBoxParent.css("top",scrolltop);
-		//alert("doScroll");
 	},
 	buildTweetBox:function(event){
 		var me= event.data.self;
@@ -1654,7 +1658,7 @@ console.log("aaaa top:"+top+"/left:"+left+"/height:"+height+"/clientHeight:"+cli
 		var retAfter= MansikiMapUtil.after(me.tweetIdMap,me.cursor,idIndex,me.tweetsFuncs);
 		me.tweetIdMap = retAfter.newMap;
 		me.cursor += retAfter.offset;
-		console.log("buildTweetBox:oldmap:"+oldmap.toSource()+"/me.tweetIdMap:"+me.tweetIdMap.toSource());		
+//console.log("buildTweetBox:oldmap:"+oldmap.toSource()+"/me.tweetIdMap:"+me.tweetIdMap.toSource());		
 		me.tweets[idIndex]={text:text,prop:prop};
 		me.buildFuncs(me,idIndex);
 		return me.execBuildTweetBox(me,idIndex);

@@ -278,9 +278,11 @@ console.log("getChildCount func.level :"+func.level+"/this.level:"+this.level +"
 		infoBoxCover.unbind("mouseup");
 		viewList.unbind("mousemove");
 		viewList.unbind("mouseout");
+		viewList.unbind("click");
 		infoBoxCover.bind("mouseup",{self:me,infoBoxCover:infoBoxCover,tweetBox:tweetBox},me.onMouseUp);
-		viewList.bind("mouseout",{self:me,infoBoxCover:infoBoxCover,tweetBox:tweetBox},me.onMouseUp);
+		//viewList.bind("mouseout",{self:me,infoBoxCover:infoBoxCover,tweetBox:tweetBox},function(){me.dragTimer=setTimeout(me.onMouseUp,0);});
 		viewList.bind("mousemove",{self:me,tweetBox:tweetBox,start:y,height:height},me.onDrag);
+		viewList.bind("click",{self:me,infoBoxCover:infoBoxCover,tweetBox:tweetBox,start:y,height:height},me.onMouseUp);
 		infoBoxCover.css("cursor","move");
 	},
 	onDrag:function(event){
@@ -297,15 +299,18 @@ console.log("getChildCount func.level :"+func.level+"/this.level:"+this.level +"
 	doDrag:function(me,tweetBox,start,height,y){
 		var top = tweetBox.position().top;
 		var diff = y-start;
-console.log("doDrag top:"+top+"/y:"+y+"/start:"+start+"/diff:"+diff+"/height:"+height);
+console.log("doDrag top:"+top+"/y:"+y+"/start:"+start+"/diff:"+diff+"/height:"+height+"/idIndex:"+me.idIndex);
 		tweetBox.css("top",y-start);
 		window.getSelection().removeAllRanges();
 		
-		if(Math.abs(diff)>height/4){
+		if(Math.abs(diff)>height/2){
+			var viewList = me.editor.getViewList();
+			viewList.unbind("mousemove");
+		    	//alert("doDrag:diff:"+diff+"/height:"+height);
 			if(diff< 0){
-				me.editor.moveTweet({data:{self:me.editor,direct:"up",idIndex:me.idIndex}});
+				me.editor.moveTweet({data:{self:me.editor,direct:"up",idIndex:me.idIndex,caller:"doDrag"}});
 			}else{
-				me.editor.moveTweet({data:{self:me.editor,direct:"down",idIndex:me.idIndex}});
+				me.editor.moveTweet({data:{self:me.editor,direct:"down",idIndex:me.idIndex,caller:"doDrag"}});
 			}
 			var tweetBox = me.editor.getTweetBoxObj(me.editor,me.idIndex);
 			var infoBoxCover = me.editor.getTweetBoxInfoCover(tweetBox);
@@ -313,6 +318,8 @@ console.log("doDrag top:"+top+"/y:"+y+"/start:"+start+"/diff:"+diff+"/height:"+h
 			infoBoxCover.css("height",infoBox.css("height"));
 			infoBoxCover.bind("mousedown",{self:me,tweetBox:tweetBox},me.onMouseDown);
 			infoBoxCover.bind("mouseup",{self:me,tweetBox:tweetBox,infoBoxCover:infoBoxCover},me.onMouseUp);
+			//var y =event.clientY;
+			setTimeout(function(){viewList.click();viewList.bind("mousemove",{self:me,tweetBox:tweetBox,start:y,height:height},me.onDrag);},100);
 		}
 	},
 	onMouseUp:function(event){
@@ -324,6 +331,7 @@ console.log("doDrag top:"+top+"/y:"+y+"/start:"+start+"/diff:"+diff+"/height:"+h
 		viewList.unbind("mouseout");
 		if(tweetBox!==undefined){
 			tweetBox.css("border-left-color",me.editor.constMap.unselectColor);
+			tweetBox.css("top","");
 		}
 		infoBoxCover.unbind("mouseup");
 		infoBoxCover.css("cursor","pointer");
